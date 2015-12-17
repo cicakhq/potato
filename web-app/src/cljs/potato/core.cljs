@@ -1099,7 +1099,7 @@ highlighted-message - the message that should be highlighted (or
 
 (defn- make-draft-message [text-string html]
   (let [current-user (:current-user (deref potato.state/global))
-        hash (cljs.pprint/cl-format nil "~{~2,'0x~}" (cljs-hash.goog/sha1-bytes (str (:id current-user) "_" text-string)))]
+        hash (cljs-hash.goog/sha1-hex (str (:id current-user) "_" text-string))]
     {:id           (str draft-marker "draft:" (get-unique-id))
      :from         (:id current-user)
      :created_date (.format (.utc (js/moment)) "YYYY-MM-DDTHH:mm:ss.SSSZ")
