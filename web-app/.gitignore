@@ -1,0 +1,20 @@
+.DS_Store
+
+#ignore node_modules, as the node project is not "deployed" per se: http://www.mikealrogers.com/posts/nodemodules-in-git.html
+/node_modules
+/libs
+
+# IDEA
+.idea
+potato.iml
+
+# CLOJURE
+figwheel_server.log
+resources/public/js
+resources/public/css
+.lein-env
+target
+out
+.lein-repl-history
+.nrepl-port
+.repl

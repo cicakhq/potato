@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<% include "common_meta.tmpl" %>
+<head>
+  <% call common_meta %>
+  <% include "common_script.tmpl" %>
+  <% includeindex "manifest/css.manifest" %>
+  <link href="/assets/css/<% #index "manifest/css.manifest.login.css" %>" rel="stylesheet">
+  <title>Login</title>
+</head>
+<body>
+  <header id="potato-head">
+    <hgroup id="potato-brand">
+      <h1><a href="/">potato</a></h1>
+      <h2>Delicious conversations</h2>
+    </hgroup>
+    <nav id="potato-links">
+      <ul>
+        <li><a href="/#tour">Tour</a></li>
+        <li><a href="//blog.potato.network/">Blog</a></li>
+        <li><a href="//twitter.com/potato_group">Twitter</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <form id="login" method="post" action="/login">
+      <% if redirect %>
+        <input type="hidden" name="redirect" value="<% #redirect %>">
+      <% end %>
+      <input type="hidden" name="m" value="<% if mobile-p #"1" else #"0" end %>">
+      <fieldset>
+        <legend align="center">Login</legend>
+        <p id="email">
+          <label for="username">Email:</label>
+          <input id="username" name="username" type="text" size="30"
+                 placeholder="Email address or username" autofocus
+                 value="<% if username #username end %>" tabindex=1>
+
+        </p>
+        <p id="password">
+          <label for="password">Password:</label>
+          <input id="password" name="password" type="password"
+                 placeholder="Password" size="30" tabindex=2>
+        </p>
+        <% if mobile-p %>
+          <input type="hidden" name="remember" value="0">
+        <% else %>
+          <p id="remember">
+            <input type="checkbox" name="remember" checked tabindex=3>
+            <label id="remember">Remember login</label>
+          </p>
+        <% end %>
+        <% if error-p %>
+        <p class="error">
+          Error: username or password incorrect
+        </p>
+        <% end %>
+        <p id="submit"><input type="submit" value="Login" size="30" tabindex=4></p>
+      </fieldset>
+    </form>
+  </main>
+  <% if ! use-external-authenticator %>
+  <p id="signup">Not a member? <a href="/register">Sign up now</a></p>
+  <% end %>
+</body>
+</html>

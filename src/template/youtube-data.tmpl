@@ -1,0 +1,14 @@
+<% #| -*- html -*- |# %>
+<% #| This form is displayed when a youtube link is posted to the channel |# %>
+<% #| Available variables: NAME, TITLE, THUMBNAIL-URL, THUMBNAIL-WIDTH, THUMBNAIL-HEIGHT |# %>
+<% #| The thumbnail values are NIL if no thumbnail is available |# %>
+<picture>
+  <div><% #title %></div>
+  <% if thumbnail-url %>
+    <div>
+      <a href="https://www.youtube.com/watch?v=<% #name %>">
+        <img src="<% #thumbnail-url %>" width="<% #thumbnail-width %>" height="<% #thumbnail-height %>">
+      </a>
+    </div>
+  <% end %>
+</picture>

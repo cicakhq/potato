@@ -1,0 +1,27 @@
+<% include "common_meta.tmpl" #| -*- html -*- |# %>
+<!DOCTYPE html>
+<% call ie9 %>
+<head>
+  <title>Potato: teams group chat</title>
+  <% call common_meta %>
+  <% includeindex "manifest/css.manifest" %>
+  <% includeindex "manifest/js.manifest" %>
+  <link href="/assets/css/<% #index "manifest/css.manifest.landing.css" %>" rel="stylesheet">
+</head>
+<body>
+  <% include "potato_header.tmpl" %>
+  <main id="landing">
+    <h1>Edible group chat for folks</h1>
+    <form method="post" class="form-signin" role="form" action="/register2">
+      <fieldset>
+        <input type="text" size="40" name="email" placeholder="Email Address" title="Email address">
+        <input type="submit" size="40" value="Register">
+        <p>If you have an account, enter your Email Address to Sign In</p>
+      </fieldset>
+    </form>
+  </main>
+  <section id="features">
+  </section>
+  <% include "potato_footer.tmpl" %>
+</body>
+</html>

@@ -1,0 +1,64 @@
+* Quicklisp install
+
+** Initialise QL
+
+: cd $POTATO_SRC/files
+: sbcl --load init_quicklisp.lisp
+
+** Local projects and dependencies links to $HOME/quicklisp/local-projects
+
+TODO: This depends on where the dependencies are downloaded to
+
+* Initialise Solr
+
+Start solr normally:
+
+: $SOLR_HOME/bin/solr start
+
+Copy the configuration files:
+
+: cp -r $POTATO_SRC/files/solr_conf/potato $SOLR_HOME/example/solr
+
+Create the Solr core manually:
+
+  - Go to the page http://localhost:8983/solr
+  - Click on "Core admin'
+  - Click on "Add core"
+  - For name and instance_dir, type "potato"
+  - Click on "Add core"
+
+There is also a way to to the same thing using the API, but I haven't
+tested that one. The method is explained here:
+http://wiki.apache.org/solr/CoreAdmin
+
+   http://localhost:8983/solr/admin/cores?action=CREATE&name=potato&instanceDir=potato
+
+* Bootstrap the couchdb instance
+
+I originally put this in the start_server.lisp script, but it's so
+dangerous that it should take a bit of an effort to run.
+
+: sbcl --eval '(progn (ql:quickload "potato") (funcall (find-symbol "RESET-DB" "POTATO")) (sb-ext:exit :code 0))'
+
+* Start services
+
+Currently the state server needs to be started before the main Potato
+server. This is a teporary limitation.
+
+The index manager can be started and restarted at will without any
+effect on the rest of the system.
+
+Note that the log files will be created at the current directory where
+the start_server.lisp script is started.
+
+** Index server
+
+: sbcl --load $POTATO_SRC/files/start_server.lisp index
+
+** State server
+
+: sbcl --load $POTATO_SRC/files/start_server.lisp state
+
+** Mail potato server
+
+: sbcl --load $POTATO_SRC/files/start_server.lisp potato

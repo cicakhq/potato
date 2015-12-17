@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <% includeindex "manifest/js.manifest" %>
+  <% includeindex "manifest/css.manifest" %>
+  <% include "common_meta.tmpl" %>
+  <head>
+    <title>Test channels</title>
+    <% call common_meta %>
+    <% include "common_script.tmpl" %>
+  </head>
+  <body>
+    <div>
+      <div>Joined channels (there may be more channels available which are not yet joined):</div>
+      <% for channels %>
+        <div>
+          <a href="/channel/<% #id %>"><% #name %></a>
+        </div>
+      <% end %>
+    </div>
+
+    <hr>
+
+    <div>
+      <div>Group and channel tree:</div>
+      <% for all-channels %>
+        <div>
+          <div><a href="/group_details?id=<% e#group-id %>"><% #group-name %></a></div>
+          <% if channels %>
+            <ul>
+              <% for channels %>
+                <li><a href="/channel/<% e#channel-id %>"><% #channel-name %></a></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <hr>
+
+    <form method="post" action="/createchannel">
+      <div>
+        <div>Create channel:</div>
+        <div>
+          <label for="group-select">Group:</label>
+          <select id="group-select" name="group">
+            <% for groups %>
+              <option value="<% #id %>"><% #name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <input id="channel-name" type="text" name="name" size="40">
+        </div>
+        <div>
+          <input type="submit" value="Create">
+        </div>
+      </div>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<% include "common_meta.tmpl" %>
+  <head>
+    <% call common_meta %>
+    <% includeindex "manifest/css.manifest" %>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <title>User settings</title>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="potato-basic">
+    <div>
+      <% if api-token %>
+        API token: <code><% #api-token %></code>
+      <% else %>
+        No API token
+      <% end %>
+    </div>
+    <div>
+      <form method="post" action="/request_api_token">
+        <input type="submit" value="Request new API token">
+      </form>
+    </div>
+
+    <hr>
+
+    <form method="post" action="/upload_image" enctype="multipart/form-data">
+      <div>
+        <% if image-assigned-p %>
+          Current photo: <img src="<% r#image-url %>">
+        <% else %>
+          No photo set
+        <% end %>
+      </div>
+      <div>
+        Photo: <input type="file" name="photo" size="40">
+      </div>
+      <div>
+        <input type="submit" value="Upload">
+      </div>
+    </form>
+
+    <hr>
+
+    <form method="post">
+      <div>
+        Your name: <input type="text" name="description" value="<% #description %>">
+        <% if description-error %>
+          <div style="color: red;"><% #description-error %></div>
+        <% end %>
+      </div>
+
+      <hr>
+
+      <div>
+        <div>New password: <input type="password" name="password1" size="20"></div>
+        <div>Again: <input type="password" name="password2" size="20"></div>
+        <% if password-error %>
+          <div style="color: red;"><% #password-error %></div>
+        <% end %>
+        <% if password-message %>
+          <div><% #password-message %></div>
+        <% end %>
+        <div><input type="submit" value="Update"></div>
+      </div>
+    </form>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

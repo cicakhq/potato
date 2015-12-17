@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <% include "common_meta.tmpl" %>
+  <head>
+    <title>Domain invite</title>
+    <% call common_meta %>
+  </head>
+  <body>
+    <a href="/">Back</a>
+    <p>
+      This is the invitation page for domain <% #domain-name %>. It is
+      only shown to a user which has the right to join this domain, but
+      still has not actively done so.
+    </p>
+    <p>
+      The source for this page is available in <code>domain-invite.tmpl</code>
+    </p>
+    <p>
+      <form method="post" action="/join_domain">
+        Click here to join domain:
+        <input type="hidden" name="id" value="<% #domain-id %>">
+        <input type="submit" value="Join">
+      </form>
+    </p>
+  </body>
+</html>

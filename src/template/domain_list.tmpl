@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<% include "common_meta.tmpl" %>
+  <head>
+    <% call common_meta %>
+    <title>Domains</title>
+    <% includeindex "manifest/css.manifest" %>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="potato-basic">
+    <a href="/">Back</a>
+    <div>You are currently a member of the following domains:</div>
+    <div>
+      <% for domains %>
+        <div>
+          <a href="/domains/<% e#id %>"><% #name %></a>
+          <%
+             if (role == :PRIVATE) #"This is your private domain"
+             else                  #"Standard domain"
+             end
+          %>
+        </div>
+      <% end %>
+    </div>
+
+    <hr>
+
+    <div>
+      <div>The following domains are available for you to join:</div>
+      <div>
+        <% for available-domains %>
+          <div>
+            <form method="post" action="/join_domain">
+              <% #name %>
+              <input type="hidden" name="id" value="<% e#id %>">
+              <input type="submit" value="Join">
+            </form>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>
+

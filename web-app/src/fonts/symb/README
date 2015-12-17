@@ -1,0 +1,2 @@
+brew install fontforge ttf2eot
+npm install ttf2woff -g

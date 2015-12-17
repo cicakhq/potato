@@ -1,0 +1,71 @@
+# EMACS and IntelliJ
+*~
+.#*
+
+# COMMON LISP
+*.fasl
+*.abcl
+*.lx64fsl
+quicklisp/tmp/
+quicklisp/local-projects/
+quicklisp/dists/quicklisp/
+server-config.lisp
+.cache/
+/quicklisp.lisp
+
+# APPLICATION RELATED
+*.log
+*.log.*
+
+# DEPLOYMENT
+deploy/ansible/cache/*cache
+deploy/ansible/vars/custom.yml
+.vagrant/
+deploy/ansible/roles/solr/files/solr-4.10.0.tgz
+deploy/ansible/roles/solr/files/jdk-8u20-linux-x64.rpm
+public/
+src/template/manifest/*.manifest
+potato.bin
+
+# NODE, BROCCOLI AND BOWER
+web-app/node_modules
+web-app/bower_components
+web-app/.cljs_rhino_repl
+
+## START OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Mac client
+xcuserdata
+*.xcuserstate
+
+## END OS X
+
+# VirtualBox files
+.bash_history
+quicklisp/
+
+# Potato specific
+cache/
+*.pid
+.idea
+local-config*.lisp

@@ -1,0 +1,15 @@
+<% #| -*- html -*- |# %>
+<% #| This form is displayed when a github link is posted to the channel |# %>
+<% #| Available variables: DESCRIPTION, URL, HOMEPAGE, OWNER-AVATAR-URL, OWNER-URL |# %>
+<% #| HOMEPAGE can be NIL if no homepage has been assigned |# %>
+<picture>
+  <div>
+    Github description: <a href="<% #url %>"><% #description %></a>
+  </div>
+  <% if homepage %>
+    <div>
+      <a href="<% #homepage %>">Homepage link</a>
+    </div>
+  <% end %>
+  <% #| <div><a href="<% #owner-url %>"><img src="<% #owner-avatar-url %>"></a></div> |# %>
+</picture>

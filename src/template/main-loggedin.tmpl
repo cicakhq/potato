@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<% include "common_meta.tmpl" %>
+<% call ie9 %>
+<head>
+  <% includeindex "manifest/css.manifest" %>
+  <title>Potato: teams group chat</title>
+  <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+  <% call common_meta %>
+</head>
+<body>
+  <% include "potato_header.tmpl" %>
+  <main id="potato-menu">
+    <% if ! user-registered-p %>
+    <section id="not-activated">
+      You are not yet activated. If you did not yet receive your activation email, click
+      <a href="/send_activation_email">here</a> to resend it to
+      <% #user-email %>.
+    </section>
+    <% end %>
+
+    <% if new-login %>
+      <section>
+        You have not yet configured your account. In particular, you should update your user name.
+        <a href="/settings">Configure account.</a>
+      </section>
+    <% end %>
+
+    <section id="domains">
+      <h2>Available channels</h2>
+      <ul>
+        <% for domain-tree %>
+          <% var domain-name = domain-name %>
+          <% if ! (domain-role == "PRIVATE") %>
+            <% for groups %>
+              <% if ! (group-type == :private) %>
+                <% for channels %>
+                  <li> <a href="/channel/<% e#channel-id %>"><% #,domain-name %> – <% #channel-name %></a> </li>
+                <% end %>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </ul>
+    </section>
+
+    <% if allow-create-domain %>
+    <section id="create-domain">
+      <h2>Domains</h2>
+      <p>
+        Potato implements the concept of a "domain" (This is an
+        unfortunate name, since the word is so severely overloaded.
+        Perhaps "site" would be a better word) which represents a
+        high-level separation between different groups of users.
+      </p>
+      <p>
+        Users can be member of multiple domains, but users that are
+        not members of the same domain are effectively hidden from
+        each other in every respect. Thus, if more that one
+        organisation shares a Potato server (a hosted installation),
+        each organisation will use their own domain.
+      </p>
+      <p>
+        If you want to create a domain, you can do that
+        here: <a href="/domain_create">Create a new domain</a>
+      </p>
+    </section>
+    <% end %>
+
+    <section id="settings">
+      <h2>Settings</h2>
+      <ul>
+<!--
+        <li><a href="/domains">New domains you can join</a></li>
+-->
+        <li><a href="/settings">User settings</a></li>
+      </ul>
+    </section>
+  </main>
+  <% include "potato_footer.tmpl" %>
+</body>
+</html>

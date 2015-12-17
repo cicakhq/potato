@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<% include "common_meta.tmpl" %>
+<html>
+  <head>
+    <% includeindex "manifest/css.manifest" %>
+    <title>Create new domain</title>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <% call common_meta %>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="potato-menu">
+      <section>
+        <h2>About domain creation</h2>
+        <p>
+          <em><strong>Note:</strong> this page only provides the most
+            basic functionality. The system has a more complex
+            rights-system where a domain administrator can create groups
+            of users with private channels within the scope of a single
+            domain. None of this functionality is currently exposed. As
+            always, patches are welcome.</em>
+        </p>
+        <p>
+          After creating a new domain, you will be the sole
+          administrator of that domain, and you will be able to invite
+          users to join the domain.
+        </p>
+      </section>
+      <section>
+        <h2>Create domain</h2>
+        <form method="post">
+          <p>
+            <div>Name of the domain: <input type="text" name="name" size="40"></div>
+            <div><button type="submit">Create</button></div>
+          </p>
+        </form>
+      </section>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

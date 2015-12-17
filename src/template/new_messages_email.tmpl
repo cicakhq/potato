@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>New notifications</title>
+  </head>
+  <body>
+    <p>You have received <% #num-messages %> notification<% if (num-messages > 1) #"s" end %> on Potato.</p>
+
+    <ul>
+    <% for messages %>
+      <li>
+        <div>From: <% #sender-name %> in channel <a href="<% #channel-url %>"><% #channel-name %></a></div>
+        <div><% r#text %></div>
+      </li>
+    <% end %>
+    <% if (remaining-messages > 0) %>
+      <li>Another <% #remaining-messages %> message<% if (remaining-messages > 1) #"s" end %> not displayed</li>
+    <% end %>
+    </ul>
+  </body>
+</html>

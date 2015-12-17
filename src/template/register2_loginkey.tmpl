@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<% #| This file is displayed after a user has entered his email            |# %>
+<% #| address and the verfication email has been sent. The page includes a |# %>
+<% #| form where the activation code can be typed directly.                |# %>
+
+<html lang="en">
+  <% include "common_meta.tmpl" %>
+  <head>
+    <% call common_meta  %>
+    <% includeindex "manifest/css.manifest" %>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <title>Register</title>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="register-key">
+      <h1>To login into your account an email was sent to: <b><% #email  %>.</b></h1>
+      <h2>You can either follow the link in the email, or paste the code here:</h2>
+      <form class="form-signin" method="post" action="/register2_accept">
+        <fieldset>
+          <input type="hidden" name="email" value="<% #email %>">
+          <input type="text" size="40" name="code" placeholder="Key code">
+          <input type="submit" value="Login">
+        </fieldset>
+      </form>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

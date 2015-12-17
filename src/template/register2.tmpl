@@ -1,0 +1,23 @@
+<% include "common_meta.tmpl" %>
+<!DOCTYPE html>
+<% call ie9 %>
+<html lang="en">
+  <head>
+    <% call common_meta %>
+    <% includeindex "manifest/css.manifest" %>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <title>Register</title>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main>
+    <form method="post" class="form-signin" role="form">
+      <fieldset>
+        <input type="text" size="40" name="email" placeholder="Email Address">
+        <input type="submit" value="Sign up for Free">
+      <fieldset>
+    </form>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

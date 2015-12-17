@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<% include "common_meta.tmpl" %>
+<html>
+  <head>
+    <% includeindex "manifest/css.manifest" %>
+    <title>Domain <% #domain-name %></title>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <% call common_meta %>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="potato-menu">
+      <section id="welcome">
+        <% if new-login %>
+        <p>
+          You have not yet configured your account. In particular, you should update your user name.
+          <a href="/settings">Configure account.</a>
+        </p>
+        <% end %>
+
+        <h2>Welcome to <% #domain-name %></h2>
+
+        <% if domain-admin-p %>
+        <p>
+          You are an administator of this domain.
+        </p>
+        <% end %>
+      </section>
+
+      <section id="channel-list">
+        <h3>Available channels</h3>
+        <ul>
+          <% for groups for channels %>
+          <li><a href="/channel/<% #channel-id %>"><% #channel-name %></a></li>
+          <% end end %>
+        </ul>
+      </section>
+
+      <% if domain-admin-p %>
+      <section id="administation">
+        <h3>Administation</h3>
+        <p>
+          You can invite individual users to this domain or you can
+          specify that any user with a given email domain (i.e. the part
+          after the @) can join this domain.
+        </p>
+        <p>
+          Once a user has been invited, all you have to do is to give
+          the URL to this page (<a href="<% #domain-url %>"><% #domain-url %></a>) to the user and they
+          will be able to join. Note that this site will never send
+          invitation emails to the users directly.
+        </p>
+
+        <h4>Invite a user by email address</h4>
+        <form method="post" action="/domain/<% e#domain-id %>/invite_by_email_address">
+          <p>
+            <div>
+              Email address: <input type="text" name="email" size="40">
+              <button type="submit">Invite user</button>
+            </div>
+          </p>
+          <p>
+            Outstanding invitations:
+            <ul>
+            <% for email-invite-list %>
+            <li><% #email %></li>
+            <% end %>
+            </ul>
+          </p>
+        </form>
+
+        <h4>Invite any user with a given email domain</h4>
+        <form method="post" action="/domain/<% e#domain-id %>/invite_by_domain">
+          <p>
+            <div>
+              Email domain: <i>username @</i>&nbsp;<input type="text" name="domain" size="40">
+              <button type="submit">Invite users</button>
+            </div>
+          </p>
+          <p>
+            Invited email comain names:
+            <ul>
+              <% for domain-invite-list %>
+              <li><% #domain %></li>
+              <% end %>
+            </ul>
+          </p>
+        </form>
+      </section>
+      <% end %>
+    </main>
+
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

@@ -1,0 +1,147 @@
+aside#toolbar {
+    margin:              0;
+    min-height:          100%;
+    width:               @side-nav-width;
+    overflow-y:          hidden;
+    flex:                0 0 @side-nav-width;
+    border-left-width:   0px;
+    border-left-style:   solid;
+    overflow-x:          hidden;
+    display:             flex;
+    flex-direction:      column;
+    background-color:    lighten(@glaciergray, 19%);
+
+    section#search {
+        @search-height:  @line-height;
+        @padding:        2*@font-size;
+        border:          0;
+        padding:         0;
+        flex:            0 0 @header-height;
+        position:        relative;
+
+        display:         flex;
+        flex-direction:  column;
+        height:          @header-height;
+        align-self:      center;
+        padding-right:   6px;
+        padding-left:    6px;
+        overflow-x:      hidden;
+
+        &::before {
+            position:    absolute;
+            top:         (@header-height - @search-height)/2;
+            left:        @padding/2;
+            font-size:   @font-size;
+            font-family: FontAwesome;
+            content:     "\f002";
+            z-index:     10;
+            color:       @glaciergray;
+        }
+
+        #search-input {
+            margin-top:     (@header-height - @search-height - 4px)/2;
+            padding:       2px @padding;
+            font-size:     @font-size;
+            max-width:     @side-nav-width - 2*@padding - 2px - 12px;
+            height:        @line-height;
+            border-radius: 40px;
+            background:    @white;
+            border:        1px solid @titanium;
+            position:      relative;
+        }
+
+        .search-close {
+            float: right;
+            border: 0;
+        }
+
+        .search-results {
+            display:       none;
+            position:      fixed;
+            width:         24em;
+            max-height:    70%;
+            min-height:    30px;
+            line-height:   21px;
+            top:           40px;  // FIXME
+            right:         5px;  // FIXME
+            padding-left:  10px;
+            padding-right: 10px;
+            padding-top:   10px;
+            border:        1px solid;
+            z-index:       1000;
+            overflow-y:    scroll;
+            background:    #f0f0f0;
+
+            figure.search-result-message {
+                position:      relative;
+                margin:        0;
+                margin-bottom: 0.5em;
+                padding:       5px;
+                border:        1px solid;
+                border-radius: 3px;
+                cursor:        pointer;
+                background:    #f8ffff;
+
+                &:hover {
+                    background: #e0e0e0;
+                }
+
+                figcaption.search-result-header {
+                    font-size: 0.9em;
+
+                    address {
+                        display:     inline-block;
+                        font-style:  normal;
+                        font-weight: 700;
+                    }
+
+                    time {
+                        display:   inline-block;
+                        float:     right;
+                        font-size: 0.8em;
+                    }
+                }
+
+                .search-result-content em { }
+
+                blockquote.search-result-content {
+                    margin:  0;
+                    padding: 0;
+                }
+            }
+        }
+    }
+
+    section#roster {
+        height:            100%;
+        border-left:       1px solid lighten(@glaciergray, 10%);
+        padding:           0.8*@font-size;
+        overflow-y:        auto;
+        flex:              1 1 auto;
+
+        h2 {
+            margin:            0;
+            padding:           0;
+            margin-bottom:     0.4*@line-height;;
+            text-transform:    uppercase;
+            font-size:         0.7*@font-size;
+        }
+
+        ul {
+            margin:            0;
+            padding:           0;
+            list-style:        none;
+            font-size:         0.8 * @font-size;
+            line-height:       @line-height;
+            cursor:            pointer;
+
+            li:before {
+                font-size:       0.5*@font-size;
+                font-family:     FontAwesome;
+                content:         "\f111";
+                margin-right:    @font-size/4;
+            }
+        }
+    }
+
+}

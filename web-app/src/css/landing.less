@@ -1,0 +1,115 @@
+@import (inline) "include/normalize.css";
+@import "themes/marsala-light";
+@import "include/fonts";
+
+@import "include/potato";
+
+html, body {
+    line-height:             1.2*@line-height;
+}
+
+@import "include/header";
+@import "include/footer";
+
+main#landing {
+    @spacer:                 50px;
+
+    padding-top:             10px;
+    padding-bottom:          3*@spacer;
+    height:                  100%;
+    text-align:              center;
+    display:                 flex;
+    flex-direction:          column;
+    align-items:             center;
+    justify-content:         center;
+    overflow-y:              auto;
+
+    h1 {
+        color:               darken(@tangerine, 30%);
+    }
+
+    fieldset {
+        margin:              0 auto;
+        padding:             0;
+        padding-top:         @spacer;
+        border:              0;
+        text-align:          left;
+
+        input[type="text"] {
+            font-weight:     700;
+            border:          2px solid;
+            padding:         0;
+            outline:         0;
+            padding-left:    10px;
+            border-radius:   .25rem;
+            margin-right:    5px;
+            font-size:       1.1rem;
+            height:          48px;
+            width:           20 * @font-size;
+            transition:      border-color .1s;
+            box-sizing:      border-box;
+            border-color:    @tangerine;
+            color:           @black;
+            &:hover {
+                border:      2px solid darken(@tangerine, 20%);
+            }
+        }
+
+        input[type="text"]::-webkit-input-placeholder { /* WebKit browsers */
+            color:    @titanium;
+        }
+
+        input[type="text"]::-moz-placeholder { /* Mozilla Firefox 19+ */
+            opacity:  1;
+            color:    @titanium;
+        }
+
+        input[type="text"]:-ms-input-placeholder { /* Internet Explorer 10+ */
+            color:    @titanium;
+        }
+
+        #button {
+            background-color: @tangerine;
+            color:            @white;
+            border-color:     darken(@tangerine, 10%);
+        }
+
+        input[type="submit"] {
+            font-weight:      700;
+            border:           2px solid;
+            border-radius:    .25rem;
+            cursor:           pointer;
+            height:           48px;
+            font-size:        1.2 * @font-size;
+            width:            10  * @font-size;
+            margin:           0;
+            margin-top:       15px;
+            padding:          0;
+            #button;
+
+            &:hover {
+                border:        2px solid;
+                border-color:  darken(@tangerine, 20%);
+            }
+        }
+
+        p {
+            color:            @sandstone;
+            margin:           0;
+            padding-top:      @font-size/2;
+            font-size:        0.9 * @font-size;
+        }
+    }
+}
+
+main#potato-basic {
+    margin:            0 auto;
+    padding-left:      10px;
+    padding-right:     10px;
+    flex:              1;
+    padding:           0;
+    border:            0;
+    width:             90%;
+    overflow-y:        auto;
+}
+

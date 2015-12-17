@@ -1,0 +1,130 @@
+* Calling convention
+
+All API calls have the prefix =/api/1.0=. The header =api-token= must be
+set to the value of the API token as set in the =/settings= page.
+
+* API calls
+
+** Generic functions
+*** Get protocol version
+
+URL: /version
+
+GET: Returns version information
+
+** Channels
+*** List all channels
+
+URL: /channels
+
+GET: Returns a list of all channels the user have access to.
+
+PARAMETERS: sub: If set to "1", include subscription information for the current user.
+
+The result will be a nested structure containing a list of all groups
+the user is a member of, and within each entry a list of all channels
+in that group:
+
+#+BEGIN_SRC javascript
+[
+    {
+        "id": "8b8bf1d73dd5841bd32ebee0534f1326",
+        "name": "Foo",
+        "channels": [
+            {
+                "id": "8b8bf1d73dd5841bd32ebee0534f291c",
+                "name": "Foo"
+            },
+            {
+                "id": "8b8bf1d73dd5841bd32ebee053ceceb0",
+                "name": "Bar foo"
+            }
+        ]
+    },
+    {
+        "id": "8b8bf1d73dd5841bd32ebee053cec042",
+        "name": "Test test",
+        "channels": []
+    }
+]
+#+END_SRC
+
+*** List joined channels
+
+URL: /channels/joined
+
+GET: Returns a list of channels that the user has joined.
+
+*** List users in channel
+
+URL: /channels/CHANNEL/users
+
+GET: Returns a list of all users in channel CHANNEL
+
+*** User channel membership
+
+URL: /channels/CHANNEL/users/USER
+
+GET: Returns username and id of USER, if in the channel
+PUT: Makes a USER join CHANNEL
+DELETE: Removes the user from CHANNEL
+
+** Groups
+*** List groups
+
+URL: /groups
+
+GET: Returns a list of all groups available to the user
+
+*** List channels in a group
+
+URL: /groups/GROUP/channels
+
+GET: return a list of channels in GROUP
+
+*** Group details
+
+URL: /groups/GROUP
+
+GET: Returns group details for GROUP
+
+** Messages
+*** Post a message
+
+URL: /channels/CHANNEL/create
+
+POST: Post a new message on CHANNEL
+
+The content should be a JSON structure of the following form:
+
+#+BEGIN_SRC json
+{
+    text: "this is the content of the message"
+}
+#-END_SRC
+
+*** Read message history
+
+URL: /channels/CHANNEL/history
+
+GET: Read history
+
+| Parameter | Default | Function                         |
+|-----------+---------+----------------------------------|
+| from      | now     | timestamp or "now"               |
+| num       | 10      | Max number of messages to return |
+
+*** Poll for updates
+
+URL: /channels/CHANNEL/updates
+
+GET: Block while waiting for updates.
+
+The format of the updates follow the [[http://www.html5rocks.com/en/tutorials/eventsource/basics/][EventSource]] standard.
+
+** Invitations
+*** Reply to invitations
+
+URL: invitations/GROUP/{accept,reject}
+
+PUT: reply to the invitation

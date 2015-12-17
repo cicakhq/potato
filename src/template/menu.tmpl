@@ -1,0 +1,50 @@
+<% include "common_meta.tmpl" #| -*- html -*- |# %>
+<!DOCTYPE html>
+<% call ie9 %>
+<head>
+  <% includeindex "manifest/css.manifest" %>
+  <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+  <title>Potato: teams group chat</title>
+  <% call common_meta %>
+</head>
+<body>
+  <% include "potato_header.tmpl" %>
+  <main id="potato-menu">
+    <% if ! user-registered-p %>
+    <section id="not-activated">
+      You are not yet activated. If you did not yet receive your activation email, click
+      <a href="/send_activation_email">here</a> to resend it to
+      <% #user-email %>.
+    </section>
+    <% end %>
+    <section id="domains">
+      <h2>List of domains</h2>
+      <ul><% for domain-tree var domain-name = domain-name %>
+        <% if ! (domain-role == "PRIVATE" ) %>
+          <% for groups %>
+            <% if ! ( group-type == :private) %>
+              <% for channels %>
+                <li> <a href="/channel/<% e#channel-id %>"><% #,Domain-name %> – <% #channel-name %></a> </li>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %></ul>
+    </section>
+    <section id="settings">
+      <h2>Settings</h2>
+      <ul>
+        <li id="username"><a href="/settings">Set your display name</a></li>
+        <script type="application/javascript">
+          var username = "<% #user-description %>";
+          if (username.indexOf("@") < 0) {
+            $("#username").hide( true);
+          }
+        </script>
+        <li><a href="/domains">Domains you can join</a></li>
+      </ul>
+    </section>
+  </main>
+  <% include "potato_footer.tmpl" %>
+</body>
+</html>

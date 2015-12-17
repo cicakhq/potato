@@ -1,0 +1,27 @@
+(in-package :potato-tests)
+
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+
+(define-test notification-message-cd->json-with-type (:contexts #'user-context)
+  (let* ((cd-content '((:|_id|
+                        . "msg-b5bc0d28aab7a91dca71a91459db788e-2014-11-14T02:45:35.096154Z_00000")
+                       (:|_rev| . "1-0faa713bae36865781a7e4cf18c706ec")
+                       (:|type| . "message")
+                       (:|created_date| . "2014-11-14T02:45:35.096154Z")
+                       (:|from| . "user-lokedhs@gmail.com") (:|from_name| . "Elias")
+                       (:|channel| . "b5bc0d28aab7a91dca71a91459db788e")
+                       (:|text| . "footesting")))
+         (content (potato.core:make-message-from-couchdb cd-content)))
+    (labels ((test-result (v)
+               (assert-equal "msg-b5bc0d28aab7a91dca71a91459db788e-2014-11-14T02:45:35.096154Z_00000"
+                             (st-json:getjso "id" v))
+               (assert-equal "2014-11-14T02:45:35.096154Z" (st-json:getjso "created_date" v))
+               (assert-equal "user-lokedhs@gmail.com" (st-json:getjso "from" v))
+               (assert-eql :false (st-json:getjso "use_math" v))))
+      (let ((res (potato.core::notification-message-cd->json-html content)))
+        (test-result res)
+        (assert-equal "<p>footesting</p>" (st-json:getjso "text" res)))
+      (let ((res (potato.core::notification-message-cd->json-text content)))
+        (test-result res)
+        (assert-equal "footesting" (st-json:getjso "text" res)))
+      (test-result (potato.core::notification-message-cd->json-alist content)))))

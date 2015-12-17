@@ -1,0 +1,35 @@
+@symb-font-path:  '/assets/fonts/symb';
+@noto-font-path:  '/assets/fonts/Noto';
+
+@font-face {
+    font-family: 'Symbola';
+    src: url('@{symb-font-path}/symb.eot');
+    src: url('@{symb-font-path}/symb.eot?#iefix') format('embedded-opentype'),
+         url('@{symb-font-path}/symb.woff') format('woff'),
+         url('@{symb-font-path}/symb.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal
+}
+
+@font-face {
+    font-family: 'Emoji';
+    src: local('Apple Color Emoji'),
+         local('Noto Color Emoji'),
+         url('@{noto-font-path}/NotoColorEmoji.ttf') format('truetype'),
+         local(Symbola),
+         url('@{symb-font-path}/symb.eot?#iefix') format('embedded-opentype'),
+         url('@{symb-font-path}/symb.woff') format('woff'),
+         url('@{symb-font-path}/symb.ttf') format('truetype');
+    unicode-range: @emoji-unicode-ranges;
+}
+
+@emoji-size:   1.1em;
+@emojiBW-size: 1.3em;
+
+@font-face {
+    font-family: 'EmojiBW';
+    src: url('@{symb-font-path}/symb.eot?#iefix') format('embedded-opentype'),
+         url('@{symb-font-path}/symb.woff') format('woff'),
+         url('@{symb-font-path}/symb.ttf') format('truetype');
+    unicode-range: @emoji-unicode-ranges;
+}

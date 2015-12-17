@@ -1,0 +1,36 @@
+ <% include "common_meta.tmpl"  %>
+<!DOCTYPE html>
+<% call ie9 %>
+<html lang="en"><head>
+    <% call common_meta %>
+    <title>Register</title>
+    <link href="/assets/css/register.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <form method="post" class="form-signin" role="form">
+        <h2 class="form-signin-heading">Please register</h2>
+        <input type="hidden" name="activate-api" value="<% if activate-api #"1" else #"0" end %>">
+        <% if activate-api %>
+          <input type="hidden" name="redirect-path" value="<% #redirect-path %>">
+        <% end %>
+        <input type="email" class="form-control"
+               placeholder="Email address"
+               value="<% if email #email end %>"
+               required autofocus name="email"/>
+        <% if email-error %><span><% #email-error %></span><% end %>
+        <input type="password" class="form-control"
+               placeholder="Password" required name="password1"/>
+        <% if password-error %><span><% #password-error %></span><% end %>
+        <input type="description" class="form-control"
+               placeholder="Display name" required name="description"
+               value="<% if description #description end %>"/>
+        <% if description-error %>
+          <span><% #description-error %></span>
+        <% end %>
+        <button class="btn btn-lg btn-primary btn-block"
+                type="submit" value="Register">Register</button>
+      </form>
+    </div> <!-- /container -->
+  </body>
+</html>

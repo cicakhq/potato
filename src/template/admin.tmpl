@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% includeindex "manifest/js.manifest" %>
+  <% includeindex "manifest/css.manifest" %>
+  <%
+     var dev = dev
+  %>
+  <title>Admin</title>
+  <script>
+    domainId = "<% r#domain-id %>";
+    <% if ,dev %>
+      isDev = true;
+    <% end %>
+  </script>
+  <style>
+    .group-editor-users {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .group-editor-left-panel {
+      flex: 0 0 auto;
+    }
+
+    .group-editor-right-panel {
+      flex: 1 1 auto;
+    }
+
+    .group-editor-search-results-entry {
+      cursor: pointer;
+    }
+
+    .group-editor-search-results-entry:hover {
+      background: #e0e0e0;
+    }
+
+    .group-editor-table-button {
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .group-editor-table-button:hover {
+      background: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <!--[if gt IE 9)]><!--> <noscript> <!--<![endif]-->
+  <div> Modern browser with Javascript support required. </div>
+  <!--[if gt IE 9)]><!--> </noscript> <!--<![endif]-->
+  <!--[if gt IE 9)]><!-->
+  <div id="admin-root" tabindex="0">
+    <div id="channels-editor"Loading</div>
+    <div id="group-admin">Loading</div>
+  </div>
+  <script src="/assets/js/<% #index "manifest/js.manifest.imports.js" %>"></script>
+  <% if ,dev %>
+    <script src="http://localhost:10555/js/admin.js" type="text/javascript"></script>
+  <% else %>
+    <script src="<% #"/assets/js/" #index "manifest/js.manifest.admin.js" $"admin.js" %>"></script>
+  <% end %>
+  <!--<![endif]-->
+</body>
+</html>

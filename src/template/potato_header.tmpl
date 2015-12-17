@@ -1,0 +1,28 @@
+<% #| -*- html -*- |# %>
+<header id="potato-head">
+  <hgroup id="potato-brand">
+    <h1><a href="/">potato</a></h1>
+    <h2>Delicious conversations</h2>
+  </hgroup>
+  <nav id="potato-links">
+    <% if logged-in-p %>
+    <section id="user">
+      <p id="welcome">Welcome <% #user-description %></p>
+      <p>
+        <span id="settings"><a href="/settings">User settings</a></span>
+        <span id="logout"><a href="/logout">Logout</a></span>
+      </p>
+    </section>
+    <% else %>
+    <section id="links">
+      <ul id="marketing">
+        <li><a href="/#tour">Tour</a></li>
+        <li><a href="/downloads">Downloads</a></li>
+      </ul>
+      <ul id="connect">
+        <li><a href="/login">Login</a></li>
+      </ul>
+    </section>
+    <% end %>
+  </nav>
+</header>

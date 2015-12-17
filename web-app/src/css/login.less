@@ -1,0 +1,230 @@
+@import (inline) "include/normalize.css";
+@import "themes/marsala-light";
+@import "include/fonts";
+
+@header-height: 80px;
+@margin-side:   10px;
+@margin-top:    15px;
+@image-width:   70px;
+
+html, body {
+    height:           100%;
+    width:            100%;
+    line-height:      1.2*@line-height;
+    background-color: lighten(@glaciergray, 20%);
+    font:             @font-size @fonts-list;
+    color:            @black;
+}
+
+body {
+    display:          flex;
+    flex-direction:   column;
+}
+
+@import "include/header.less";
+
+@media screen and (max-width: 500px) {
+    form#login {
+        p#email::before,
+        p#password::before {
+            left:  -8vw !important;
+            width: 8vw  !important;
+        }
+    }
+}
+
+main {
+    flex:              0 0 auto;
+    margin-top:        5%;
+    display:           flex;
+    width:             100%;
+    flex-direction:    row;
+    justify-content:   center;
+
+    fieldset {
+        margin:           0;
+        padding:          0;
+        outline:          0;
+        border:           0;
+        min-width:        320px - 4*@font-size;  // small iPhone
+        max-width:        50%;
+        background-color: @white;
+        //padding-top:      @font-size;
+        padding-top:      @font-size;
+        padding-bottom:   @font-size;
+        padding-right:    6*@font-size;
+        padding-left:     6*@font-size;
+        border-radius:    @line-height;
+        border:           1px solid lighten(@glaciergray, 15%);
+
+        legend {
+            position:         relative;
+            text-align:       center;
+            margin-top:       0;
+            padding-left:     2*@font-size;
+            padding-right:    2*@font-size;
+            padding-top:      0.2*@line-height;
+            padding-bottom:   0.2*@line-height;
+            font-size:        2*@font-size;
+            border:           1px solid lighten(@glaciergray, 18%);
+            border-radius:    10px;
+            background-color: @white;
+            font-weight:      600;
+        }
+    }
+
+}
+
+form#login {
+    #email label,
+    #password label {
+        display:        none;
+    }
+
+    p#email,
+    p#password,
+    p#remember,
+    p#submit {
+        position:         relative;
+    }
+
+    p#email:before,
+    p#password:before {
+        position:         absolute;
+        left:             -3*@font-size;
+        font-family:      'FontAwesome', sans-serif;
+        background-color: @white;
+        color:            @black;
+        display:          block;
+        height:           2*@line-height;
+        line-height:      2*@line-height;
+        text-align:       center;
+        width:            3*@font-size;
+        font-size:        140%;
+    }
+
+    p#email::before {
+        content:          "\f007";
+    }
+
+    p#password::before {
+        content:          "\f023";
+    }
+
+    #email input, #password input, #submit input {
+        height:             2*@line-height;
+    }
+
+    @keyframes border-pulsate {
+        0%   { border-color: lighten(@tangerine, 20%); }
+        20%  { border-color: @tangerine; }
+        40%  { border-color: darken(@tangerine, 20%); }
+        80%  { border-color: @tangerine; }
+        90%  { border-color: lighten(@tangerine, 10%); }
+        100% { border-color: lighten(@tangerine, 20%); }
+    }
+
+    input[type="text"], input[type="password"] {
+        width                : 100%;
+        padding              : 0;
+        border               : none;
+        outline              : 0;
+        font-family          : @fonts-list;
+        font-size            : @font-size;
+        line-height          : @line-height;
+        -webkit-appearance   : none;
+        background-color     : lighten(@glaciergray, 10%);
+        border               : 2px solid lighten(@glaciergray, 10%);
+        border-radius        : 0px @font-size/2 @font-size/2 0px;
+        color                : @black;
+        padding-left         : @font-size;
+        box-sizing           : border-box;
+
+        &:focus {
+            background-color : lighten(@glaciergray, 18%);
+            border           : 2px solid lighten(@tangerine, 12%);
+            animation        : border-pulsate 4s infinite;
+        }
+    }
+
+    p#submit {
+    }
+
+    @keyframes color-pulsate {
+        0%   { color: lighten(@custard, 10%); font-size: 1.1*@font-size;}
+        20%  { color: lighten(@custard, 20%); font-size: 1.11*@font-size;}
+        40%  { color: lighten(@custard, 50%); font-size: 1.12*@font-size; }
+        90%  { color: lighten(@custard, 10%); font-size: @font-size; }
+        100% { color: lighten(@custard, 5%);  font-size: 1.05*@font-size;}
+    }
+
+
+    input[type="submit"] {
+        width:              100%;
+        border:             none;
+        padding:            0;
+        -webkit-appearance: none;
+        border-radius:      @font-size/3;
+        background-color:   @tangerine;
+        color:              @white;
+        font-weight:        bold;
+        -webkit-appearance: none;
+        margin-bottom:      @line-height/4;
+        text-transform:     uppercase;
+        padding-left:       @font-size;
+        box-sizing:         border-box;
+
+        &:focus {
+            color:             @custard;
+            animation        : color-pulsate 4s infinite;
+        }
+    }
+
+    input[type="submit"]:hover {
+        background-color:   @treetop;
+    }
+
+    p#remember {
+        text-align:         right;
+        margin-bottom:      @line-height;
+    }
+
+    input[type="checkbox"] + label {
+        color:              @titanium;
+        font-style:         normal;
+        display:            inline-block;
+        margin-left:        @font-size/3;
+    }
+
+    input[type="checkbox"]:checked + label {
+        color:              @treetop;
+        background-color:   @custard;
+        font-style:         normal;
+        margin-left:        @font-size/3;
+    }
+}
+
+p#signup {
+    text-align: center;
+    font-style: italic;
+
+    &:after {
+        padding-left:  0.4*@font-size;
+        font-family:   'FontAwesome', sans-serif;
+        color:         @scubablue;
+        content:       "\f061";
+        font-style:    normal;
+    }
+
+    a {
+        color:           @scubablue;
+        text-decoration: none;
+        font-style:      normal;
+        font-weight:     700;
+        margin-left:     0.5*@font-size;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

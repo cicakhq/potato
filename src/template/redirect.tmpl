@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <% var url = redirect-location %>
+    <title>Redirect to <% #,url %></title>
+    <meta http-equiv="refresh" content="0; url=<% #,url %>">
+  </head>
+  <body>
+    If you are not being redirected, click <a href="<% #,url %>">here</a> to proceed.
+  </body>
+</html>
