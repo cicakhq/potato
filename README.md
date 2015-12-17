@@ -7,7 +7,7 @@ Delicious conversations platform in Common Lisp and ClojureScript.
   - Markdown-like syntax for messages
   - File uploads to S3 or local storage with image thumbnails in the channel
   - Inline maths based on MathJax
-  - Detection of URL's with automatic insertion of thumnails or description
+  - Detection of URL's with automatic insertion of thumbnails or description
     with built-in support for Wikipedia, Youtube, Guthub and XKCD. It is easy
     to add support for other sites
   - Email notifications sent to users after being mentioned or when they receive
