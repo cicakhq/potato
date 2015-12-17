@@ -6,35 +6,37 @@
 ;;;   (cljs-repl)
 
 (ns ^:figwheel-load potato.core
-    (:require [om.core :as om :include-macros true]
-              [om.dom :include-macros true]
-              [goog.dom]
-              [goog.dom.xml]
-              [goog.events]
-              [goog.events.EventType]
-              [goog.style]
-              [goog.dom.classlist]
-              [goog.ui.IdleTimer]
-              [goog.Uri]
-              [goog.Uri.QueryData]
-              [goog.History]
-              [goog.history.Html5History]
-              [cljs-http.client :as http]
-              [clojure.string]
-              [clojure.set]
-              [cljs.core.async  :as async]
-              [cljsjs.moment]
-              [cljs.pprint]
-              [potato.state]
-              [potato.urls]
-              [potato.eventsource2]
-              [potato.keyboard]
-              [potato.emoji]
-              [potato.preferences]
-              [potato.search]
-              [potato.fineuploader]
-              [potato.mathjax])
-    (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
+  (:use [cljs-hash.sha1 :only [sha1]])
+  (:require [om.core :as om :include-macros true]
+            [om.dom :include-macros true]
+            [goog.dom]
+            [goog.dom.xml]
+            [goog.events]
+            [goog.events.EventType]
+            [goog.style]
+            [goog.dom.classlist]
+            [goog.ui.IdleTimer]
+            [goog.Uri]
+            [goog.Uri.QueryData]
+            [goog.History]
+            [goog.history.Html5History]
+            [cljs-http.client :as http]
+            [clojure.string]
+            [clojure.set]
+            [cljs.core.async  :as async]
+            [cljsjs.moment]
+            [cljs.pprint]
+            [cljs-hash.goog]
+            [potato.state]
+            [potato.urls]
+            [potato.eventsource2]
+            [potato.keyboard]
+            [potato.emoji]
+            [potato.preferences]
+            [potato.search]
+            [potato.fineuploader]
+            [potato.mathjax])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defonce current-build-id (aget js/window "currentBuildId"))
 
@@ -1096,13 +1098,17 @@ highlighted-message - the message that should be highlighted (or
     (get counter 0)))
 
 (defn- make-draft-message [text-string html]
-  (let [current-user (:current-user (deref potato.state/global))]
+  (let [current-user (:current-user (deref potato.state/global))
+        hash (cljs.pprint/cl-format nil "~{~2,'0x~}" (cljs-hash.goog/sha1-bytes (str (:id current-user) "_" text-string)))]
+    (cljs.pprint/cl-format true "Hash result of: ~s: ~s"
+                           (str (:id current-user) "_" text-string)
+                           hash)
     {:id           (str draft-marker "draft:" (get-unique-id))
      :from         (:id current-user)
      :created_date (.format (.utc (js/moment)) "YYYY-MM-DDTHH:mm:ss.SSSZ")
      :text         text-string
      :raw_field    html
-     :hash         (.sha1 js/window (str (:id current-user) "_" text-string))
+     :hash         hash
      :unconfirmed  true}))
 
 (defn- send-with-retries [channel text-string html]
