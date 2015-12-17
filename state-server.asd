@@ -1,7 +1,7 @@
 (asdf:defsystem #:state-server
   :description "Server keeping the state of users in the channels"
   :author "Elias Martenson <lokedhs@gmail.com>"
-  :license "Proprietary"
+  :license "Apache"
   :serial t
   :depends-on (:bordeaux-threads
                :alexandria

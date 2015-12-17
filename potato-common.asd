@@ -1,7 +1,7 @@
 (asdf:defsystem #:potato-common
   :description "Common function shared by the different modules"
   :author "Elias Martenson <lokedhs@gmail.com>"
-  :license "Proprietary"
+  :license "Apache"
   :serial t
   :depends-on (:alexandria
                :bordeaux-threads

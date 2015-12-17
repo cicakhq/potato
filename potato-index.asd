@@ -1,7 +1,7 @@
 (asdf:defsystem #:potato-index
   :description "Index manager for Potato"
   :author "Elias Martenson <lokedhs@gmail.com>"
-  :license "Proprietary"
+  :license "Apache"
   :serial t
   :depends-on (:potato-common
                :alexandria

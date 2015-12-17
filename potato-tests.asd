@@ -1,7 +1,7 @@
 (asdf:defsystem #:potato-tests
   :description "Test cases for potato"
   :author "Elias Martenson <lokedhs@gmail.com>"
-  :license "Proprietary"
+  :license "Apache"
   :serial t
   :depends-on (:potato
                :fiveam)

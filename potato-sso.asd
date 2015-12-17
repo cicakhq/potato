@@ -1,7 +1,7 @@
 (asdf:defsystem #:potato-sso
   :description "SSO support for Potato"
   :author "Elias Martenson <lokedhs@gmail.com>"
-  :license "Proprietary"
+  :license "Apache"
   :serial t
   :depends-on (:cl-base64
                :trivial-ldap

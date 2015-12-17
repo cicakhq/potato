@@ -1,6 +1,6 @@
 (asdf:defsystem #:potato
     :description "Group chat application"
-    :license "Proprietary"
+    :license "Apache"
     :serial t
     :depends-on (:lofn
                  :clouchdb
