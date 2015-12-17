@@ -257,9 +257,9 @@
           (funcall init-fn parameters)))
 
       (alexandria:when-let ((cmd (getf options :cmd)))
-        (potato.common:generic-init)
+        (potato.common.application:start-component 'potato.common::generic)
         (with-readable-errors
-            (potato.commands:run-command cmd))
+          (potato.commands:run-command cmd))
         (uiop:quit 0))
 
       (cond ((getf options :potato)
