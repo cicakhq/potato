@@ -12,6 +12,10 @@ Delicious conversations platform in Common Lisp and ClojureScript.
     to add support for other sites
   - Email notifications sent to users after being mentioned or when they receive
     private messages if the user didn't read the messages
+  - Group-based permission system (the user interface for this is not complete yet)
+  - Message search based on Apache Solr
+  - Private messages are implemented as a special channel, giving the private chats
+    identical functionality as the main channels
   - API that allows for writing external clients
 
 # How to install
