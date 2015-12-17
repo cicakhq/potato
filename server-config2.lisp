@@ -32,7 +32,6 @@
                           (merge-pathnames #p"vendor/clouchdb-patch/src/" (truename "."))
                           (merge-pathnames #p"vendor/cl-rabbit/" (truename "."))
                           (merge-pathnames #p"vendor/cl-rabbit-async/" (truename "."))
-                          (merge-pathnames #p"vendor/cl-containers/" (truename "."))
                           (truename "."))
                         (symbol-value sym)))))))
 

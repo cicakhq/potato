@@ -1,34 +1,21 @@
 [submodule "vendor/lofn"]
 	path = vendor/lofn
 	url = https://github.com/lokedhs/lofn
-	branch = master
-[submodule "vendor/html5-notification"]
-	path = vendor/html5-notification
-	url = https://github.com/lokedhs/html5-notification
-	branch = master
 [submodule "vendor/cl-solr"]
 	path = vendor/cl-solr
 	url = git://github.com/lokedhs/cl-solr
-	branch = master
 [submodule "vendor/containers"]
 	path = vendor/containers
 	url = git://github.com/lokedhs/containers
-	branch = master
 [submodule "vendor/cl-markup"]
 	path = vendor/cl-markup
 	url = https://github.com/lokedhs/cl-markup
-	branch = master
 [submodule "vendor/clouchdb-patch"]
 	path = vendor/clouchdb-patch
 	url = https://github.com/lokedhs/clouchdb-patch
-	branch = master
 [submodule "vendor/cl-rabbit"]
 	path = vendor/cl-rabbit
 	url = https://github.com/lokedhs/cl-rabbit
-	branch = master
 [submodule "vendor/cl-rabbit-async"]
 	path = vendor/cl-rabbit-async
 	url = https://github.com/lokedhs/cl-rabbit-async
-[submodule "vendor/cl-containers"]
-	path = vendor/cl-containers
-	url = https://github.com/gwkkwg/cl-containers
