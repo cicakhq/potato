@@ -216,7 +216,10 @@
            #:update-role-for-group-user
            #:disable-channel
            #:potato-error
-           #:ensure-message))
+           #:ensure-message
+           #:domain-user/user
+           #:domain-user/domain
+           #:domain-user/role))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

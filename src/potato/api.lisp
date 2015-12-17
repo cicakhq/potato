@@ -250,11 +250,12 @@
 (define-api-method (api-channels-screen "/channels" nil ())
   (api-case-method
     (:get (loop
-             for domain-desc in (potato.core:load-domains-for-user (potato.core:current-user))
-             collect (st-json:jso "id" (first domain-desc)
-                                  "name" (second domain-desc)
+             for domain-user in (potato.core:load-domains-for-user (potato.core:current-user))
+             for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
+             collect (st-json:jso "id" (potato.core:domain/id domain)
+                                  "name" (potato.core:domain/name domain)
                                   "groups" (loop
-                                              for group in (potato.core:find-groups-in-domain (first domain-desc))
+                                              for group in (potato.core:find-groups-in-domain domain)
                                               when (potato.core:user-role-for-group group (potato.core:current-user))
                                               collect (st-json:jso "id" (potato.core:group/id group)
                                                                    "name" (potato.core:group/name group)
