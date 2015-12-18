@@ -1,8 +1,12 @@
 ;;; ClojureScript by Mathieu Legrand <mathieu@legrand.im>
 ;;; To connect:
 ;;;   M-x cider-connect  localhost  7888
-;;;   (defmethod cider.nrepl.middleware.track-state/ns-as-map nil [_] {})
+;;;   (figwheel-sidecar.repl-api/cljs-repl)
+;;;
+;;; To use the latest Clojurescript:
+;;;   M-x cider-jack-in
 ;;;   (use 'figwheel-sidecar.repl-api)
+;;;   (start-figwheel!)
 ;;;   (cljs-repl)
 
 (ns ^:figwheel-load potato.core
@@ -20,6 +24,7 @@
             [goog.Uri.QueryData]
             [goog.History]
             [goog.history.Html5History]
+            [goog.crypt.Sha256]
             [cljs-http.client :as http]
             [clojure.string]
             [clojure.set]
@@ -1100,6 +1105,7 @@ highlighted-message - the message that should be highlighted (or
 (defn- make-draft-message [text-string html]
   (let [current-user (:current-user (deref potato.state/global))
         hash (cljs-hash.goog/sha1-hex (str (:id current-user) "_" text-string))]
+    (cljs.pprint/cl-format true "Concaulated hash: ~s" hash)
     {:id           (str draft-marker "draft:" (get-unique-id))
      :from         (:id current-user)
      :created_date (.format (.utc (js/moment)) "YYYY-MM-DDTHH:mm:ss.SSSZ")
