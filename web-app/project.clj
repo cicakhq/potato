@@ -19,8 +19,7 @@
 
   :plugins      [[lein-cljsbuild            "1.1.1"]    ; Leiningen plugin to make ClojureScript development easy
                  [lein-figwheel             "0.5.0-1"]
-                 [cider/cider-nrepl         "0.11.0-SNAPSHOT"
-                 ]]
+                 [cider/cider-nrepl         "0.11.0-SNAPSHOT"]]
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
