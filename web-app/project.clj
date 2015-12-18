@@ -30,7 +30,7 @@
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-1"]]
-                   :source-paths ["src/cljs" "env/dev/cljs"]}}
+                   :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]}}
 
   :cljsbuild {:builds
               [{:id "dev"

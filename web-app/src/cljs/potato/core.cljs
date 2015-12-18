@@ -24,7 +24,7 @@
             [goog.Uri.QueryData]
             [goog.History]
             [goog.history.Html5History]
-            [goog.crypt.Sha256]
+            [goog.crypt.Sha1]
             [cljs-http.client :as http]
             [clojure.string]
             [clojure.set]
@@ -1102,10 +1102,21 @@ highlighted-message - the message that should be highlighted (or
     (om.core/transact! counter [0] inc)
     (get counter 0)))
 
+(defn encode-string-as-sha1 [s]
+  "Encode a UTF-8 representation of the string s as a sequence of hex bytes."
+  ;; Anyone looking at this thing might wonder why we're simply not
+  ;; calling cljs-hash.goog/sha1-hex to do this work. Indeed this is
+  ;; what was done previously, but it turns out that this
+  ;; implementation is buggy and does not handle non-BMP characters
+  ;; correctly.
+  ;; See this bug report for details: https://github.com/google/closure-library/issues/470
+  (let [digester (new js/goog.crypt.Sha1)]
+    (.update digester (clj->js (map (fn [x] (.codePointAt x 0)) (js/unescape (js/encodeURIComponent s)))))
+    (cljs.pprint/cl-format nil "~{~2,'0x~}" (.digest digester))))
+
 (defn- make-draft-message [text-string html]
   (let [current-user (:current-user (deref potato.state/global))
-        hash (cljs-hash.goog/sha1-hex (str (:id current-user) "_" text-string))]
-    (cljs.pprint/cl-format true "Concaulated hash: ~s" hash)
+        hash (encode-string-as-sha1 (str (:id current-user) "_" text-string))]
     {:id           (str draft-marker "draft:" (get-unique-id))
      :from         (:id current-user)
      :created_date (.format (.utc (js/moment)) "YYYY-MM-DDTHH:mm:ss.SSSZ")
