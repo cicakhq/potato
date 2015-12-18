@@ -1,3 +1,7 @@
+* Note
+
+The information in this document is not up to date. The API has changed significantly since this document was last updated.
+
 * Calling convention
 
 All API calls have the prefix =/api/1.0=. The header =api-token= must be
