@@ -19,3 +19,6 @@
 [submodule "vendor/cl-rabbit-async"]
 	path = vendor/cl-rabbit-async
 	url = https://github.com/lokedhs/cl-rabbit-async
+[submodule "vendor/html5-notification"]
+	path = vendor/html5-notification
+	url = https://github.com/lokedhs/html5-notification
