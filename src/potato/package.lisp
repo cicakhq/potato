@@ -133,7 +133,6 @@
            #:channel-source/state-source
            #:notification-message-cd->json-html
            #:poll-for-updates-and-return-from-request
-           #:start-html5-notifications-for-channel
            #:user-email
            #:user-email/user
            #:user-email/email
