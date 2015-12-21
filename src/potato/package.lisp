@@ -373,7 +373,10 @@
            #:+all-services+
            #:create-and-bind-notifications-queue-async
            #:process-message
-           #:declare-notifications-queue-async))
+           #:declare-notifications-queue-async
+           #:add-new-channel-binding
+           #:add-new-channel-binding-async
+           #:verify-queue-name))
 
 (defpackage :potato.rabbitmq-channels
   (:use :cl :potato :potato.common)

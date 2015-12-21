@@ -384,6 +384,31 @@
       (api-case-method
         (:get (api-get-single-update channels event-id format-name services))))))
 
+(define-api-method (api-channel-updates2-control-screen "/channel-updates/update" nil ())
+  (lofn:with-checked-parameters ((event-id :name "event-id" :required t)
+                                 (command :name "cmd" :required t)
+                                 (cid :name "channel" :required t)
+                                 (service-names :name "services" :required nil))
+    (api-case-method
+      (:post
+       (let ((services (if service-names
+                           (parse-service-names service-names)
+                           '(:content-p t)))
+             (channel (potato.core:load-channel-with-check cid :if-not-joined :join)))
+         (unless (equal command "add")
+           (raise-api-error "Only command add is currently supported" hunchentoot:+http-bad-request+))
+         (destructuring-bind (&key content-p user-state-p channel-updates-p &allow-other-keys) services
+           (unless (or content-p user-state-p channel-updates-p)
+             (raise-api-error "Illegal services: at least one of content, state, channel is required"
+                              hunchentoot:+http-bad-request+))
+           (potato.rabbitmq-notifications:verify-queue-name event-id nil)
+           (with-pooled-rabbitmq-connection (conn)
+             (potato.rabbitmq-notifications:add-new-channel-binding conn 1 event-id (potato.core:channel/id channel)
+                                                                    :content-p content-p
+                                                                    :user-state-p user-state-p
+                                                                    :channel-updates-p channel-updates-p))
+           (st-json:jso "result" "ok")))))))
+
 #+nil(define-api-method (api-channel-updates-screen "/channel/([^/]+)/updates" t (channel-id))
   (api-case-method
     (:get (potato.core:start-html5-notifications-for-channel channel-id))))

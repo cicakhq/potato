@@ -32,19 +32,25 @@
   (let ((conn-sym (gensym "CONN-"))
         (chnum-sym (gensym "CHANNEL-INDEX-"))
         (rchannel-sym (gensym "CHANNEL-")))
-    `(progn
-       (defun ,sync-name (,conn-sym ,chnum-sym ,@args)
-         (macrolet ,(loop
-                       for (fn sync-fn async-fn) in functions
-                       for arg = (gensym)
-                       collect `(,fn (&rest ,arg) (append '(,sync-fn ,conn-sym ,chnum-sym) ,arg)))
-           ,@body))
-       (defun ,async-name (,rchannel-sym ,@args)
-         (macrolet ,(loop
-                       for (fn sync-fn async-fn) in functions
-                       for arg = (gensym)
-                       collect `(,fn (&rest ,arg) (append '(,async-fn ,rchannel-sym) ,arg)))
-           ,@body)))))
+    (multiple-value-bind (rem-forms declarations doc-string)
+        (alexandria:parse-body body :documentation t)
+      `(progn
+         (defun ,sync-name (,conn-sym ,chnum-sym ,@args)
+           ,@(if doc-string (list doc-string))
+           ,@declarations
+           (macrolet ,(loop
+                         for (fn sync-fn async-fn) in functions
+                         for arg = (gensym)
+                         collect `(,fn (&rest ,arg) (append '(,sync-fn ,conn-sym ,chnum-sym) ,arg)))
+             ,@rem-forms))
+         (defun ,async-name (,rchannel-sym ,@args)
+           ,@(if doc-string (list doc-string))
+           ,@declarations
+           (macrolet ,(loop
+                         for (fn sync-fn async-fn) in functions
+                         for arg = (gensym)
+                         collect `(,fn (&rest ,arg) (append '(,async-fn ,rchannel-sym) ,arg)))
+             ,@rem-forms))))))
 
 (define-async-sync-function declare-notifications-queue declare-notifications-queue-async
     ((d cl-rabbit:queue-declare cl-rabbit-async:async-queue-declare))
@@ -66,10 +72,11 @@
   (princ "q-" stream)
   (princ (cleanup-name uid) stream)
   (princ "-" stream)
-  (let ((d (ironclad:make-digest :sha256)))
-    (dolist (cid cid-list)
-      (ironclad:update-digest d (babel:string-to-octets cid :encoding :utf-8)))
-    (princ (ironclad:byte-array-to-hex-string (subseq (ironclad:produce-digest d) 0 16)) stream)))
+  (when cid-list
+    (let ((d (ironclad:make-digest :sha256)))
+      (dolist (cid cid-list)
+        (ironclad:update-digest d (babel:string-to-octets cid :encoding :utf-8)))
+      (princ (ironclad:byte-array-to-hex-string (subseq (ironclad:produce-digest d) 0 16)) stream))))
 
 (defun verify-queue-name (name cid-list)
   (when name
@@ -79,15 +86,45 @@
         (error "Attempt to read from illegal queue")))))
 
 (defun make-queue-name (uid cid-list)
+  (when (null cid-list)
+    (error "Can't make a queue name without a channel list"))
   (with-output-to-string (s)
     (print-queue-name-prefix s uid cid-list)
     (princ "-" s)
     (princ (make-random-name 20) s)))
 
-(define-async-sync-function create-and-bind-notifications-queue create-and-bind-notifications-queue-async
+(define-async-sync-function add-new-channel-binding add-new-channel-binding-async
     ((d declare-notifications-queue declare-notifications-queue-async)
      (r request-full-state-server-sync request-full-state-server-sync-async)
      (b cl-rabbit:queue-bind cl-rabbit-async:async-queue-bind))
+    (queue-name cid &key content-p user-state-p channel-updates-p)
+  "Add a new channel binding for channel CID on queue QUEUE-NAME."
+  (unless (or content-p user-state-p channel-updates-p)
+    (error "At least one of :CONTENT-P :USER-STATE-P :CHANNEL-UPDATES-P must be specified"))
+  (when content-p
+    (b :queue queue-name
+       :exchange *channel-content-exchange-name*
+       :routing-key cid))
+  (when user-state-p
+    (b :queue queue-name
+       :exchange *state-server-sender-exchange-name*
+       :routing-key (format nil "change.*.~a.*.all" cid))
+    (b :queue queue-name
+       :exchange *state-server-sender-exchange-name*
+       :routing-key (format nil "sync.*.~a.*.~a"
+                            (encode-name-for-routing-key cid)
+                            (encode-name-for-routing-key queue-name))))
+  (when channel-updates-p
+    (b :queue queue-name
+       :exchange *channel-exchange-name*
+       :routing-key (format nil "*.~a" (encode-name-for-routing-key cid))))
+  (when user-state-p
+    (r cid queue-name)))
+
+(define-async-sync-function create-and-bind-notifications-queue create-and-bind-notifications-queue-async
+    ((d declare-notifications-queue declare-notifications-queue-async)
+     (b cl-rabbit:queue-bind cl-rabbit-async:async-queue-bind)
+     (a add-new-channel-binding add-new-channel-binding-async))
     (user channels services)
   (destructuring-bind (&key content-p user-state-p user-notifications-p unread-p channel-updates-p) services
     (when (and (not content-p)
@@ -100,21 +137,8 @@
           (cid-list (mapcar #'potato.core:ensure-channel-id channels)))
       (let ((queue-name (make-queue-name uid cid-list)))
         (d queue-name nil)
-        (when content-p
-          (dolist (cid cid-list)
-            (b :queue queue-name
-               :exchange *channel-content-exchange-name*
-               :routing-key cid)))
-        (when user-state-p
-          (dolist (cid cid-list)
-            (b :queue queue-name
-               :exchange *state-server-sender-exchange-name*
-               :routing-key (format nil "change.*.~a.*.all" cid))
-            (b :queue queue-name
-               :exchange *state-server-sender-exchange-name*
-               :routing-key (format nil "sync.*.~a.*.~a"
-                                    (encode-name-for-routing-key cid)
-                                    (encode-name-for-routing-key queue-name)))))
+        (dolist (cid cid-list)
+          (a queue-name cid :content-p content-p :user-state-p user-state-p :channel-updates-p channel-updates-p))
         (when user-notifications-p
           (b :queue queue-name
              :exchange *user-notifications-exchange-name*
@@ -123,14 +147,6 @@
           (b :queue queue-name
              :exchange *unread-state-exchange-name*
              :routing-key (format nil "~a.*" (encode-name-for-routing-key uid))))
-        (when channel-updates-p
-          (dolist (cid cid-list)
-            (b :queue queue-name
-               :exchange *channel-exchange-name*
-               :routing-key (format nil "*.~a" (encode-name-for-routing-key cid)))))
-        (when user-state-p
-          (dolist (cid cid-list)
-            (r cid queue-name)))
         queue-name))))
 
 (defun process-channel-message (msg msg-formatter)
