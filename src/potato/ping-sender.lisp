@@ -19,7 +19,7 @@
 
 (defun load-context (notification)
   (let* ((message-id (potato.user-notification:user-notification/message-id notification))
-         (msglist (potato.core:load-message-range-with-check message-id)))
+         (msglist (potato.core:load-message-range (potato.core:load-message message-id))))
     (loop
       for msg in msglist
       collect `((:message . ,(potato.core:message/id msg))

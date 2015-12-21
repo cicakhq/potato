@@ -219,7 +219,8 @@
            #:ensure-message
            #:domain-user/user
            #:domain-user/domain
-           #:domain-user/role))
+           #:domain-user/role
+           #:load-message-range))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

@@ -389,11 +389,10 @@
     (let ((msg (load-message-with-check msgid user)))
       (update-message-star msg user add-p ))))
 
-(defun load-message-range-with-check (message-id &optional (num-rows 5))
+(defun load-message-range (message &optional (num-rows 5))
+  (check-type message message)
   (with-messages-db
-    (let* ((message (load-message message-id))
-           (channel (load-channel-with-check (message/channel message) :if-not-joined :load))
-           (channel-id (channel/id channel))
+    (let* ((channel-id (message/channel message))
            (id (list channel-id (message/id message)))
            (l1 (clouchdb:invoke-view "channel" "created_date"
                                      :start-key id
@@ -407,6 +406,12 @@
       (let* ((trailing (cdr (getfield :|rows| l2)))
              (range (mapcar (lambda (v) (getfield :|value| v)) (append (reverse (getfield :|rows| l1)) trailing))))
         (mapcar (lambda (v) (make-message-from-couchdb v)) range)))))
+
+(defun load-message-range-with-check (message-id &optional (num-rows 5))
+  (with-messages-db
+    (let* ((message (load-message message-id)))
+      (load-channel-with-check (message/channel message) :if-not-joined :load)
+      (load-message-range message num-rows))))
 
 (defun send-message-update-to-rabbitmq-queue (message)
   (with-pooled-rabbitmq-connection (conn)
