@@ -26,6 +26,7 @@
           (setf (symbol-value sym)
                 (append '((merge-pathnames #p"vendor/cl-solr/" (truename "."))
                           (merge-pathnames #p"vendor/containers/" (truename "."))
+                          (merge-pathnames #p"vendor/html5-notification/" (truename "."))
                           (merge-pathnames #p"vendor/lofn/" (truename "."))
                           (merge-pathnames #p"vendor/cl-markup/" (truename "."))
                           (merge-pathnames #p"vendor/clouchdb-patch/src/" (truename "."))
