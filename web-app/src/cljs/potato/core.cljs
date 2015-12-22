@@ -29,7 +29,6 @@
             [clojure.set]
             [cljs.core.async  :as async]
             [cljsjs.moment]
-            [cljs.pprint]
             [potato.state]
             [potato.urls]
             [potato.eventsource2]
@@ -228,7 +227,6 @@ id's. Returns the updated value."
 (defn handle-unread-notification [e]
   (let [cid (:channel e)
         count (:count e)]
-    (cljs.pprint/cl-format true "Unread notification, data: ~s" e)
     (om/transact! (state-root) [:channels]
       (fn [channels]
         (if (get channels cid)
@@ -261,7 +259,6 @@ id's. Returns the updated value."
     (refresh-messages-for-users updated (into #{} (map :id user-list)))))
 
 (defn handle-user-name-change [e]
-  (cljs.pprint/cl-format true "Got user name change: ~s" e)
   (let [uid (:user e)]
     (om/transact! (state-root)
         (fn [app]
@@ -272,7 +269,6 @@ id's. Returns the updated value."
             (refresh-messages-for-users updated #{uid}))))))
 
 (defn request-details-for-users [app user-list]
-  (cljs.pprint/cl-format true "Requesting details for users: ~s" user-list)
   (go
     (let [{user-list-result :body} (async/<! (http/post "/user_details"
                                                         {:json-params {:domain (-> app :current-domain :id)
@@ -379,11 +375,11 @@ id's. Returns the updated value."
       (let [image (path-from-components potato.urls/user-image user "a")]
         (case type
           ;; Message sent on a private channel
-          "PRIVATE" (show-notification id (cljs.pprint/cl-format nil "Private message from ~a" user-name) text image)
+          "PRIVATE" (show-notification id (str "Private message from " user-name) text image)
           ;; Mention of the user's name
-          "MENTION" (show-notification id (cljs.pprint/cl-format nil "~a mentioned you" user-name) text image)
+          "MENTION" (show-notification id (str user-name "~a mentioned you") text image)
           ;; A keyword was mentioned on a channel
-          "WORD"    (show-notification id (cljs.pprint/cl-format nil "Update from ~a" user-name) text image)
+          "WORD"    (show-notification id (str "Update from " user-name) text image)
           ;; Unexpected notification type, just display a generic message
           (show-notification id "Notification from potato" text image))))))
 
@@ -399,8 +395,6 @@ id's. Returns the updated value."
           (if begin-p
             (conj v uid)
             (disj v uid))))
-      (cljs.pprint/cl-format true "Updating typing state, cid=~s, uid=~s, type=~s, state=~s"
-                             cid uid (:add-type e) (:typing (get (:channels @potato.state/global) cid)))
       ;; We need to tell the input field that the list of users have changed
       (async/put! async-channel [:type (-> @potato.state/global :channels (get cid) :typing)]))))
 
@@ -431,7 +425,6 @@ id's. Returns the updated value."
                                                                             [])}))))))))
 
 (defn dispatch-notification-entry [entry async-channel]
-  (cljs.pprint/cl-format true "Got server message: ~s" entry)
   (case (:type entry)
     ;; Dispatch message events to the async channel
     "m"
@@ -461,14 +454,13 @@ id's. Returns the updated value."
     "update-star"
     (handle-update-star entry)
     ;; Log any unhandled event types
-    (cljs.pprint/cl-format true "Unknown type: ~s" entry)))
+    (.log js/console (str "Unknown type: " entry))))
 
 (defn make-polling-connection [channel-id]
   (let [async-channel (async/chan)]
     (potato.eventsource2/set-callback-fn! (fn [event]
                                             (dispatch-notification-entry event async-channel)))
     (potato.eventsource2/set-error-fn! (fn [error-p]
-                                         (cljs.pprint/cl-format true "Setting error: ~s" error-p)
                                          (om/transact! (om/root-cursor potato.state/connection) [:error]
                                            (constantly error-p))))
     (potato.eventsource2/start-notification-handler channel-id)
@@ -1110,7 +1102,8 @@ highlighted-message - the message that should be highlighted (or
   ;; See this bug report for details: https://github.com/google/closure-library/issues/470
   (let [digester (new js/goog.crypt.Sha1)]
     (.update digester (clj->js (map (fn [x] (.codePointAt x 0)) (js/unescape (js/encodeURIComponent s)))))
-    (cljs.pprint/cl-format nil "~{~2,'0x~}" (.digest digester))))
+    ;;(cljs.pprint/cl-format nil "~{~2,'0x~}" (.digest digester))
+    "palle"))
 
 (defn- make-draft-message [text-string html]
   (let [current-user (:current-user (deref potato.state/global))
@@ -1319,7 +1312,8 @@ highlighted-message - the message that should be highlighted (or
               other-users-typing (disj typing user-id)]
           (if (> (count other-users-typing) 0)
             (om.dom/div #js {:className "typing"}
-              (cljs.pprint/cl-format nil is-or-are-typing
+              "XXtypingXX"
+              #_(cljs.pprint/cl-format nil is-or-are-typing
                                      (map (fn [uid]
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
                                           other-users-typing)))))))))

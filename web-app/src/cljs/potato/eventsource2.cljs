@@ -3,7 +3,6 @@
 (ns potato.eventsource2
   (:require [cljs-http.client :as http]
             [cljs.core.async  :as async]
-            [cljs.pprint]
             [goog.net.XhrIo]
             [goog.net.EventType]
             [potato.urls])
@@ -36,7 +35,6 @@
         old-error (:error-p old)]
     (when (or (and old-error (not error-p))
               (and (not old-error) error-p))
-      (cljs.pprint/cl-format true "Calling error handler function with state: ~s" error-p)
       ((:error-fn @active-config) error-p))))
 
 ;;; sec:poll
@@ -68,7 +66,6 @@
     (goog.events.listen req goog.net.EventType/COMPLETE
       (fn [event]
         (this-as ref
-          (cljs.pprint/cl-format true "Got status from HTTP call: ~s, data: ~s" (.getStatus ref) ref)
           (case (.getStatus ref)
             ;; Handle new event
             200
@@ -93,13 +90,13 @@
         (run-polling-request-loop req)))
     (goog.events.listen req goog.net.EventType/ERROR
       (fn [event]
-        (cljs.pprint/cl-format true "Poll error")))
+        (.log js/console "Poll error")))
     (goog.events.listen req goog.net.EventType/ABORT
       (fn [event]
-        (cljs.pprint/cl-format true "Poll abort")))
+        (.log js/console "Poll abort")))
     (goog.events.listen req goog.net.EventType/TIMEOUT
       (fn [event]
-        (cljs.pprint/cl-format true "Poll timeout")))
+        (.log js/console "Poll timeout")))
 
     req))
 
@@ -122,14 +119,13 @@
 (declare start-websocket)
 
 (defn handle-websocket-timeout [ws]
-  (cljs.pprint/cl-format true "Websocket ping reply timeout")
   (.close ws))
 
 (defn handle-websocket-refresh [ws msg]
   (let [received-index (:data msg)
         last-index (:last-index @websocket-config)]
     (when (not= received-index last-index)
-      (throw (cljs.pprint/cl-format false "Wrong index from server. Got ~s, expected ~s" received-index last-index)))
+      (throw (str false "Wrong index from server. Got " received-index ", expected " last-index)))
     (.clearTimeout js/window (:timer @websocket-config))
     (swap! websocket-config #(conj % {:timer nil :refresh-reply-received true}))))
 
@@ -169,26 +165,24 @@
       (start-poll (:channel @websocket-config) (:event @websocket-config)))))
 
 (defn start-websocket [cid initial-event]
-  (cljs.pprint/cl-format true "Starting websocket for channel: ~s, event: ~s" cid initial-event)
-  (let [ws (new js/WebSocket (cljs.pprint/cl-format false "~a/~a~@[?event=~a~]"
-                                                    (aget js/window "websocketUrl")
+  (let [ws (new js/WebSocket #_(cljs.pprint/cl-format false "~a/~a~@[?event=~a~]"
+                                                      (aget js/window "websocketUrl")
                                                     cid
-                                                    initial-event))]
+                     
+                               initial-event)
+                (str (aget js/window "websocketUrl") "/" cid (if initial-event (str "?event=" initial-event) "")))]
     (.addEventListener ws "message"
                        (fn [event]
                          (handle-websocket-message ws (js->clj (js/JSON.parse (aget event "data")) :keywordize-keys true))))
     (.addEventListener ws "open"
                        (fn [event]
-                         (cljs.pprint/cl-format true "Websocket event: open")
                          (notify-fail false)
                          (start-websocket-ping ws)))
     (.addEventListener ws "close"
                        (fn [event]
-                         (cljs.pprint/cl-format true "Websocket event: close")
                          (handle-websocket-close ws)))
     (.addEventListener ws "error"
                        (fn [event]
-                         (cljs.pprint/cl-format true "Websocket event: error")
                          (notify-fail true)
                          (.close ws)))
     (swap! websocket-config (fn [config]

@@ -11,7 +11,7 @@
                  [org.omcljs/om             "0.9.0"]
                  [org.clojure/core.async    "0.2.374"]
                  [cljs-http                 "0.1.39" :exclusions [org.clojure/core.async]]
-                 [cljsjs/moment             "2.9.0-0"]]
+                 [cljsjs/moment             "2.10.6-0"]]
 
   :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
                  ]

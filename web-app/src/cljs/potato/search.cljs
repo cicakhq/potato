@@ -5,8 +5,7 @@
              [goog.dom.forms]
              [goog.style]
              [cljs-http.client :as http]
-             [cljs.core.async :as async]
-             [cljs.pprint])
+             [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def no-results-text    "No results")
@@ -61,7 +60,8 @@
       (let [search-section (om.core/get-node owner)
             bounds (goog.style/getBounds (first (goog.dom/getElementsByTagNameAndClass "input" nil search-section)))]
         (goog.style/setStyle (first (goog.dom/getElementsByTagNameAndClass nil "search-results" search-section))
-                             "top" (cljs.pprint/cl-format nil "~dpx" (+ (.-top bounds) (.-height bounds) 5)))))
+                             "top" #_(cljs.pprint/cl-format nil "~dpx" (+ (.-top bounds) (.-height bounds) 5))
+                             (str (+ (.-top bounds) (.-height bounds) 5) "px"))))
     om.core/IRenderState
     (render-state [_ {:keys [search-opened found-messages]}]
       (om.dom/section #js {:id "search"}
@@ -78,7 +78,7 @@
                            ;; every time an attempt was made to click on the checkbox. Obviously
                            ;; this is incorrect, but it was done simply to test the new "favourited only"
                            ;; search feature.
-                           :onBlur  #(cljs.pprint/cl-format true "blur, owner=~s" owner)})
+                           :onBlur  #(.log js/console "blur called")})
         (om.dom/div #js {:id "search-results"
                          :className "search-results"
                          :style (potato.core/display search-opened)}
