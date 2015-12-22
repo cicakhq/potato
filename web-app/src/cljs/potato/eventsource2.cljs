@@ -3,6 +3,7 @@
 (ns potato.eventsource2
   (:require [cljs-http.client :as http]
             [cljs.core.async  :as async]
+            [cljs.pprint]
             [goog.net.XhrIo]
             [goog.net.EventType]
             [potato.urls])

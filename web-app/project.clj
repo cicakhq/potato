@@ -6,10 +6,7 @@
   :min-lein-version   "2.5.0"
 
   :dependencies [[org.clojure/clojure       "1.7.0"]
-                 ;;[figwheel                  "0.5.0-1"]
-                 ;;[figwheel-sidecar          "0.5.0-1"]
                  [http-kit "2.1.8"]
-                 ;;[weasel "0.7.0"]
                  [org.clojure/clojurescript "1.7.189" :exclusions [org.apache.ant/ant]]
                  [org.omcljs/om             "0.8.8"] ; ClojureScript interface to Facebook's React
                  [cljs-http                 "0.1.30"] ; A ClojureScript HTTP library
@@ -17,13 +14,7 @@
                  [cljsjs/moment             "2.9.0-0"]] ; Moment.js
 
   :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
-                 [lein-figwheel             "0.5.0-1" :exclusions [org.clojure/clojure
-                                                                   org.clojure/tools.reader
-                                                                   ring/ring-core
-                                                                   commons-fileupload
-                                                                   clj-time]]
-                 [cider/cider-nrepl         "0.11.0-SNAPSHOT" :exclusions [org.clojure/clojure
-                                                                           org.clojure/tools.nrepl]]]
+                 ]
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
@@ -32,19 +23,15 @@
                  :init-ns potato.dev}
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
-                                  [figwheel-sidecar "0.5.0-1" :exclusions [http-kit
-                                                                           org.clojure/tools.reader
-                                                                           org.clojure/core.async
-                                                                           org.clojure/tools.analyzer.jvm
-                                                                           org.clojure/tools.analyzer
-                                                                           org.clojure/core.memoize
-                                                                           org.clojure/core.cache
-                                                                           org.clojure/data.priority-map
-                                                                           org.ow2.asm/asm-all
-                                                                           commons-fileupload
-                                                                           ring/ring-core
-                                                                           joda-time]]]
-                   :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]}}
+                                  [figwheel-sidecar "0.5.0-1"]]
+                   :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]
+                   :plugins [[lein-figwheel             "0.5.0-1" :exclusions [org.clojure/clojure
+                                                                               org.clojure/tools.reader
+                                                                               ring/ring-core
+                                                                               commons-fileupload
+                                                                               clj-time]]
+                             [cider/cider-nrepl         "0.11.0-SNAPSHOT" :exclusions [org.clojure/clojure
+                                                                                       org.clojure/tools.nrepl]]]}}
 
   :cljsbuild {:builds
               [{:id "dev"
