@@ -11,13 +11,13 @@
                  [http-kit "2.1.8"]
                  [weasel "0.7.0"]
                  [com.cemerick/piggieback "0.2.1"]
-                 [org.clojure/clojurescript "1.7.170" :scope "provided"]
-                 [org.omcljs/om             "0.8.8"]    ; ClojureScript interface to Facebook's React
-                 [cljs-http                 "0.1.30"]   ; A ClojureScript HTTP library
-                 [cljs-hash                 "0.0.2"]    ; SHA1 and MD5 wrapper library
+                 [org.clojure/clojurescript "1.7.189" :exclusions [org.apache.ant/ant]]
+                 [org.omcljs/om             "0.8.8"] ; ClojureScript interface to Facebook's React
+                 [cljs-http                 "0.1.30"] ; A ClojureScript HTTP library
+                 [cljs-hash                 "0.0.2"] ; SHA1 and MD5 wrapper library
                  [cljsjs/moment             "2.9.0-0"]] ; Moment.js
 
-  :plugins      [[lein-cljsbuild            "1.1.1"]    ; Leiningen plugin to make ClojureScript development easy
+  :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
                  [lein-figwheel             "0.5.0-1"]
                  [cider/cider-nrepl         "0.11.0-SNAPSHOT"]]
 
@@ -67,10 +67,12 @@
                 :source-paths ["src/cljs" "env/prod/cljs"]
                 :compiler {:main          potato.main
                            :output-to     "resources/public/js/potato.js"
-                           :optimizations :advanced
+                           :optimizations :simple
                            :externs       ["externs-input.js"]
-                           :elide-asserts true
-                           :pretty-print  false}}
+                           :elide-asserts false
+                           :pseudo-names true
+                           :print-input-delimiter true
+                           :pretty-print  true}}
 
                {:id "admin-dev"
                 :source-paths ["admin/cljs" "env/admin-dev/cljs"]
