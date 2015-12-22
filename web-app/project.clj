@@ -7,10 +7,11 @@
 
   :dependencies [[org.clojure/clojure       "1.7.0"]
                  [http-kit "2.1.8"]
-                 [org.clojure/clojurescript "1.7.189" :exclusions [org.apache.ant/ant]]
-                 [org.omcljs/om             "0.8.8"] ; ClojureScript interface to Facebook's React
-                 [cljs-http                 "0.1.30"] ; A ClojureScript HTTP library
-                 [cljsjs/moment             "2.9.0-0"]] ; Moment.js
+                 [org.clojure/clojurescript "1.7.170" :exclusions [org.apache.ant/ant]]
+                 [org.omcljs/om             "0.9.0"]
+                 [org.clojure/core.async    "0.2.374"]
+                 [cljs-http                 "0.1.39" :exclusions [org.clojure/core.async]]
+                 [cljsjs/moment             "2.9.0-0"]]
 
   :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
                  ]
