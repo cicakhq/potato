@@ -10,7 +10,6 @@
                  [org.clojure/clojurescript "1.7.189" :exclusions [org.apache.ant/ant]]
                  [org.omcljs/om             "0.8.8"] ; ClojureScript interface to Facebook's React
                  [cljs-http                 "0.1.30"] ; A ClojureScript HTTP library
-                 [cljs-hash                 "0.0.2"] ; SHA1 and MD5 wrapper library
                  [cljsjs/moment             "2.9.0-0"]] ; Moment.js
 
   :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
@@ -18,20 +17,22 @@
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
-  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
-                 :welcome (println "Welcome to Potato dev server Clojure REPL.")
-                 :init-ns potato.dev}
-
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-1"]]
                    :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]
-                   :plugins [[lein-figwheel             "0.5.0-1" :exclusions [org.clojure/clojure
-                                                                               org.clojure/tools.reader
-                                                                               ring/ring-core
-                                                                               commons-fileupload
-                                                                               clj-time]]
-                             [cider/cider-nrepl         "0.11.0-SNAPSHOT" :exclusions [org.clojure/clojure
-                                                                                       org.clojure/tools.nrepl]]]}}
+                   :plugins [[lein-figwheel "0.5.0-1" :exclusions [org.clojure/clojure
+                                                                   org.clojure/tools.reader
+                                                                   ring/ring-core
+                                                                   commons-fileupload
+                                                                   clj-time]]
+                             [cider/cider-nrepl "0.11.0-SNAPSHOT" :exclusions [org.clojure/clojure
+                                                                               org.clojure/tools.nrepl]]]
+                   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
+                                  :welcome (println "Welcome to Potato dev server Clojure REPL.")
+                                  :init-ns potato.dev}
+                   :figwheel {:server-port      10555
+                              :http-server-root "public"
+                              :nrepl-port       7888}}}
 
   :cljsbuild {:builds
               [{:id "dev"
@@ -95,10 +96,4 @@
                            :output-to     "resources/public/js/admin.js"
                            :optimizations :advanced
                            :elide-asserts true
-                           :pretty-print  false}}]}
-
-  ;; the server-port is used by the web application to find the dev files.
-  ;; the nrepl-port is used from Emacs / IntelliJ to connect to the running Figwheel REPL
-  :figwheel {:server-port      10555
-             :http-server-root "public"
-             :nrepl-port       7888})
+                           :pretty-print  false}}]})

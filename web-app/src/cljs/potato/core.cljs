@@ -10,7 +10,6 @@
 ;;;   (cljs-repl)
 
 (ns ^:figwheel-load potato.core
-  (:use [cljs-hash.sha1 :only [sha1]])
   (:require [om.core :as om :include-macros true]
             [om.dom :include-macros true]
             [goog.dom]
@@ -31,7 +30,6 @@
             [cljs.core.async  :as async]
             [cljsjs.moment]
             [cljs.pprint]
-            [cljs-hash.goog]
             [potato.state]
             [potato.urls]
             [potato.eventsource2]

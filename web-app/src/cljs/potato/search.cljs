@@ -1,11 +1,12 @@
 (ns potato.search
   (:require  [om.core :include-macros true]
-             [om.dom  :include-macros true]
+             [om.dom :include-macros true]
              [goog.dom]
              [goog.dom.forms]
              [goog.style]
              [cljs-http.client :as http]
-             [cljs.core.async  :as async])
+             [cljs.core.async :as async]
+             [cljs.pprint])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def no-results-text    "No results")
