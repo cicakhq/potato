@@ -3,20 +3,22 @@
   :description        "A Potato front-end implemented with OM"
   :url                "http://potato.network"
   :license            {:name "Apache"}
-  :min-lein-version   "2.5.0"
+  :min-lein-version   "2.5.3"
 
   :dependencies [[org.clojure/clojure       "1.7.0"]
                  [http-kit "2.1.8"]
-                 [org.clojure/clojurescript "0.0-3269" :exclusions [org.apache.ant/ant]]
+                 [org.clojure/clojurescript "0.0-3269" :scope "provided"]
                  [org.omcljs/om             "0.9.0"]
                  [org.clojure/core.async    "0.2.374"]
-                 [cljs-http                 "0.1.39" :exclusions [org.clojure/core.async]]
+                 [cljs-http                 "0.1.30" :exclusions [org.clojure/core.async]]
                  [cljsjs/moment             "2.10.6-0"]]
 
   :plugins      [[lein-cljsbuild            "1.1.2"]
                  ]
 
   :clean-targets ^{:protect false} ["resources/public/js"]
+
+  :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-1"]]
@@ -73,10 +75,11 @@
                            :output-to     "resources/public/js/potato.js"
                            :optimizations :simple
                            :externs       ["externs-input.js"]
-                           :elide-asserts false
-                           :pseudo-names true
-                           :print-input-delimiter true
-                           :pretty-print  true}}
+                           :elide-asserts true
+                           :pseudo-names false
+                           :print-input-delimiter false
+                           :pretty-print  false
+                           }}
 
                {:id "admin-dev"
                 :source-paths ["admin/cljs" "env/admin-dev/cljs"]
