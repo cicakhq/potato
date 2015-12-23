@@ -48,7 +48,7 @@
 (def nonbreak-space     "\u00a0")
 (def message-deleted    "message deleted")
 (def message-updated    "updated")
-(def placeholder        "Hello from ClojureScript")
+(def placeholder        "Type something, or drag a file here")
 (def channels-text      "Channels")
 (def private-text       "Conversations")
 (def users-text         "Users")
