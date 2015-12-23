@@ -148,7 +148,7 @@ built from the `web-app` directory:
 
 ```
 cd web-app
-lein cljsbuild once prod admin-prod
+lein with-profile -dev cljsbuild once prod admin-prod
 ```
 
 ## CSS compilation

@@ -3,14 +3,15 @@
   :description        "A Potato front-end implemented with OM"
   :url                "http://potato.network"
   :license            {:name "Apache"}
-  :min-lein-version   "2.5.0"
+  :min-lein-version   "2.5.3"
 
   :dependencies [[org.clojure/clojure       "1.7.0"]
                  [http-kit "2.1.8"]
-                 [org.clojure/clojurescript "1.7.170" :exclusions [org.apache.ant/ant]]
+                 [org.clojure/clojurescript "0.0-3269" :scope "provided"]
                  [org.omcljs/om             "0.9.0"]
                  [org.clojure/core.async    "0.2.374"]
-                 [cljs-http                 "0.1.39" :exclusions [org.clojure/core.async]]
+                 ;; If cljs-http is upgraded to 0.1.39, the code will fail when compiled with optimisations enabled
+                 [cljs-http                 "0.1.30" :exclusions [org.clojure/core.async]]
                  [cljsjs/moment             "2.9.0-0"]]
 
   :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
@@ -74,9 +75,9 @@
                            :optimizations :simple
                            :externs       ["externs-input.js"]
                            :elide-asserts false
-                           :pseudo-names true
-                           :print-input-delimiter true
-                           :pretty-print  true}}
+                           :pseudo-names false
+                           :print-input-delimiter false
+                           :pretty-print  false}}
 
                {:id "admin-dev"
                 :source-paths ["admin/cljs" "env/admin-dev/cljs"]
