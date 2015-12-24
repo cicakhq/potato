@@ -61,7 +61,7 @@ email address."
     (cond ((zerop (length email))
            (hunchentoot:redirect "/"))
           ((not (potato.core:is-allowed-email-p email))
-           (error "Illegal email address format"))
+           (error "Illegal email address format for ~s" email))
           (t
            (let ((id (make-login-request-id email)))
              (clouchdb:delete-document id :if-missing :ignore)
