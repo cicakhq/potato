@@ -72,7 +72,7 @@
                 :source-paths ["src/cljs" "env/prod/cljs"]
                 :compiler {:main          potato.main
                            :output-to     "resources/public/js/potato.js"
-                           :optimizations :advanced
+                           :optimizations :simple
                            :externs       ["externs-input.js"]
                            :elide-asserts false
                            :pseudo-names false
