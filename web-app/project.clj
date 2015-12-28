@@ -7,7 +7,7 @@
 
   :dependencies [[org.clojure/clojure       "1.7.0"]
                  [http-kit "2.1.8"]
-                 [org.clojure/clojurescript "0.0-3269" :scope "provided"]
+                 [org.clojure/clojurescript "1.7.170" :scope "provided"]
                  [org.omcljs/om             "0.9.0"]
                  [org.clojure/core.async    "0.2.374"]
                  ;; If cljs-http is upgraded to 0.1.39, the code will fail when compiled with optimisations enabled
@@ -21,20 +21,14 @@
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-1"]]
-                   :source-paths ["cljs_src" "src/cljs" "env/dev/cljs"]
+                   :source-paths ["cljs_src"]
                    :plugins [[lein-figwheel "0.5.0-1" :exclusions [org.clojure/clojure
                                                                    org.clojure/tools.reader
                                                                    ring/ring-core
                                                                    commons-fileupload
                                                                    clj-time]]
                              [cider/cider-nrepl "0.11.0-SNAPSHOT" :exclusions [org.clojure/clojure
-                                                                               org.clojure/tools.nrepl]]]
-                   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
-                                  :welcome (println "Welcome to Potato dev server Clojure REPL.")
-                                  :init-ns potato.dev}
-                   :figwheel {:server-port      10555
-                              :http-server-root "public"
-                              :nrepl-port       7888}}}
+                                                                               org.clojure/tools.nrepl]]]}}
 
   :cljsbuild {:builds
               [{:id "dev"
@@ -98,4 +92,12 @@
                            :output-to     "resources/public/js/admin.js"
                            :optimizations :advanced
                            :elide-asserts true
-                           :pretty-print  false}}]})
+                           :pretty-print  false}}]}
+
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
+                 :welcome (println "Welcome to Potato
+                                  dev server Clojure REPL.")
+                 :init-ns potato.dev}
+  :figwheel {:server-port      10555
+             :http-server-root "public"
+             :nrepl-port       7888})

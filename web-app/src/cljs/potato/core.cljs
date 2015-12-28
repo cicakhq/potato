@@ -1,7 +1,4 @@
 ;;; ClojureScript by Mathieu Legrand <mathieu@legrand.im>
-;;; To connect:
-;;;   M-x cider-connect  localhost  7888
-;;;   (figwheel-sidecar.repl-api/cljs-repl)
 ;;;
 ;;; To use the latest Clojurescript:
 ;;;   M-x cider-jack-in

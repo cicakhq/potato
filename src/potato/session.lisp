@@ -15,6 +15,11 @@
 (defmethod initialize-instance :after ((obj potato-acceptor) &key)
   (setf (hunchentoot:acceptor-request-class obj) 'potato-web-request))
 
+(defmethod hunchentoot:process-connection ((acceptor potato-acceptor) (socket t))
+  (handler-bind ((error (lambda (condition)
+                          (log:warn "Error of type: ~s" (type-of condition)))))
+    (call-next-method)))
+
 (defmethod hunchentoot:acceptor-log-message ((acceptor potato-acceptor) log-level fmt &rest args)
   (log:trace "backtrace:~a" (with-output-to-string (s) (trivial-backtrace:print-backtrace-to-stream s)))
   (let ((message (apply #'format nil fmt args)))
