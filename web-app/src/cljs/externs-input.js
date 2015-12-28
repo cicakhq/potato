@@ -1,7 +1,9 @@
 "use strict";
+
 var InputController = {};
 
 window.sha1 = function() {};
+String.prototype.codePointAt = function(index) {};
 
 /**
  * @type {(function(Object):!Editable)}
