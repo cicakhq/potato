@@ -9,7 +9,7 @@ if [ "$OS" == "FreeBSD" ]; then
 fi
 
 if [ -n "$SBCL_PATH" ] && [ -x "$SBCL_PATH" ]; then
-    exec $SBCL_PATH --script "/var/tmp/provision.cl"
+    exec $SBCL_PATH --script "/var/tmp/provision.lisp"
 else
     >&2 echo "$SBCL_PATH is not executable ($OS)"
     exit 1
