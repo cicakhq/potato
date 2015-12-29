@@ -45,8 +45,8 @@
 
 (defun handle-register-user ()
   (lofn:with-parameters (email description password1 activate-api redirect-path)
-    (let ((email-trimmed (string-trim " " email))
-          (description-trimmed (string-trim " " description))
+    (let ((email-trimmed (string-downcase (potato.core:trim-string email)))
+          (description-trimmed (potato.core:trim-string description))
           (enable-api (string= activate-api "1"))
           (errors nil))
       (unless (is-allowed-email-p email-trimmed)

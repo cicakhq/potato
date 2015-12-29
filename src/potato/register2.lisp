@@ -57,7 +57,7 @@ email address."
     (potato.email:send-email mail)))
 
 (defun register2-post-handler (email)
-  (let ((email (string-trim " " email)))
+  (let ((email (string-downcase (potato.core:trim-string email))))
     (cond ((zerop (length email))
            (hunchentoot:redirect "/"))
           ((not (potato.core:is-allowed-email-p email))

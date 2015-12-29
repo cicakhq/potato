@@ -219,7 +219,8 @@
            #:domain-user/user
            #:domain-user/domain
            #:domain-user/role
-           #:load-message-range))
+           #:load-message-range
+           #:trim-string))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
