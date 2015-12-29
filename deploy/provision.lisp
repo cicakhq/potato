@@ -32,11 +32,28 @@
 
 ; erlang is a super dependency of couchdb and rabbitmq
 ; openjdk8 pulls libXt and depends on a whole list of X-related packages
-; + TODO: see https://www.digitalocean.com/community/tutorials/how-to-install-java-on-freebsd-10-1, modify `fstab'
 (dolist (p '("sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "gnutls" "openssl" "ImageMagick-nox11"
              "autoconf" "libtool" "automake" ;; for libfixposix
              "erlang" "couchdb" "rabbitmq" "openjdk8" "memcached" "rabbitmq-c-devel" "leiningen"))
   (cmd-package "install" p))
+
+(with-open-file (stream "/etc/fstab" :direction :io :if-exists :OVERWRITE)
+  (let ((found-fs (loop for line = (read-line stream nil)
+                     while line
+                     when (search "fdescfs" line)
+                     collect :fdescfs
+                     when (search "procfs" line)
+                     collect :procfs)))
+    ;; position is now at the end of the file, we can safely append
+    (unless (member :fdescfs found-fs)
+      (format stream "fdesc   /dev/fd     fdescfs     rw  0   0~%")
+      (format t "added fdescfs to /etc/fstab~%"))
+    (unless (member :procfs found-fs)
+      (format stream "proc    /proc       procfs      rw  0   0~%")
+      (format t "added procfs to /etc/fstab~%"))))
+
+;; mount all new filesystems
+(uiop:run-program (list "/sbin/mount" "-a"))
 
 (portsnap "fetch")
 (handler-case
@@ -47,7 +64,6 @@
 (handler-case
     (pkg-info "nginx-devel")
   ;; "info" failed, which probably means we do not have nginx-devel installed yet
-  ;; TODO: manage updates?
   (uiop:subprocess-error ()
     (format t "Installing nginx~%")
     (uiop:chdir "/usr/ports/www/nginx-devel")
