@@ -1106,7 +1106,7 @@ highlighted-message - the message that should be highlighted (or
   ;; correctly.
   ;; See this bug report for details: https://github.com/google/closure-library/issues/470
   (let [digester (new js/goog.crypt.Sha1)]
-    (.update digester (clj->js (map (fn [x] (.codePointAt x 0)) (js/unescape (js/encodeURIComponent s)))))
+    (.update digester (clj->js (map (fn [x] (.charCodeAt x 0)) (js/unescape (js/encodeURIComponent s)))))
     (cljs.pprint/cl-format nil "~{~2,'0x~}" (.digest digester))))
 
 (defn- make-draft-message [text-string html]
