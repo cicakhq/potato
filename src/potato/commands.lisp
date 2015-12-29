@@ -334,6 +334,18 @@ Valid values for role is: user, admin"
     (potato.core:remove-user-from-group group user)
     (format t "User ~a removed from group ~a~%" (potato.core:user/id user) (potato.core:group/id group))))
 
+(define-command user-info "user-info"
+    ((user "user id"))
+    ()
+    "Show user details"
+    "Show user details"
+  (let ((user (potato.db:load-instance 'potato.core:user user)))
+    (format t "Description: ~a~%" (potato.core:user/description user))
+    (format t "Activated date: ~a~%" (potato.core:user/activated-p user))
+    (format t "New login: ~:[false~;true~]~%" (potato.core:user/new-login user))
+    (format t "Primary email: ~a~%" (potato.core:user/primary-email user))
+    (format t "Email addresses: ~{~a~^, ~}~%" (potato.core:user/email-addresses user))))
+
 (defun run-command (cmd)
   (multiple-value-bind (match strings)
       (cl-ppcre:scan-to-strings "^([a-zA-Z0-9-]+)(?: +(.*))?$" cmd)
