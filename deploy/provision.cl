@@ -41,18 +41,17 @@
   (cmd-package "install" p))
 
 (portsnap "fetch")
-(handler-bind ((uiop:subprocess-error
-                #'(lambda (ex)
-                    (portsnap "extract"))))
-  (portsnap "update"))
-;; first should be extract, but next should be update?
+(handler-case
+    (portsnap "update")
+  ;; update failed, maybe we should try "extract" for the initial portsnap
+  (uiop:subprocess-error () (portsnap "extract")))
 
-;; how not to re-install installed packages?
-(handler-bind ((uiop:subprocess-error
-                #'(lambda (ex)
-                    (format t "Installing nginx~%")
-                    (uiop:chdir "/usr/ports/www/nginx-devel")
-                    (uiop:run-program (list "/usr/bin/make" "-DWITH=\"HTTPV2\"" "install" "clean" "BATCH=yes")))))
-  (pkg-info "nginx-devel"))
-
+(handler-case
+    (pkg-info "nginx-devel")
+  ;; "info" failed, which probably means we do not have nginx-devel installed yet
+  ;; TODO: manage updates?
+  (uiop:subprocess-error ()
+    (format t "Installing nginx~%")
+    (uiop:chdir "/usr/ports/www/nginx-devel")
+    (uiop:run-program (list "/usr/bin/make" "-DWITH=\"HTTPV2\"" "install" "clean" "BATCH=yes"))))
 
