@@ -54,7 +54,7 @@ Copy the Solr configuration from the Potato distribution at
 at `server/solr`:
 
 ```
-cp -r $POTATO_HOME/deploy/solr/potato $SOLR_HOME/server/solr
+cp -r $POTATO_HOME/deploy/files/solr/potato $SOLR_HOME/server/solr
 ```
 
 Finally, the potato configuration needs to be added to Solr. This is

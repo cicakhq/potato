@@ -82,6 +82,8 @@
   (format t "Extracting SolR~%")
   (uiop:run-program (list "/usr/bin/tar" "-zx" "-C" "/usr/local" "-f" "/tmp/solr-5.4.0.tgz")))
 
+(uiop:run-program (list "/bin/cp" "-r" "/potato/deploy/files/solr/potato" "/usr/local/solr-5.4.0/server/solr"))
+
 (format t "Installing libfixposix~%")
 (uiop:chdir "/tmp")
 (uiop:run-program (list "/usr/local/bin/curl" "-o" "libfixposix.zip" "https://codeload.github.com/sionescu/libfixposix/zip/master"))
