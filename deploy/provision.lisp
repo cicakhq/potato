@@ -33,7 +33,8 @@
 ; erlang is a super dependency of couchdb and rabbitmq
 ; openjdk8 pulls libXt and depends on a whole list of X-related packages
 ; + TODO: see https://www.digitalocean.com/community/tutorials/how-to-install-java-on-freebsd-10-1, modify `fstab'
-(dolist (p '("curl" "git" "bzip2" "zip" "unzip" "bash" "gnutls" "openssl"
+(dolist (p '("sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "gnutls" "openssl" "ImageMagick-nox11"
+             "autoconf" "libtool" "automake" ;; for libfixposix
              "erlang" "couchdb" "rabbitmq" "openjdk8" "memcached" "rabbitmq-c-devel" "leiningen"))
   (cmd-package "install" p))
 
@@ -64,5 +65,15 @@
 
   (format t "Extracting SolR~%")
   (uiop:run-program (list "/usr/bin/tar" "-zx" "-C" "/usr/local" "-f" "/tmp/solr-5.4.0.tgz")))
+
+(format t "Installing libfixposix~%")
+(uiop:chdir "/tmp")
+(uiop:run-program (list "/usr/local/bin/curl" "-o" "libfixposix.zip" "https://codeload.github.com/sionescu/libfixposix/zip/master"))
+(uiop:run-program (list "/usr/bin/unzip" "/tmp/libfixposix.zip"))
+(uiop:chdir "/tmp/libfixposix-master")
+(uiop:run-program (list "/usr/local/bin/autoreconf" "-i" "-f"))
+(uiop:run-program (list "./configure"))
+(uiop:run-program (list "make"))
+(uiop:run-program (list "make" "install"))
 
 

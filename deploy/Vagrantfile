@@ -26,6 +26,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vb.customize ["modifyvm", :id, "--audio", "none"]
   end
 
-  config.vm.provision "file",  source: "provision.cl", destination: "/var/tmp/provision.cl"
+  config.vm.provision "file",  source: "provision.lisp", destination: "/var/tmp/provision.lisp"
   config.vm.provision "shell", path:   "provision.sh"
 end
