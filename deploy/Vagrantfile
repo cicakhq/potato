@@ -19,6 +19,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provider "virtualbox" do |vb, override|
+    config.vm.network :bridged , :mac => "5CA1AB1E0001"
     vb.gui    = false
     vb.memory = 2048
     vb.cpus   = 4
