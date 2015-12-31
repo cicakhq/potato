@@ -155,7 +155,10 @@
 (format t "Building the lisp binary~%")
 (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "./tools/build_binary.sh"))
 
-(format t "Building the web application")
+(format t "Pulling CLJS dependencies and building the web application~%")
 (uiop:chdir "/home/potato/potato/web-app")
 (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/lein" "with-profile" "-dev" "cljsbuild" "once" "prod" "admin-prod"))
+
+(format t "Pulling GULP dependencies and building the CSS~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/npm" "install"))
 
