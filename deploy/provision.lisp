@@ -45,7 +45,8 @@
 
 ; erlang is a super dependency of couchdb and rabbitmq
 ; openjdk8 pulls libXt and depends on a whole list of X-related packages
-(dolist (p '("sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "lsof" "gnutls" "openssl" "ImageMagick-nox11"
+(dolist (p '("sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "lsof" "gnutls" "openssl"
+             "ImageMagick-nox11" "npm"
              "autoconf" "libtool" "automake" ;; for libfixposix
              "erlang" "couchdb" "rabbitmq" "openjdk8" "memcached" "rabbitmq-c-devel" "leiningen"))
   (cmd-package "install" p))
@@ -76,11 +77,11 @@
 ;; mount all new filesystems
 (uiop:run-program (list "/sbin/mount" "-a"))
 
-;(portsnap "fetch")
-;(handler-case
-;    (portsnap "update")
+(portsnap "fetch")
+(handler-case
+    (portsnap "update")
   ;; update failed, maybe we should try "extract" for the initial portsnap
-;  (uiop:subprocess-error () (portsnap "extract")))
+  (uiop:subprocess-error () (portsnap "extract")))
 
 (handler-case
     (pkg-info "nginx-devel")
@@ -144,4 +145,17 @@
   (format stream "#-quicklisp~%")
   (format stream "(let ((quicklisp-init (merge-pathnames \"quicklisp/setup.lisp\" (user-homedir-pathname))))~%")
   (format stream "     (when (probe-file quicklisp-init) (load quicklisp-init)))~%"))
+
+(format t "Cloning public repository~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "clone" "https://github.com/cicakhq/potato.git"))
+(uiop:chdir "/home/potato/potato")
+(format t "Initialising submodules~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "init"))
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "update"))
+(format t "Building the lisp binary~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "./tools/build_binary.sh"))
+
+(format t "Building the web application")
+(uiop:chdir "/home/potato/potato/web-app")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/lein" "with-profile" "-dev" "cljsbuild" "once" "prod" "admin-prod"))
 
