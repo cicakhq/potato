@@ -31,6 +31,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vb.customize ["modifyvm", :id, "--audio", "none", "--name", POTATO_NAME]
   end
 
-  config.vm.provision "file",  source: "provision.lisp", destination: "/var/tmp/provision.lisp"
-  config.vm.provision "shell", path:   "provision.sh"
+  config.vm.provision "shell", path: "provision.sh", args: [ POTATO_SERVER_DIR, "deploy/provision.lisp" ]
 end
