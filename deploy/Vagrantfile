@@ -17,6 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider "vmware_fusion" do |vmw|
     vmw.vmx["memsize"]  = "2048"
     vmw.vmx["numvcpus"] = "4"
+    vmw.vmx["vm_name"]  = POTATO_NAME
   end
 
   config.vm.provider "virtualbox" do |vb, override|

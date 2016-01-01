@@ -56,7 +56,7 @@
                        while line
                        thereis (search "root " line))))
     (unless found-root
-      (format t "add root to sudoers file")
+      (format t "add root to sudoers file~%")
       (format stream "root ALL=(ALL) NOPASSWD: ALL"))))
 
 (with-open-file (stream "/etc/fstab" :direction :io :if-exists :OVERWRITE)
