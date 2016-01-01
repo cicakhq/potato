@@ -45,7 +45,7 @@
 
 ; erlang is a super dependency of couchdb and rabbitmq
 ; openjdk8 pulls libXt and depends on a whole list of X-related packages
-(dolist (p '("sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "lsof" "gnutls" "openssl"
+(dolist (p '("rsync" "sudo" "curl" "git" "bzip2" "zip" "unzip" "bash" "lsof" "gnutls" "openssl"
              "ImageMagick-nox11" "npm" "haproxy"
              "autoconf" "libtool" "automake" ;; for libfixposix
              "erlang" "couchdb" "rabbitmq" "openjdk8" "memcached" "rabbitmq-c-devel" "leiningen"))

@@ -4,27 +4,30 @@
 VAGRANTFILE_API_VERSION = "2"
 POTATO_LOCAL_DIR        = `git rev-parse --show-toplevel`.chomp
 POTATO_SERVER_DIR       = "/potato"
+POTATO_NAME             = "potato"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box    = "freebsd/FreeBSD-11.0-CURRENT"
-  config.ssh.shell = "sh"
   #config.vm.box_check_update = false
+  config.ssh.shell = "sh"
 
   config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.synced_folder POTATO_LOCAL_DIR, POTATO_SERVER_DIR, mount_options: ["noatime,ro"], nfs: true
 
-  config.vm.provider "vmware_fusion" do |v|
-    v.vmx["memsize"]  = "2048"
-    v.vmx["numvcpus"] = "4"
+  config.vm.provider "vmware_fusion" do |vmw|
+    vmw.vmx["memsize"]  = "2048"
+    vmw.vmx["numvcpus"] = "4"
   end
 
   config.vm.provider "virtualbox" do |vb, override|
-    config.vm.network :bridged , :mac => "5CA1AB1E0001"
+    override.vm.network "private_network", ip: "169.254.10.10"
+    override.vm.base_mac = "5CA1AB1E0001"
+    override.vm.hostname = "#{POTATO_NAME}.local"
     vb.gui    = false
     vb.memory = 2048
     vb.cpus   = 4
     vb.name   = "Potato virtualbox"
-    vb.customize ["modifyvm", :id, "--audio", "none"]
+    vb.customize ["modifyvm", :id, "--audio", "none", "--name", POTATO_NAME]
   end
 
   config.vm.provision "file",  source: "provision.lisp", destination: "/var/tmp/provision.lisp"
