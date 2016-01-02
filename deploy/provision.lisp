@@ -1,8 +1,13 @@
-#!/usr/bin/env sbcl
+#!/usr/bin/env sbcl --noinform
 
 (require :asdf)
 
-(defconstant *freebsd-type* "FreeBSD")
+;;reading comman line arguments
+;(dolist (element uiop:*command-line-arguments*)
+;  (uiop:writeln element)
+;  (write-line element));; look the different output
+
+(defvar *freebsd-type* "FreeBSD")
 
 (defun freebsd-update ()
   (format t "Checking for FreeBSD patches~%")
@@ -138,27 +143,38 @@
 
 (uiop:chdir "/home/potato")
 
-(uiop:run-program (list "/usr/local/bin/curl" "-O" "https://beta.quicklisp.org/quicklisp.lisp"))
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/sbcl" "--noinform" "--non-interactive" "--noprint" "--load" "/home/potato/quicklisp.lisp" "--eval" "(quicklisp-quickstart:install)") :output *standard-output* :error *standard-output*)
+(unless (uiop:directory-exists-p "/home/potato/quicklisp")
+  (format t "Installing Quicklisp~%")
+  (uiop:run-program (list "/usr/local/bin/curl" "-O" "https://beta.quicklisp.org/quicklisp.lisp"))
+  (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/sbcl" "--noinform" "--non-interactive" "--noprint" "--load" "/home/potato/quicklisp.lisp" "--eval" "(quicklisp-quickstart:install)") :output *standard-output* :error *standard-output*)
 
-(with-open-file (stream "/home/potato/.sbclrc" :direction :output :if-exists :rename)
-  (format stream "#-quicklisp~%")
-  (format stream "(let ((quicklisp-init (merge-pathnames \"quicklisp/setup.lisp\" (user-homedir-pathname))))~%")
-  (format stream "     (when (probe-file quicklisp-init) (load quicklisp-init)))~%"))
+  (with-open-file (stream "/home/potato/.sbclrc" :direction :output :if-exists :rename)
+    (format stream "#-quicklisp~%")
+    (format stream "(let ((quicklisp-init (merge-pathnames \"quicklisp/setup.lisp\" (user-homedir-pathname))))~%")
+    (format stream "     (when (probe-file quicklisp-init) (load quicklisp-init)))~%")))
 
-(format t "Cloning public repository~%")
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "clone" "https://github.com/cicakhq/potato.git"))
-(uiop:chdir "/home/potato/potato")
-(format t "Initialising submodules~%")
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "init"))
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "update"))
-(format t "Building the lisp binary~%")
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "./tools/build_binary.sh"))
+;; rsync -rtv source_folder/ destination_folder/
+(unless (uiop:directory-exists-p "/home/potato/potato")
+  (format t "Cloning public repository~%")
+  (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "clone" "https://github.com/cicakhq/potato.git"))
+  (uiop:chdir "/home/potato/potato")
+  (format t "Initialising submodules~%")
+  (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "init"))
+  (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/git" "submodule" "update")))
 
-(format t "Pulling CLJS dependencies and building the web application~%")
+(unless (uiop:file-exists-p "/home/potato/potato/potato.bin")
+  (format t "Building the lisp binary~%")
+  (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "./tools/build_binary.sh")))
+
 (uiop:chdir "/home/potato/potato/web-app")
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/lein" "with-profile" "-dev" "cljsbuild" "once" "prod" "admin-prod"))
+(format t "Pulling CLJS dependencies~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/lein" "with-profile" "-dev" "deps") :output *standard-output* :error *standard-output*)
+(format t "Building the CLJS web application~%")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/lein" "with-profile" "-dev" "cljsbuild" "once" "prod" "admin-prod") :output *standard-output* :error *standard-output*)
 
 (format t "Pulling GULP dependencies and building the CSS~%")
-(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/npm" "install"))
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/npm" "install") :output *standard-output* :error *standard-output*)
 
+;; Set couchdb_enable to YES in /etc/rc.conf
+;; Set memcached_enable to YES in /etc/rc.conf
+;; Set rabbitmq_enable to YES in /etc/rc.conf
