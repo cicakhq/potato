@@ -45,6 +45,17 @@
 ;-- MAIN
 
 (format t "Hello World!~%")
+
+(when (string= (uiop:hostname) "")
+  (uiop:run-program (list "/bin/hostname" "potato"))
+  (with-open-file (stream "/etc/rc.conf" :direction :io :if-exists :overwrite)
+    (let ((found-hostname (loop for line = (read-line stream nil)
+                             while line
+                               thereis (search "hostname=" line))))
+      (unless found-hostname
+        (format t "add hostname to rc.conf~%")
+        (format stream "hostname=\"potato\"")))))
+
 (when (string= (software-type) *freebsd-type*)
   (freebsd-update))
 
@@ -175,6 +186,31 @@
 (format t "Pulling GULP dependencies and building the CSS~%")
 (uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "/usr/local/bin/npm" "install") :output *standard-output* :error *standard-output*)
 
-;; Set couchdb_enable to YES in /etc/rc.conf
-;; Set memcached_enable to YES in /etc/rc.conf
-;; Set rabbitmq_enable to YES in /etc/rc.conf
+(with-open-file (stream "/etc/rc.conf" :direction :io :if-exists :OVERWRITE)
+  (let ((found-rc (loop for line = (read-line stream nil)
+                     while line
+                     when (search "couchdb_enable" line)
+                     collect :couchdb
+                     when (search "memcached_enable" line)
+                     collect :memcached
+                     when (search "rabbitmq_enable" line)
+                     collect :rabbitmq)))
+    ;; position is now at the end of the file, we can safely append
+    (unless (member :couchdb found-rc)
+      (format stream "couchdb_enable=\"YES\"~%")
+      (format t "Added couchdb to /etc/rc.conf~%"))
+    (unless (member :memcached found-rc)
+      (format stream "memcached_enable=\"YES\"~%")
+      (format t "Added memcached to /etc/rc.conf~%"))
+    (unless (member :rabbitmq found-rc)
+      (format stream "rabbitmq_enable=\"YES\"~%")
+      (format t "Added rabbitmq to /etc/rc.conf~%"))))
+
+(format t "Start CouchDB, Memcached and RabbitMQ~%")
+(dolist (the-service '("couchdb" "memcached" "rabbitmq"))
+  (uiop:run-program (list (format nil "/usr/local/etc/rc.d/~a" the-service) "start") :output *standard-output* :error *standard-output*))
+
+(uiop:chdir "/home/potato/potato/")
+(format t "Init of the CouchDB database")
+(uiop:run-program (list "/usr/local/bin/sudo" "-u" "potato" "./potato.bin" "-c" "potato.cfg" "--init"))
+
