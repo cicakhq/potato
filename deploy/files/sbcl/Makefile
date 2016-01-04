@@ -116,7 +116,7 @@ MAKE_SH_ARGS+=	--without-sb-safepoint-strictly
 MAKE_SH_ARGS+=	--without-sb-safepoint \
 		--without-sb-safepoint-strictly \
 		--without-sb-thruption \
-		--without-sb-wtimer
+		--without-sb-wtimer --without-sb-sprof
 . endif
 .else
 MAKE_SH_ARGS+=	--without-sb-thread
