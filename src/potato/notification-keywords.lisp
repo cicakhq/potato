@@ -78,7 +78,7 @@ reminder is sent.")
           (cl-memcached:mc-set memcached-key (conspack:encode keywords))
           keywords))))
 
-(potato.db:define-hook-fn flush-notification-keywords notification-keywords (config)
+(potato.db:define-hook-fn flush-notification-keywords notification-keywords (config :type (:save :delete))
   (let ((result (clouchdb:invoke-view "user" "channels_by_domain_and_user"
                                       :start-key (list (notification-keywords/user config) nil)
                                       :end-key (list (notification-keywords/user config) 'clouchdb:json-map))))

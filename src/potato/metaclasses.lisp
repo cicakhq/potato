@@ -177,9 +177,16 @@
   (when (and (persisted-entry-class/record-changes-p col)
              #+nil(slot-boundp obj 'modifications)
              #+nil(slot-value obj 'modifications)
-             (closer-mop:slot-boundp-using-class class obj col)
-             (not (equal (closer-mop:slot-value-using-class class obj col) new-value)))
-    (setf (gethash (closer-mop:slot-definition-name col) (persisted-entry/modifications obj)) t)))
+             (closer-mop:slot-boundp-using-class class obj col))
+    (let ((value (closer-mop:slot-value-using-class class obj col)))
+      (when (not (equal value new-value))
+        (let ((modifications (persisted-entry/modifications obj))
+              (n (closer-mop:slot-definition-name col)))
+          (multiple-value-bind (v updated-p)
+              (gethash n modifications)
+            (declare (ignore v))
+            (unless updated-p
+              (setf (gethash n modifications) value))))))))
 
 (defun persisted-entry-is-value-updated (obj slot)
   (check-type obj persisted-entry)
@@ -187,8 +194,13 @@
   (unless (should-record-modifications-p (class-of obj))
     (error "This object does not record changes"))
   (let ((modifications (persisted-entry/modifications obj)))
-    (values (and modifications
-                 (gethash slot modifications)))))
+    (if modifications
+        (multiple-value-bind (v updated-p)
+            (gethash slot modifications)
+          (if updated-p
+              (values t v)
+              (values nil nil)))
+        (values nil nil))))
 
 (defun persisted-entry-clear-modifications-list (obj)
   (check-type obj persisted-entry)

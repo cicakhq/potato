@@ -1,7 +1,8 @@
 (defpackage :potato.db-fixes
   (:use :cl :potato.common)
   (:export #:fix-images
-           #:transfer-messages))
+           #:transfer-messages
+           #:update-user-nicknames))
 
 (in-package :potato.db-fixes)
 
@@ -127,3 +128,15 @@ hold more information (for example the image's dimensions)."
                         (getfield :|file_list| msg)))
           (clouchdb:put-document msg))))))
  
+(defun update-user-nicknames ()
+  (potato.common.application:start-component 'potato.common::generic)
+  (potato.common.application:start-component 'potato.db::db)
+  (let ((result (clouchdb:ad-hoc-view "function(doc) { if(doc.type === 'user') emit(doc._id,doc); }")))
+    (dolist (row (getfield :|rows| result))
+      (let ((content (getfield :|value| row)))
+        (unless (getfield :|nickname| content :accept-missing t)
+          (let ((uid (getfield :|_id| content)))
+            (format t "Updating user: ~s~%" uid)
+            (let ((nick (make-instance 'potato.core:user-nickname :user uid :nickname uid)))
+              (potato.db:save-instance nick))
+            (clouchdb:create-document (append content (list (cons :|nickname| uid))))))))))

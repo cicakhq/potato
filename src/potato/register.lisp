@@ -18,13 +18,15 @@
                                 (cons :redirect-path redirect-path))))
 
 (defun make-unregistered-user (description password)
-  (let ((user (make-instance 'user
-                             :couchdb-id (concatenate 'string "user-" (potato.db:make-random-couchdb-id))
-                             :description description
-                             :password (or password "")
-                             :activated-p nil
-                             :activate-code (ironclad:byte-array-to-hex-string (secure-random:bytes 16 secure-random:*generator*))
-                             :default-image-name (format nil "~a.png" (1+ (random 7))))))
+  (let* ((id (potato.db:make-random-couchdb-id))
+         (user (make-instance 'user
+                              :couchdb-id (concatenate 'string "user-" id)
+                              :nickname id
+                              :description description
+                              :password (or password "")
+                              :activated-p nil
+                              :activate-code (ironclad:byte-array-to-hex-string (secure-random:bytes 16 secure-random:*generator*))
+                              :default-image-name (format nil "~a.png" (1+ (random 7))))))
     (when password
       (potato.core::user/update-password user password))
     user))

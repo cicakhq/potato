@@ -220,7 +220,10 @@
            #:domain-user/domain
            #:domain-user/role
            #:load-message-range
-           #:trim-string))
+           #:trim-string
+           #:user-nickname
+           #:user/nickname
+           #:nickname-is-in-use-p))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

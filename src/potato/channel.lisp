@@ -163,10 +163,10 @@ the following form: \(ID DESCRIPTION IMAGE-NAME)"
 (defun flush-user-descriptions-for-channel-members (channel-id)
   (cl-memcached:mc-del (user-descriptions-for-channel-members-memcached-key channel-id)))
 
-(potato.db:define-hook-fn flush-channel-member-descriptions channel-users (obj)
+(potato.db:define-hook-fn flush-channel-member-descriptions channel-users (obj :type (:save :delete))
   (flush-user-descriptions-for-channel-members (channel-users/channel-id obj)))
 
-(potato.db:define-hook-fn flush-channel-members-at-user-change user (obj)
+(potato.db:define-hook-fn flush-channel-members-at-user-change user (obj :type (:save :delete))
   (dolist (cid (find-channels-for-user obj))
     (flush-user-descriptions-for-channel-members cid)))
 
