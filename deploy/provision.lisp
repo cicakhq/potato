@@ -54,7 +54,7 @@
                                thereis (search "hostname=" line))))
       (unless found-hostname
         (format t "add hostname to rc.conf~%")
-        (format stream "hostname=\"potato\"")))))
+        (format stream "hostname=\"potato\"~%")))))
 
 (when (string= (software-type) *freebsd-type*)
   (freebsd-update))
