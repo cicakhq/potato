@@ -54,6 +54,15 @@
       <hr>
 
       <div>
+        Nickname: <input type="text" name="nickname" value="<% #nickname %>">
+        <% if nickname-error %>
+          <div style="color: red;"><% #nickname-error %></div>
+        <% end %>
+      </div>
+
+      <hr>
+
+      <div>
         <div>New password: <input type="password" name="password1" size="20"></div>
         <div>Again: <input type="password" name="password2" size="20"></div>
         <% if password-error %>

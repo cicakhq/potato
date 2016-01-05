@@ -129,6 +129,7 @@
 (defmethod save-instance ((obj persisted-entry) &key (error-if-fail t))
   (let* ((class (class-of obj))
          (args (make-doc-from-instance class obj)))
+    (run-hooks-for-obj obj :pre-save)
     (let ((result (apply #'clouchdb:create-document
                          (append args
                                  (alexandria:if-let ((counchdb-revision (persisted-entry/couchdb-revision obj)))
@@ -140,16 +141,16 @@
                          (let ((id (persisted-entry/couchdb-id obj)))
                            (when id
                              (list :id id))))))
-      (if (cdr (assoc :|ok| result))
-          ;; The document was successfully created, update the id slot
-          (progn
-            (setf (persisted-entry/couchdb-id obj) (cdr (assoc :|id| result)))
-            (setf (persisted-entry/couchdb-revision obj) (cdr (assoc :|rev| result)))
-            (run-hooks-for-obj obj :save))
-          ;; The create call failed, report the error unless ERROR-IF-FAIL is false
-          (when error-if-fail
-            (error 'persist-error :result result)))
-      (flush-cache-for-object-if-enabled class (persisted-entry/couchdb-id obj))
+      (cond ((cdr (assoc :|ok| result))
+             ;; The document was successfully created, update the id slot
+             (setf (persisted-entry/couchdb-id obj) (cdr (assoc :|id| result)))
+             (setf (persisted-entry/couchdb-revision obj) (cdr (assoc :|rev| result)))
+             (flush-cache-for-object-if-enabled class (persisted-entry/couchdb-id obj))
+             (run-hooks-for-obj obj :save)
+             (potato.db:persisted-entry-clear-modifications-list obj))
+            (error-if-fail
+             ;; The create call failed, report the error unless ERROR-IF-FAIL is false
+             (error 'persist-error :result result)))
       result)))
 
 (defgeneric load-instance-from-doc (class doc &key accept-empty-type))
@@ -246,17 +247,25 @@ Therefore, it always issues a warning when the function is called."
       (error "Attempt to load attachment for an object which does not have attachment enabled"))
     (clouchdb:get-attachment-stream (persisted-entry/couchdb-id obj) name :force-binary force-binary)))
 
-(defmacro define-hook-fn (name class (obj &optional type) &body body)
+(defmacro define-hook-fn (name class (obj &key (type :save)) &body body)
   "Define a hook function NAME for CLASS."
   (alexandria:with-gensyms (class-sym obj-sym type-sym)
-    `(progn ;;eval-when (:compile-toplevel :load-toplevel :execute)
-       (let ((,class-sym (find-class ',class)))
-         (defun ,name (,obj-sym ,type-sym)
-           (declare (ignorable ,type-sym))
-           (let ((,obj ,obj-sym)
-                 ,@(if type `((,type ,type-sym))))
-             ,@body))
-         (pushnew ',name (persisted-entry-class/hooks ,class-sym))))))
+    (multiple-value-bind (rem-forms declarations doc-string)
+        (alexandria:parse-body body :documentation t)
+      `(progn ;;eval-when (:compile-toplevel :load-toplevel :execute)
+         (let ((,class-sym (find-class ',class)))
+           (defun ,name (,obj-sym ,type-sym)
+             ,@(if doc-string (list doc-string))
+             (when ,(cond ((symbolp type)
+                           `(eq ,type-sym ,type))
+                          ((alexandria:sequence-of-length-p type 1)
+                           `(eq ,type-sym ,(car type)))
+                          (t
+                           `(member ,type-sym ',type)))
+               (let ((,obj ,obj-sym))
+                 ,@declarations
+                 ,@rem-forms)))
+           (pushnew ',name (persisted-entry-class/hooks ,class-sym)))))))
 
 (defun call-clouchdb-update-function (category name document params)
   (loop
