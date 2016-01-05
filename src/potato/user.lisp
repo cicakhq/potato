@@ -170,7 +170,7 @@
     (when (and updated-p (not (equal (user/nickname user) value)))
       (let ((nick (make-instance 'user-nickname :user (user/id user) :nickname (user/nickname user))))
         ;; This call will throw an error if the nickname already exists
-        (log:info "Saving nick: ~s" (user/nickname user))
+        (log:trace "Saving nick: ~s" (user/nickname user))
         (potato.db:save-instance nick)))))
 
 (potato.db:define-hook-fn remove-old-nickname-if-changed user (user :type :save)
@@ -178,7 +178,7 @@
   (multiple-value-bind (updated-p value)
       (potato.db:persisted-entry-is-value-updated user 'nickname)
     (when (and updated-p (not (equal (user/nickname user) value)))
-      (log:info "Removing nick: ~s" value)
+      (log:trace "Removing nick: ~s" value)
       (let ((nick (potato.db:load-instance 'user-nickname (make-user-nickname-id value))))
         (potato.db:remove-instance nick)))))
 
