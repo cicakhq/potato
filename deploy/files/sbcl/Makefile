@@ -40,7 +40,7 @@ CPPFLAGS+=	-I. -DSBCL_PREFIX=\\\"\$$(SBCL_PREFIX)\\\"
 CONMODULES=	asdf sb-aclrepl sb-bsd-sockets sb-cltl2 sb-concurrency \
 		sb-cover sb-executable sb-gmp sb-grovel sb-introspect \
 		sb-md5 sb-mpfr sb-posix sb-queue sb-rotate-byte sb-rt \
-		sb-simple-streams sb-sprof
+		sb-simple-streams
 
 MAKE_SH_ARGS?=	--prefix=${PREFIX} \
 		--dynamic-space-size=${DYNAMIC_SPACE_SIZE} \
