@@ -52,9 +52,10 @@ NMFLAGS?=	-gp
 BOOT_ARCH_OS_LIST=	1.0.31-amd64-freebsd8 1.0.31-i386-freebsd8 \
 			1.2.9-x86_64-dragonfly4
 
-OPTIONS_DEFINE=		SBCL THREADS
+OPTIONS_DEFINE=		SBCL THREADS FANCY
 SBCL_DESC=		Bootstrap with installed SBCL binary, if available
 THREADS_DESC=		Experimental threading support
+FANCY_DESC=		Enable fancy SBCL options
 
 .include <bsd.port.options.mk>
 
@@ -100,6 +101,9 @@ MAKE_SH_ARGS+=	--xc-host='${XC_HOST}'
 
 .if ${PORT_OPTIONS:MTHREADS}
 MAKE_SH_ARGS+=	--with-sb-thread
+.endif
+.if ${PORT_OPTIONS:MFANCY}
+MAKE_SH_ARGS+=	--fancy
 . if defined(WITH_FUTEX)
 MAKE_SH_ARGS+=	--with-sb-futex
 . else
@@ -116,7 +120,7 @@ MAKE_SH_ARGS+=	--without-sb-safepoint-strictly
 MAKE_SH_ARGS+=	--without-sb-safepoint \
 		--without-sb-safepoint-strictly \
 		--without-sb-thruption \
-		--without-sb-wtimer --without-sb-sprof
+		--without-sb-wtimer
 . endif
 .else
 MAKE_SH_ARGS+=	--without-sb-thread
