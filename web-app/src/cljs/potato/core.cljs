@@ -568,15 +568,6 @@ id's. Returns the updated value."
         (when (:channel dest)
           (aset js/window "location" (str potato.urls/channel-root "/" (:channel dest)))))))
 
-(defn user-in-list [[uid name active] owner]
-  (reify
-    om/IDisplayName (display-name [_] "user-in-list")
-    om/IRender
-    (render [_]
-      (om.dom/li #js {:className (if active "online-highlight")
-                      :onClick   (if uid #(start-private-chat uid))} name
-                      (if active (str nonbreak-space active-text))))))
-
 (defn channel-header [channel owner]
   (reify
     om/IDisplayName (display-name [_] "channel-header")
@@ -893,32 +884,42 @@ id's. Returns the updated value."
                                                              :editable         (not (:unconfirmed message))
                                                              :editing-callback #(om/set-state! owner :editing %)}}))))))))
 
-(defn roster-component [data owner]
+(defn user-in-list [[uid name nickname active] owner]
   (reify
-    om/IDisplayName (display-name [_] "roster-component")
+    om/IDisplayName (display-name [_] "user-in-list")
     om/IRender
     (render [_]
-      (om.dom/section
-          #js {:id "roster"}
-        (om.dom/h2 nil users-text)
-        (apply om.dom/ul #js {:id "channel-online"}
-               (om/build-all user-in-list
-                             (sort-by #(clojure.string/lower-case (second %))
-                                      (remove nil?
-                                              (map (fn [[uid user-state]]
-                                                     (let [user-name-entry (get (:user-to-name-map data) uid)]
-                                                       (if (and user-name-entry (:active user-state))
-                                                         (list uid (:description user-name-entry) (:active user-state)))))
-                                                   (:users (get (:channels data) (:active-channel data))))))))
-        (apply om.dom/ul #js {:id "channel-offline"}
-               (om/build-all user-in-list
-                             (sort-by #(clojure.string/lower-case (second %))
-                                      (remove nil?
-                                              (map (fn [[uid user-state]]
-                                                     (let [user-name-entry (get (:user-to-name-map data) uid)]
-                                                       (if (and user-name-entry (not (:active user-state)))
-                                                         (list uid (:description user-name-entry) (:active user-state)))))
-                                                   (:users (get (:channels data) (:active-channel data))))))))))))
+      (om.dom/li #js {:className (if active "online-highlight")
+                      :onClick   (if uid #(start-private-chat uid))
+                      :title     nickname}
+        name
+        (if active (str nonbreak-space active-text))))))
+
+(defn roster-component [data owner]
+  (let [build-user-list
+        (fn [active-p]
+          (om/build-all user-in-list
+                        (sort-by #(clojure.string/lower-case (second %))
+                                 (remove nil?
+                                         (map (fn [[uid user-state]]
+                                                (let [user-name-entry (get (:user-to-name-map data) uid)
+                                                      user-active-p (:active user-state)]
+                                                  (if (and user-name-entry (or (and active-p user-active-p)
+                                                                               (and (not active-p) (not user-active-p))))
+                                                    (list uid
+                                                          (:description user-name-entry)
+                                                          (:nickname user-name-entry)
+                                                          user-active-p))))
+                                              (:users (get (:channels data) (:active-channel data))))))))]
+    (reify
+      om/IDisplayName (display-name [_] "roster-component")
+      om/IRender
+      (render [_]
+        (om.dom/section
+            #js {:id "roster"}
+          (om.dom/h2 nil users-text)
+          (apply om.dom/ul #js {:id "channel-online"} (build-user-list true))
+          (apply om.dom/ul #js {:id "channel-offline"} (build-user-list false)))))))
 
 (defn channel-toolbar [data owner]
   (reify
