@@ -155,6 +155,7 @@ the following form: \(ID DESCRIPTION IMAGE-NAME)"
                                (let ((user (potato.db:load-instance 'user uid)))
                                  (list (user/id user)
                                        (user/description user)
+                                       (user/nickname user)
                                        (potato.user-image:image-url-for-user user))))
                              user-ids)))
           (cl-memcached:mc-set key (conspack:encode list))

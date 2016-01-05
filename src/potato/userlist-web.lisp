@@ -37,10 +37,11 @@
     (let* ((channel (potato.core:load-channel-with-check (st-json:getjso "channel" data)))
            (result (potato.core:user-descriptions-for-channel-members channel)))
       (st-json:jso "members" (mapcar #'(lambda (v)
-                                         (destructuring-bind (id description user-image)
+                                         (destructuring-bind (id description nickname user-image)
                                              v
                                            (st-json:jso "id" id
                                                         "description" description
+                                                        "nickname" nickname
                                                         "image_name" user-image)))
                                      result)))))
 
@@ -57,4 +58,5 @@
                               collect (let ((user (potato.core:load-user uid)))
                                         (st-json:jso "id" (potato.core:user/id user)
                                                      "description" (potato.core:user/description user)
+                                                     "nickname" (potato.core:user/nickname user)
                                                      "image_name" (potato.user-image:image-url-for-user user))))))))

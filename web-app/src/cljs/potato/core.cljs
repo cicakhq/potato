@@ -41,7 +41,6 @@
 (defonce current-build-id (aget js/window "currentBuildId"))
 
 ;; Localization related
-(def is-or-are-typing   "~1{~#[none~;~a~;~a and ~a~:;~@{~#[~;and ~]~a~^, ~}~]~:} ~:*~1{~#[are~;is~:;are~]~:} typing")
 (def nonbreak-space     "\u00a0")
 (def message-deleted    "message deleted")
 (def message-updated    "updated")
@@ -237,7 +236,7 @@ id's. Returns the updated value."
   "Given a list of users, update the user-to-name-map in app with the
   new data and return the updated app state."
   ;; Each element in 'user-list' contains a map of the following form:
-  ;;   {:id "id" :description "name" :image_name "image_name"}
+  ;;   {:id "id" :description "name" :nickname "nickname" :image_name "image_name"}
   ;; :image_name can be missing, in which case the previous value
   ;; should be kept. This happens when a join/leave message is
   ;; received.
@@ -245,12 +244,15 @@ id's. Returns the updated value."
                   (fn [m]
                     (let [user-list-as-map (reduce (fn [r v]
                                                      (conj r {(:id v) {:description (:description v)
+                                                                       :nickname (:nickname v)
                                                                        :image-name (:image_name v)}}))
                                                    {} user-list)
                           updated-list (reduce (fn [r [k v]]
                                                  (let [updated-user (get user-list-as-map k)]
                                                    (conj r {k {:description (or (:description updated-user)
                                                                                 (:description v))
+                                                               :nickname (or (:nickname updated-user)
+                                                                             (:nickname v))
                                                                :image-name (or (:image-name updated-user)
                                                                                (:image-name v))}})))
                                                {} m)]
@@ -265,6 +267,7 @@ id's. Returns the updated value."
           (let [updated (update-in app [:user-to-name-map uid]
                           (fn [v]
                             {:description (:description e)
+                             :nickname (:nickname e)
                              :image-name (:image_name e)}))]
             (refresh-messages-for-users updated #{uid}))))))
 
@@ -1316,7 +1319,7 @@ highlighted-message - the message that should be highlighted (or
               other-users-typing (disj typing user-id)]
           (if (> (count other-users-typing) 0)
             (om.dom/div #js {:className "typing"}
-              (cljs.pprint/cl-format nil is-or-are-typing
+              (cljs.pprint/cl-format nil "~1{~#[none~;~a~;~a and ~a~:;~@{~#[~;and ~]~a~^, ~}~]~:} ~:*~1{~#[are~;is~:;are~]~:} typing"
                                      (map (fn [uid]
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
                                           other-users-typing)))))))))

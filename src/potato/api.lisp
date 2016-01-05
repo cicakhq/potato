@@ -230,10 +230,11 @@
     (:get (let* ((channel (potato.core:load-channel-with-check channel-id))
                  (result (potato.core:user-descriptions-for-channel-members channel)))
             (st-json:jso "members" (mapcar #'(lambda (v)
-                                               (destructuring-bind (id description user-image)
+                                               (destructuring-bind (id description nickname user-image)
                                                    v
                                                  (st-json:jso "id" id
                                                               "description" description
+                                                              "nickname" nickname
                                                               "image_name" user-image)))
                                            result))))))
 
