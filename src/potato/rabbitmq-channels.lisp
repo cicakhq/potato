@@ -23,11 +23,12 @@
                       "description" description
                       "image_url" image-url)))
       (:user-name-change
-       (destructuring-bind (uid description image-name)
+       (destructuring-bind (uid description nickname image-name)
            (cdr content)
          (st-json:jso "type" "user-name-change"
                       "user" uid
                       "description" description
+                      "nickname" nickname
                       "image_name" image-name)))
       (:channel-change
        (destructuring-bind (cid name topic)
@@ -55,6 +56,7 @@
             (body (lisp-to-binary (list :user-name-change
                                         uid
                                         (potato.core:user/description user)
+                                        (potato.core:user/nickname user)
                                         (potato.user-image:image-url-for-user user)))))
         (dolist (cid channels)
           (cl-rabbit:basic-publish conn 1
@@ -64,6 +66,7 @@
 
 (potato.db:define-hook-fn push-notification-on-user-description-change potato.core:user (user)
   (when (or (potato.db:persisted-entry-is-value-updated user 'potato.core::description)
+            (potato.db:persisted-entry-is-value-updated user 'potato.core::nickname)
             (potato.db:persisted-entry-is-value-updated user 'potato.core::image-name))
     (notify-user-changed user)))
 
