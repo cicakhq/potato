@@ -155,7 +155,9 @@
   (:documentation "Records the registered nickname for a user in order to ensure they are unique"))
 
 (defun make-user-nickname-id (nickname)
-  (concatenate 'string "usernickname-" (encode-name nickname)))
+  (unless (valid-user-nickname-p nickname)
+    (error "Invalid nickname format"))
+  (concatenate 'string "usernickname-" (encode-name (string-downcase nickname))))
 
 (defmethod initialize-instance :after ((obj user-nickname) &key)
   (setf (potato.db:persisted-entry/couchdb-id obj)
@@ -163,10 +165,13 @@
 
 (potato.db:define-hook-fn ensure-nickname-unique user (user :type :pre-save)
   "Hook function that creates the user-nickname instance before the user is saved."
-  (let ((nick (make-instance 'user-nickname :user (user/id user) :nickname (user/nickname user))))
-    ;; This call will throw an error if the nickname already exists
-    (log:info "Saving nick: ~s" (user/nickname user))
-    (potato.db:save-instance nick)))
+  (multiple-value-bind (updated-p value)
+      (potato.db:persisted-entry-is-value-updated user 'nickname)
+    (when (and updated-p (not (equal (user/nickname user) value)))
+      (let ((nick (make-instance 'user-nickname :user (user/id user) :nickname (user/nickname user))))
+        ;; This call will throw an error if the nickname already exists
+        (log:info "Saving nick: ~s" (user/nickname user))
+        (potato.db:save-instance nick)))))
 
 (potato.db:define-hook-fn remove-old-nickname-if-changed user (user :type :save)
   "Hook function that removes the old user-nickname object after a user was saved."
@@ -179,6 +184,9 @@
 
 (defun nickname-is-in-use-p (nickname)
   (if (potato.db:load-instance 'user-nickname (make-user-nickname-id nickname) :error-if-not-found nil) t nil))
+
+(defun valid-user-nickname-p (nickname)
+  (cl-ppcre:scan "^[a-zA-Z0-9_-]+$" nickname))
 
 ;;;
 ;;;  Passwords

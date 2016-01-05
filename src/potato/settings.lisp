@@ -34,8 +34,12 @@
                         (potato.core:user/update-password loaded-user password1)
                         (setq updated t)
                         (push '(:password-message . "Password changed") response)))
-                 (cond ((equal nickname "")
+                 (cond ((equal nickname (potato.core:user/nickname loaded-user))
+                        nil)
+                       ((equal nickname "")
                         (push '(:nickname-error . "Nickname can't be blank") response))
+                       ((not (potato.core:valid-user-nickname-p nickname))
+                        (push '(:nickname-error . "Invalid nickname (allowed charcters are a-z, 0-9, _ and -)") response))
                        ((potato.core:nickname-is-in-use-p nickname)
                         (push '(:nickname-error . "Nickname is in use") response))
                        (t

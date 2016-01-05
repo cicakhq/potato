@@ -223,7 +223,8 @@
            #:trim-string
            #:user-nickname
            #:user/nickname
-           #:nickname-is-in-use-p))
+           #:nickname-is-in-use-p
+           #:valid-user-nickname-p))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
