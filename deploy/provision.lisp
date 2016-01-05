@@ -107,9 +107,9 @@
     (uiop:chdir "/usr/ports/www/nginx-devel")
     (uiop:run-program (list "/usr/bin/make" "-DWITH=\"HTTPV2\"" "install" "clean" "BATCH=yes"))))
 
-(format t "Recompile SBCL with threads support")
+(format t "Recompile SBCL with threads support~%")
 (uiop:chdir "/potato/deploy/files/sbcl")
-(uiop:run-program (list "/usr/bin/make" "-DWITH=\"THREADS\"" "-DWITH=\"SBCL\"" "reinstall" "clean" "BATCH=yes") :output *standard-output* :error *standard-output*)
+(uiop:run-program (list "/usr/bin/make" "-DWITH=\"FANCY\"" "reinstall" "clean" "BATCH=yes") :output *standard-output* :error *standard-output*)
 
 (let* ((solr-version  "5.4.0")
        (solr-checksum "f906356e01eebb08e856a7c64250ba53")
