@@ -224,7 +224,12 @@
            #:user-nickname
            #:user/nickname
            #:nickname-is-in-use-p
-           #:valid-user-nickname-p))
+           #:valid-user-nickname-p
+           #:display-config
+           #:display-config/user
+           #:display-config/timezone
+           #:load-display-config-for-user
+           #:format-timestamp-for-display-config))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
@@ -313,7 +318,8 @@
            #:user-notification/channel
            #:process-user-notification-message-and-build-json
            #:message/deleted
-           #:user-notification/message-id))
+           #:user-notification/message-id
+           #:user-notification/created-date))
 
 (defpackage :potato.workflow
   (:use :cl :potato :potato.common :potato.core)

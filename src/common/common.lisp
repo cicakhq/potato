@@ -267,4 +267,5 @@ it contains invalid characters, raise an error."
 (potato.common.application:define-component generic
   (:dependencies logging lparallel rabbitmq clouchdb solr s3 potato.common.memcached::memcached)
   (:start
+   (local-time:reread-timezone-repository)
    (setq *init-called* t)))

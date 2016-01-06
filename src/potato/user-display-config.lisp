@@ -10,10 +10,17 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defclass display-config (potato.db:persisted-entry)
-  ((user                   :type string
-                           :initarg :user
-                           :reader display-config/user
-                           :persisted-p t))
+  ((user     :type string
+             :initarg :user
+             :reader display-config/user
+             :persisted-p t)
+   (timezone :type string
+             :initarg :timezone
+             :initform "UTC"
+             :accessor display-config/timezone
+             :persisted-p t
+             :persisted-allow-missing-value t
+             :persisted-missing-default "UTC"))
   (:metaclass potato.db:persisted-entry-class)
   (:attachments-p nil)
   (:memcached-enabled-p t)
@@ -40,3 +47,11 @@
                                    :user (ensure-user-id user))))
         (potato.db:save-instance config)
         config)))
+
+(defun format-timestamp-for-display-config (display-config ts)
+  (let ((tz (local-time:find-timezone-by-location-name (display-config/timezone display-config))))
+    (local-time:format-timestring nil ts
+                                  :format '(:short-weekday " " :day " "
+                                            :short-month " " :year ", "
+                                            (:hour 2) ":" (:min 2) " " :timezone)
+                                  :timezone tz)))

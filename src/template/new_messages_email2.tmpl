@@ -37,7 +37,10 @@
 
           <% for messages %>
             <p>
-              <div><b>From:</b> <% #sender-name %></div>
+              <div>
+                <span><b>From:</b> <% #sender-name %></span>
+                <span><b>Date:</b> <% #date %></span>
+              </div>
               <div class="message-content"><% r#text %></div>
             </p>
           <% end %>

@@ -82,12 +82,18 @@
       ;; ELSE: Email sending was blocked because the previous mail was sent too recently
       (log:trace "Email was not sent becasue a previous email was recently sent for user: ~s" (potato.core:ensure-user-id user))))
 
+(defun formatted-date-for-notification (user-notification display-config)
+  (let ((date (potato.user-notification:user-notification/created-date user-notification)))
+    (potato.core:format-timestamp-for-display-config display-config date)))
+
 (defun send-notification-email-old (user notifications)
   (if (potato.user-notification:check-and-update-last-notification-date user)
       (if *debug*
           (log:info "sending email to ~s with ~a notifications" user (length notifications))
           ;; ELSE: Not debug, actually send the mail
-          (let* ((n (length notifications))
+          (let* ((user (potato.core:current-user))
+                 (disp-conf (potato.core:load-display-config-for-user user))
+                 (n (length notifications))
                  (channel-names (make-channel-id-to-name-map (mapcar #'potato.user-notification:user-notification/channel
                                                                      notifications)))
                  (data `((:num-messages . ,n)
@@ -97,10 +103,12 @@
                                           repeat 10
                                           for sender-name = (potato.user-notification:user-notification/sender-description n)
                                           for channel-id = (potato.user-notification:user-notification/channel n)
+                                          for formatted-date = (formatted-date-for-notification n disp-conf)
                                           for channel-name = (dhs-sequences:hash-get channel-names channel-id)
                                           for channel-url = (potato.core:make-potato-url "channel/~a" channel-id)
                                           for text = (potato.user-notification:user-notification/text n)
                                           collect `((:sender-name  . ,sender-name)
+                                                    (:date         . ,formatted-date)
                                                     (:channel-name . ,channel-name)
                                                     (:channel-url  . ,channel-url)
                                                     (:text         . ,(format-message text)))))))
