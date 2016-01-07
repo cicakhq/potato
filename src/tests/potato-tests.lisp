@@ -83,9 +83,11 @@
 
 (defun user-context (body-fn)
   (all-context (lambda ()
-                 (let ((email "foo@foo.com"))
+                 (let ((email "foo@foo.com")
+                       (id (potato.db:make-random-couchdb-id)))
                    (let ((u (make-instance 'potato.core:user
-                                           :couchdb-id (concatenate 'string "user-" (potato.db:make-random-couchdb-id))
+                                           :couchdb-id (concatenate 'string "user-" id)
+                                           :nickname id
                                            :description "Foo"
                                            :activated-p "2014-01-01T12:00:00.0000Z"
                                            :activate-code "")))
