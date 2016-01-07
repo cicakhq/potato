@@ -256,6 +256,20 @@ it contains invalid characters, raise an error."
       nil
       v))
 
+(defmacro json-bind (definitions data &body body)
+  (alexandria:with-gensyms (data-sym value-sym value-set-sym)
+    `(let ((,data-sym ,data))
+       (let ,(loop
+               for row in definitions
+               collect (destructuring-bind (sym name &key (required t))
+                           (if (symbolp row) (list row (string-downcase (symbol-name row))) row)
+                         `(,sym ,`(multiple-value-bind (,value-sym ,value-set-sym)
+                                      (st-json:getjso ,name ,data-sym)
+                                    (if (and ,required (not ,value-set-sym))
+                                        (error "Key ~s was not available in JSON data" ,name)
+                                        ,value-sym)))))
+         ,@body))))
+
 (defmacro with-memcached-warnings-muffled (&body body)
   `(handler-bind ((pooler::pool-warning (lambda (condition)
                                           (declare (ignore condition))

@@ -250,14 +250,14 @@ NIL."
         ;; ELSE: User is not a member of channel
         nil)))
 
-(defun create-channel (name group initial-user-ids)
+(defun create-channel (name group initial-user-ids &key topic)
   (let ((group (ensure-group group))
         channel channel-users)
     (recover-if-fail
         (progn
           (setq channel (make-instance 'channel
                                        :name name
-                                       :topic "Topic has not been set"
+                                       :topic (or topic "Topic has not been set")
                                        :group (group/id group)
                                        :domain (group/domain group)))
           (potato.db:save-instance channel)
@@ -379,21 +379,3 @@ recovered."
   (let ((result (clouchdb:invoke-view "domain" "users_in_domain" :key (ensure-domain-id domain))))
     (dolist (row (getfield :|rows| result))
       (flush-cached-group-channel-tree (getfield :|user| (getfield :|value| row))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Web handlers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define-handler-fn-login (create-channel-screen "/createchannel" nil ())
-  (with-authenticated-user ()
-    (lofn:case-method
-      (:post (lofn:with-parameters ((group-id "group") (channel-name "name"))
-               (check-group-access group-id :require-admin-p t)
-               (let ((name-fixed (trim-string channel-name)))
-                 (unless (plusp (length name-fixed))
-                   (error "Channel name can't be blank"))
-                 (let* ((user (current-user))
-                        (channel (create-channel name-fixed group-id (list (user/id user)))))
-                   (let ((message (make-message channel user (format nil "~a created channel" (user/description user)))))
-                     (save-message message))
-                   (hunchentoot:redirect (format nil "/channel/~a" (channel/id channel))))))))))

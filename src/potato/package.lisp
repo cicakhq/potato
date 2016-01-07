@@ -229,7 +229,8 @@
            #:display-config/user
            #:display-config/timezone
            #:load-display-config-for-user
-           #:format-timestamp-for-display-config))
+           #:format-timestamp-for-display-config
+           #:check-group-access))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
@@ -330,7 +331,7 @@
            #:add-email-invitation-for-domain
            #:remove-email-invitation-for-domain
            #:send-message-to-channel
-           ))
+           #:create-channel-with-check))
 
 (defpackage :potato.register
   (:use :cl :potato :potato.common :potato.core))

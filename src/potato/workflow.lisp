@@ -174,3 +174,13 @@ it's eliminated altogether."
                                    :properties (list (cons :correlation-id (message/id message)))
                                    :body (babel:string-to-octets (st-json:write-json-to-string (message-cd->json message :text user)) :encoding :utf-8)))))
     result))
+
+(defun create-channel-with-check (user group-id channel-name topic)
+  (potato.core:check-group-access group-id :require-admin-p t)
+  (let ((name-fixed (trim-string channel-name)))
+    (unless (plusp (length name-fixed))
+      (error "Channel name can't be blank"))
+    (let* ((channel (create-channel name-fixed group-id (list (user/id user)) :topic topic))
+           (message (make-message channel user (format nil "~a created channel" (user/description user)))))
+      (save-message message)
+      channel)))

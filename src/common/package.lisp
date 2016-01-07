@@ -125,7 +125,8 @@
            #:with-memcached-warnings-muffled
            #:*slashcommand-request-exchange-name*
            #:*slashcommand-unrouted-command-exchange*
-           #:*slashcommand-unrouted-command-queue*))
+           #:*slashcommand-unrouted-command-queue*
+           #:json-bind))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)

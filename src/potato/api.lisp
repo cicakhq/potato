@@ -248,6 +248,10 @@
                (st-json:jso "result" "ok"
                             "id" (getfield :|id| result)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;  Channel management
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-api-method (api-channels-screen "/channels" nil ())
   (api-case-method
     (:get (loop
@@ -261,6 +265,16 @@
                                               collect (st-json:jso "id" (potato.core:group/id group)
                                                                    "name" (potato.core:group/name group)
                                                                    "channels" (api-load-channels-for-group group))))))))
+
+(define-api-method (api-channel-info-screen "/channel/create" nil ())
+  "Create a new channel. Input is a JSON structure of the following form:
+    {name: nnn, topic: nnn, group: nnn}
+name and group are required, while the topic parameter is optional."
+  (api-case-method
+    (:post (json-bind ((gid "group") (name "name") (topic "topic" :required nil))
+               (parse-and-check-input-as-json)
+             (let ((channel (potato.workflow:create-channel-with-check (potato.core:current-user) gid name topic)))
+               (st-json:jso "id" (potato.core:channel/id channel)))))))
 
 #+needs-rewrite(define-api-method (api-channels-joined-screen "/channels/joined" nil ())
   (api-case-method

@@ -225,3 +225,13 @@
                  message-id (potato.core:user/id (potato.core:current-user)) enable-p)
       (potato.core:update-message-star-with-check message-id enable-p)
       (st-json:jso "result" "ok"))))
+
+(potato.core:define-handler-fn-login (create-channel-screen "/createchannel" nil ())
+  (potato.core:with-authenticated-user ()
+    (lofn:case-method
+      (:post (lofn:with-checked-parameters ((group-id :name "group" :required t :allow-blank nil :trimmed t)
+                                            (channel-name :name "name" :required t :allow-blank nil :trimmed t)
+                                            (channel-topic :name "topic" :required nil :trimmed t))
+               (let ((channel (potato.workflow:create-channel-with-check (potato.core:current-user)
+                                                                         group-id channel-name channel-topic)))
+                 (hunchentoot:redirect (format nil "/channel/~a" (potato.core:channel/id channel)))))))))
