@@ -1,6 +1,6 @@
 # potato
 
-Delicious conversations platform in Common Lisp and ClojureScript.
+Open source chat platform
 
 # Features
 
