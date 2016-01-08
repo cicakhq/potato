@@ -128,15 +128,14 @@
   (potato.core:with-authenticated-user ()
     (lofn:case-method
       (:post
-       (let* ((message-id (st-json:getjso "message" data))
-              (text (st-json:getjso "text" data))
-              (length (length text)))
-         (cond ((> length potato.core:*max-message-size*)
-                (st-json:jso "result" "error"
-                             "message" "Message too large"))
-               (t
-                (update-or-delete-message message-id :text text)
-                (st-json:jso "result" "ok"))))))))
+       (json-bind ((message-id "message") (text "text")) data
+         (let ((length (length text)))
+           (cond ((> length potato.core:*max-message-size*)
+                  (st-json:jso "result" "error"
+                               "message" "Message too large"))
+                 (t
+                  (update-or-delete-message message-id :text text)
+                  (st-json:jso "result" "ok")))))))))
 
 (potato.core:define-json-handler-fn-login (delete-chat-screen "/delete_chat" data nil ())
   (potato.core:with-authenticated-user ()

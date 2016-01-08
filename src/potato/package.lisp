@@ -34,7 +34,6 @@
            #:with-authenticated-user
            #:user/id
            #:current-user
-           #:json-parse-null
            #:load-group-with-check
            #:load-channel-with-check
            #:channel/id

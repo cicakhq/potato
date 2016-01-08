@@ -261,13 +261,15 @@ it contains invalid characters, raise an error."
     `(let ((,data-sym ,data))
        (let ,(loop
                for row in definitions
-               collect (destructuring-bind (sym name &key (required t))
+               collect (destructuring-bind (sym name &key (required t) (type :default))
                            (if (symbolp row) (list row (string-downcase (symbol-name row))) row)
                          `(,sym ,`(multiple-value-bind (,value-sym ,value-set-sym)
                                       (st-json:getjso ,name ,data-sym)
                                     (if (and ,required (not ,value-set-sym))
                                         (error "Key ~s was not available in JSON data" ,name)
-                                        ,value-sym)))))
+                                        ,(ecase type
+                                           (:default `(nil-if-json-null ,value-sym))
+                                           (:boolean `(if ,value-set-sym (st-json:from-json-bool ,value-sym) nil))))))))
          ,@body))))
 
 (defmacro with-memcached-warnings-muffled (&body body)

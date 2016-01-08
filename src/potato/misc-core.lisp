@@ -86,11 +86,6 @@
 (defun trim-string (string)
   (string-trim +BLANK-CHARS+ string))
 
-(defun json-parse-null (v)
-  (if (eq v :null)
-      nil
-      v))
-
 (defun parse-timestamp (s)
   (local-time:parse-timestring s))
 

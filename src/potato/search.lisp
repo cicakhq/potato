@@ -22,11 +22,11 @@
 
 (define-json-handler-fn-login (search-message-screen "/search_message" data nil ())
   (with-authenticated-user ()
-    (let ((text (st-json:getjso "text" data))
-          (channel-id (json-parse-null (st-json:getjso "channel" data)))
-          (group-id (json-parse-null (st-json:getjso "group" data)))
-          (star-only-p (let ((v (st-json:getjso "star_only" data)))
-                         (if v (st-json:from-json-bool v) nil))))
+    (json-bind ((text "text")
+                (channel-id "channel" :required nil)
+                (group-id "group" :required nil)
+                (star-only-p "star_only" :required nil :type :boolean))
+        data
       (check-type text string)
       (let* ((search-grouping (cond ((and channel-id group-id)
                                      (error "channel and group both specified"))
