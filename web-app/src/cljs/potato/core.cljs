@@ -876,7 +876,8 @@ id's. Returns the updated value."
                 (om.dom/figure #js {:className (str "chat-entry" (if (:unconfirmed message) " unconfirmed-message"))
                                     :data-id   (:hash message)}
                     (om.dom/figcaption nil
-                        (om.dom/address #js {:className "chat-author"}
+                        (om.dom/address #js {:className "chat-author"
+                                             :title (:nickname user-entry)}
                                         (or (:description user-entry) ""))
                         (display-time (:created_date message)))
                     (om/build message-quote message {:state {:update-time      update-time
