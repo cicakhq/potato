@@ -186,7 +186,7 @@ been saved."))
                    (log:warn "No default upload location configured but S3 available, choosing S3")
                    (setq *default-upload-location* :s3))
                   (*file-upload-directory*
-                   (log:Warn "No default upload location configured but file available. Choosing file.")
+                   (log:warn "No default upload location configured but file available. Choosing file.")
                    (setq *default-upload-location* :file))
                   (t
                    (log:warn "No file upload location configured.")))))))
