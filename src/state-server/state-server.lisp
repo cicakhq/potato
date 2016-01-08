@@ -170,14 +170,13 @@ a refresh message was sent.")
         (when will-send
           (send-typing-to-queue channel-id user-id))
         (bordeaux-threads:with-lock-held ((channel-user/lock user-state))
-          (with-accessors ((timer channel-user/text-timer)) user-state
-            (when timer
-              (potato.common.timer:unschedule-timer *timer-queue* timer))
-            (setf timer
-                  (potato.common.timer:schedule-timer *timer-queue* 4
-                                                      (lambda ()
-                                                        (lparallel:future
-                                                          (typing-end user-state)))))))))))
+          (alexandria:when-let ((timer (channel-user/text-timer user-state)))
+            (potato.common.timer:unschedule-timer *timer-queue* timer))
+          (setf (channel-user/text-timer user-state)
+                (potato.common.timer:schedule-timer *timer-queue* 4
+                                                    (lambda ()
+                                                      (lparallel:future
+                                                        (typing-end user-state))))))))))
 
 (defun handle-typing-end (channel-id user-id)
   (log:trace "State server received typing-begin message. channel=~s, user=~s" channel-id user-id)
@@ -186,10 +185,9 @@ a refresh message was sent.")
       (let ((will-send nil))
         (bordeaux-threads:with-lock-held ((channel-user/lock user-state))
           (when (channel-user/text-p user-state)
-            (with-accessors ((timer channel-user/text-timer)) user-state
-              (when timer
-                (potato.common.timer:unschedule-timer *timer-queue* timer)
-                (setf timer nil)))
+            (alexandria:when-let ((timer (channel-user/text-timer user-state)))
+              (potato.common.timer:unschedule-timer *timer-queue* timer)
+              (setf (channel-user/text-timer user-state) nil))
             (setq will-send t)))
         (when will-send
           (typing-end user-state))))))
