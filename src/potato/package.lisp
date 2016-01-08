@@ -230,7 +230,8 @@
            #:display-config/timezone
            #:load-display-config-for-user
            #:format-timestamp-for-display-config
-           #:check-group-access))
+           #:check-group-access
+           #:send-typing-start-notification-to-state-server))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

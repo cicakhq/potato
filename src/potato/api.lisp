@@ -247,6 +247,15 @@
                (st-json:jso "result" "ok"
                             "id" (getfield :|id| result)))))))
 
+(define-api-method (api-type-screen "/channel/([a-z0-9]+)/type" t (cid))
+  (api-case-method
+    (:post (let ((channel (potato.core:load-channel-with-check cid)))
+             (json-bind ((active-p "state")) (parse-and-check-input-as-json)
+               (if active-p
+                   (potato.core:send-typing-start-notification-to-state-server channel (potato.core:current-user))
+                   (potato.core:send-typing-end-notification-to-state-server channel (potato.core:current-user)))
+               (st-json:jso "result" "ok"))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  Channel management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
