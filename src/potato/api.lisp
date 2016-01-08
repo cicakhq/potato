@@ -190,8 +190,7 @@
     (api-case-method
       (:put (progn
               (check-message-modification-allowed user channel message)
-              (let* ((data (parse-and-check-input-as-json))
-                     (text (st-json:getjso "text" data)))
+              (json-bind ((text "text")) (parse-and-check-input-as-json)
                 (check-message-length (length text))
                 (potato.core:save-message-modification message user text nil nil nil)
                 (st-json:jso "result" "ok"
