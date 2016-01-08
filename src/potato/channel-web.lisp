@@ -81,11 +81,9 @@
                                         range))))))
 
 (defun try-send-channel (data text)
-  (let ((channel-id (st-json:getjso "channel" data)))
-    (unless channel-id
-      (error "Channel ID not specified"))
+  (json-bind ((cid "channel")) data
     (potato.workflow:send-message-to-channel (potato.core:current-user)
-                                             (potato.core:load-channel-with-check channel-id)
+                                             (potato.core:load-channel-with-check cid)
                                              text)))
 
 (potato.core:define-json-handler-fn-login (send-chat-screen "/send_chat" data nil ())
