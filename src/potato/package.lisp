@@ -301,7 +301,8 @@
            #:file/id
            #:file/location
            #:*file-upload-directory*
-           #:*default-upload-location*))
+           #:*default-upload-location*
+           #:download-file-to-client))
 
 (defpackage :potato.user-notification
   (:use :cl :potato :potato.common)

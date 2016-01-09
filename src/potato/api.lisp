@@ -431,3 +431,13 @@ name and group are required, while the topic parameter is optional."
                                                                     :user-state-p user-state-p
                                                                     :channel-updates-p channel-updates-p))
            (st-json:jso "result" "ok")))))))
+
+(define-api-method (api-download-screen "/download/([^/]+)" t (key))
+  (api-case-method
+    (:get
+     (let ((file (potato.db:load-instance 'potato.upload:file key :error-if-not-found nil)))
+       (unless (and file
+                    (potato.upload:file/confirmed-p file)
+                    (potato.core:user-is-in-channel-p (potato.upload:file/channel file) (potato.core:current-user)))
+         (raise-api-error "File does not exist" hunchentoot:+http-not-found+))
+       (potato.upload:download-file-to-client file)))))

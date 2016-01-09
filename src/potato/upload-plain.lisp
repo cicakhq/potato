@@ -125,6 +125,11 @@ been saved."))
 (defun make-download-location (file-id)
   (format nil "/download/~a" (url-rewrite:url-encode file-id)))
 
+(defun download-file-to-client (file)
+  (ecase (file/location file)
+    (:s3 (download-s3 file))
+    (:file (download-plain file))))
+
 (potato.core:define-handler-fn-login (download-screen "/download/([^/]+)" t (key))
   (potato.core:with-authenticated-user ()
     (log:trace "Downloading file: ~s" key)
@@ -132,9 +137,7 @@ been saved."))
       (unless (file/confirmed-p file)
         (error "File does not exist"))
       (potato.core:check-user-in-channel (file/channel file))
-      (ecase (file/location file)
-        (:s3 (download-s3 file))
-        (:file (download-plain file))))))
+      (download-file-to-client file))))
 
 ;;;
 ;;;  Direct access to file content
