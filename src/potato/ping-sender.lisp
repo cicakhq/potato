@@ -17,7 +17,9 @@
               (cons cid (potato.db:load-instance 'potato.core:channel cid)))
             cidlist)))
 
-(defun load-context (notification)
+(defun load-context (display-config notification)
+  (check-type display-config potato.core:display-config)
+  (check-type notification potato.user-notification:user-notification)
   (let* ((message-id (potato.user-notification:user-notification/message-id notification))
          (msglist (potato.core:load-message-range (potato.core:load-message message-id))))
     (loop
@@ -25,6 +27,8 @@
       collect `((:message . ,(potato.core:message/id msg))
                 (:sender-name . ,(potato.core:message/from-name msg))
                 (:text . ,(format-message (potato.core:message/text msg)))
+                (:date . ,(potato.core:format-timestamp-for-display-config display-config
+                                                                           (potato.core:message/created-date msg)))
                 (:highlighted . ,(equal (potato.core:message/id msg)
                                         (potato.user-notification:user-notification/message-id notification)))))))
 
@@ -37,11 +41,11 @@
       ;; ELSE: The lists does not overlap, simply return nil
       nil)))
 
-(defun make-notification-summary-for-channel (channel notifications)
+(defun make-notification-summary-for-channel (channel display-config notifications)
   (let ((result nil)
         (current nil))
     (dolist (notification notifications)
-      (let ((msglist (load-context notification)))
+      (let ((msglist (load-context display-config notification)))
         (if current
             (alexandria:if-let ((merged-result (merge-message-lists current msglist)))
               (setq current merged-result)
@@ -56,11 +60,12 @@
       (:channel-name . ,(potato.core:channel/name channel))
       (:sections . ,(reverse result)))))
 
-(defun make-channels-summary (notifications)
+(defun make-channels-summary (notifications display-config)
   (let ((channels (load-channels-for-notifications notifications)))
     (mapcar (lambda (e)
               (make-notification-summary-for-channel
                (cdr e)
+               display-config
                (remove-if-not (lambda (n)
                                 (equal (car e) (potato.user-notification:user-notification/channel n)))
                               notifications)))
@@ -72,46 +77,9 @@
           (log:info "sending email to ~s with ~a notifications" user (length notifications))
           ;; ELSE: Not debug, actually send the mail
           (let* ((n (length notifications))
-                 (data `((:num-messages . ,n)
-                         (:channels . ,(make-channels-summary notifications))))
-                 (content (flexi-streams:with-output-to-sequence (s)
-                            (lofn:show-template s "new_messages_email2.tmpl" data))))
-            (potato.email:send-email (potato.email:make-mail-for-user user "You have new Potato notifications"
-                                                                      (format nil "You have ~a new Potato notifications" n)
-                                                                      (babel:octets-to-string content :encoding :utf-8)))))
-      ;; ELSE: Email sending was blocked because the previous mail was sent too recently
-      (log:trace "Email was not sent becasue a previous email was recently sent for user: ~s" (potato.core:ensure-user-id user))))
-
-(defun formatted-date-for-notification (user-notification display-config)
-  (let ((date (potato.user-notification:user-notification/created-date user-notification)))
-    (potato.core:format-timestamp-for-display-config display-config date)))
-
-(defun send-notification-email-old (user notifications)
-  (if (potato.user-notification:check-and-update-last-notification-date user)
-      (if *debug*
-          (log:info "sending email to ~s with ~a notifications" user (length notifications))
-          ;; ELSE: Not debug, actually send the mail
-          (let* ((user (potato.core:current-user))
                  (disp-conf (potato.core:load-display-config-for-user user))
-                 (n (length notifications))
-                 (channel-names (make-channel-id-to-name-map (mapcar #'potato.user-notification:user-notification/channel
-                                                                     notifications)))
                  (data `((:num-messages . ,n)
-                         (:remaining-messages . ,(max (- n 10) 0))
-                         (:messages . ,(loop
-                                          for n in notifications
-                                          repeat 10
-                                          for sender-name = (potato.user-notification:user-notification/sender-description n)
-                                          for channel-id = (potato.user-notification:user-notification/channel n)
-                                          for formatted-date = (formatted-date-for-notification n disp-conf)
-                                          for channel-name = (dhs-sequences:hash-get channel-names channel-id)
-                                          for channel-url = (potato.core:make-potato-url "channel/~a" channel-id)
-                                          for text = (potato.user-notification:user-notification/text n)
-                                          collect `((:sender-name  . ,sender-name)
-                                                    (:date         . ,formatted-date)
-                                                    (:channel-name . ,channel-name)
-                                                    (:channel-url  . ,channel-url)
-                                                    (:text         . ,(format-message text)))))))
+                         (:channels . ,(make-channels-summary notifications disp-conf))))
                  (content (flexi-streams:with-output-to-sequence (s)
                             (lofn:show-template s "new_messages_email.tmpl" data))))
             (potato.email:send-email (potato.email:make-mail-for-user user "You have new Potato notifications"
