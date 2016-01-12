@@ -157,7 +157,8 @@ credentials. This function returns the current session."
 (defmacro define-json-handler-fn-login ((name url data-symbol regex (&rest bind-vars)) &body body)
   (multiple-value-bind (rem-forms declarations docstring)
       (alexandria:parse-body body :documentation t)
-    (let ((condition-sym (gensym)))
+    (let ((condition-sym (gensym "CONDITION-"))
+          (stream-sym (gensym "STREAM-")))
       `(lofn:define-json-handler-fn (,name ,url ,data-symbol ,regex ,bind-vars)
          ,@(if docstring (list docstring))
          ,@declarations
@@ -178,8 +179,11 @@ credentials. This function returns the current session."
                                                          "message" "generic-error"
                                                          "description" (potato-error/message ,condition-sym)))))
                           (error (lambda (,condition-sym)
-                                   (declare (ignore ,condition-sym))
                                    (unless *debug*
+                                     (log:error "Fatal error in json handler: ~a~%~a"
+                                                ,condition-sym
+                                                (with-output-to-string (,stream-sym)
+                                                  (trivial-backtrace:print-backtrace-to-stream ,stream-sym)))
                                      (setf (hunchentoot:return-code*) hunchentoot:+http-internal-server-error+)
                                      (return-from call-handlers
                                        (st-json:jso "result" "error"
