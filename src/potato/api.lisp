@@ -274,7 +274,16 @@
                                                                    "name" (potato.core:group/name group)
                                                                    "channels" (api-load-channels-for-group group))))))))
 
-(define-api-method (api-channel-info-screen "/channel/create" nil ())
+(define-api-method (api-channel-info-screen "/channel/([a-z0-9]+)" t (cid))
+  (api-case-method
+    (:get (let ((channel (potato.core:load-channel-with-check cid)))
+            (st-json:jso "id" (potato.core:channel/id channel)
+                         "name" (potato.core:channel/name channel)
+                         "topic" (potato.core:channel/topic channel)
+                         "group" (potato.core:channel/group channel)
+                         "domain" (potato.core:channel/domain channel))))))
+
+(define-api-method (api-create-channel-screen "/channel/create" nil ())
   "Create a new channel. Input is a JSON structure of the following form:
     {name: nnn, topic: nnn, group: nnn}
 name and group are required, while the topic parameter is optional."
