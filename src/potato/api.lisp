@@ -122,6 +122,7 @@
 (defun api-load-channels-for-group (group)
   (loop
      for channel in (potato.core:find-channels-for-group group)
+     unless (potato.core:channel/deleted channel)
      collect (st-json:jso "id" (potato.core:channel/id channel)
                           "name" (potato.core:channel/name channel))))
 
