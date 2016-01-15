@@ -103,7 +103,7 @@
      (let ((result (verify-api-token-and-run ',name #'(lambda () ,@body))))
        (lofn:with-hunchentoot-stream (out "application/json")       
          (st-json:write-json result out)
-         ;; Write a final newline to made the output a bit easier to
+         ;; Write a final newline to make the output a bit easier to
          ;; read when using tools such as curl
          (format out "~c" #\Newline)))))
 
