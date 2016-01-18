@@ -217,13 +217,10 @@
     (api-case-method
       (:get (lofn:with-parameters (from num format)
               (let ((translate-function (make-translation-function format)))
-                (multiple-value-bind (messages total-rows offset)
-                    (potato.core:load-message-log channel
-                                                  (if num (min (parse-integer num) 1000) 10)
-                                                  (if (or (null from) (equal from "now")) nil from))
-                  (st-json:jso "messages" (mapcar (lambda (v) (funcall translate-function v)) messages)
-                               "total" total-rows
-                               "offset" offset))))))))
+                (let ((messages (potato.core:load-message-log channel
+                                                              (if num (min (parse-integer num) 1000) 10)
+                                                              (if (or (null from) (equal from "now")) nil from))))
+                  (st-json:jso "messages" (mapcar (lambda (v) (funcall translate-function v)) messages)))))))))
 
 (define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
   (api-case-method
