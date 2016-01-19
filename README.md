@@ -18,6 +18,18 @@ Open source chat platform
     identical functionality as the main channels
   - API that allows for writing external clients
 
+# Clients
+
+Currently there are two separate clients:
+
+  - The Emacs client is almost fully functional, and is complete
+    enough to be used in production:
+    https://github.com/lokedhs/potato-emacs
+
+  - The Android client is not ready for use yet. Help is always
+    appreciated: https://github.com/lokedhs/PotatoAndroidTest 
+    And yes, the name of the project will change, once it works.
+
 # How to install
 
 A manual installation guide can be found in `docs/INSTALL.md`. We're also working on a more
