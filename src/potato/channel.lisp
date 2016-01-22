@@ -8,7 +8,7 @@
 (defclass channel ()
   ((name     :type string
              :initarg :name
-             :reader channel/name
+             :accessor channel/name
              :persisted-p t
              :record-changes-p t)
    (topic    :type string

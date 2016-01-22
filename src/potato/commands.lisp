@@ -128,7 +128,7 @@
         (format t "~%"))
       (format t "~a~%" long-description))))
 
-(define-command list-domains "domains"
+(define-command list-domains "list-domains"
     ()
     ((type "domain type, CORPORATE, USER or ALL. Defaults to CORPORATE."))
     "List domains"
@@ -154,6 +154,19 @@
                                                   :public (arg-is-active public)
                                                   :join-default (arg-is-active auto-join))))
     (format t "Domain created: ~a~%" (potato.core:domain/id domain))))
+
+(define-command set-domain-name "set-domain-name"
+    ((domain "Domain ID")
+     (name "New name of the domain"))
+    ()
+    "Set the name of a domain"
+    "Set the name of a domain"
+  (when (zerop (length name))
+    (error "Domain name can't be blank"))
+  (let ((domain (potato.db:load-instance 'potato.core:domain domain)))
+    (setf (potato.core:domain/name domain) name)
+    (potato.db:save-instance domain)
+    (format t "Domain name updated~%")))
 
 (define-command set-domain-nickname "set-domain-nickname"
     ((domain "The id of the domain")
@@ -263,7 +276,7 @@ address has been created or not."
     (let ((channel (potato.core:create-channel name g nil)))
       (format t "Created channel: ~a~%" (potato.core:channel/id channel)))))
 
-(define-command list-channels "channels"
+(define-command list-channels "list-channels"
     ((domain "domain id"))
     ((group "group to limit the channel list for"))
     "Lists channels"
@@ -285,6 +298,19 @@ group limits the list of channels to that group only."
                 (potato.core:channel/id channel)
                 (potato.core:channel/name channel)
                 (if channel-nickname (potato.core:channel-nickname/nickname channel-nickname)))))))
+
+(define-command set-channel-name "set-channel-name"
+    ((channel "The id of the channel")
+     (name "The new name for the channek"))
+    ()
+    "Set the channel name"
+    "Set the channel name"
+  (when (zerop (length name))
+    (error "Channel name can't be blank"))
+  (let ((channel (potato.db:load-instance 'potato.core:channel channel)))
+    (setf (potato.core:channel/name channel) name)
+    (potato.db:save-instance channel)
+    (format t "Channel name updated~%")))
 
 (define-command set-channel-nickname "set-channel-nickname"
     ((channel "The id of the channel")
