@@ -72,7 +72,7 @@
                :persisted-p t
                :persisted-type :symbol
                :documentation "Mirrors the GROUP-TYPE element in the GROUP class")
-   (deleted   :type t
+   (deleted    :type t
                :initform nil
                :accessor channel-users/deleted
                :persisted-p t
