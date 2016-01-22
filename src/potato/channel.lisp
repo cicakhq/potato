@@ -53,7 +53,7 @@
                :persisted-p t)
    (name       :type string
                :initarg :name
-               :reader channel-users/name
+               :accessor channel-users/name
                :persisted-p t
                :documentation "Mirrors the NAME element in the CHANNEL class")
    (group      :type string
@@ -241,12 +241,15 @@ NIL."
             (:ignore (values nil nil))
             (:load (values channel nil)))))))
 
+(defun load-channel-users (cid)
+  (potato.db:load-instance 'channel-users (channel-users-mapping-name cid)))
+
 (defun load-channel-users-with-check (id &key (if-not-joined :error))
   (multiple-value-bind (channel channel-users)
       (load-channel-with-check id :if-not-joined if-not-joined)
     (if channel
         (or channel-users
-            (potato.db:load-instance 'channel-users (channel-users-mapping-name (channel/id channel))))
+            (load-channel-users (channel/id channel)))
         ;; ELSE: User is not a member of channel
         nil)))
 

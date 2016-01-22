@@ -307,9 +307,12 @@ group limits the list of channels to that group only."
     "Set the channel name"
   (when (zerop (length name))
     (error "Channel name can't be blank"))
-  (let ((channel (potato.db:load-instance 'potato.core:channel channel)))
-    (setf (potato.core:channel/name channel) name)
-    (potato.db:save-instance channel)
+  (let ((loaded (potato.db:load-instance 'potato.core:channel channel))
+        (channel-users (potato.core:load-channel-users channel)))
+    (setf (potato.core:channel/name loaded) name)
+    (potato.db:save-instance loaded)
+    (setf (potato.core:channel-users/name channel-users) name)
+    (potato.db:save-instance channel-users)
     (format t "Channel name updated~%")))
 
 (define-command set-channel-nickname "set-channel-nickname"

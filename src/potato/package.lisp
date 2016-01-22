@@ -231,7 +231,8 @@
            #:format-timestamp-for-display-config
            #:check-group-access
            #:send-typing-start-notification-to-state-server
-           #:channel/deleted))
+           #:channel/deleted
+           #:load-channel-users))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
