@@ -216,7 +216,7 @@ credentials. This function returns the current session."
   (lofn:with-parameters (username password remember (mobile "m") redirect)
     (log:trace "Handling login for user: ~s" username)
     (handler-case
-        (let ((user (load-user-and-check-password (string-downcase username) password)))
+        (let ((user (load-user-and-check-password (string-downcase (trim-string username)) password)))
           (setup-user-session user remember)
           (if (equal mobile "1")
               (maybe-enable-api-and-redirect-to-mobile)
