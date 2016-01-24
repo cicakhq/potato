@@ -4,7 +4,7 @@
 
 (defun show-settings-screen (extra-fields)
   ;; We reload the user here since this function can be called
-  ;; immediately after upadting a user
+  ;; immediately after updating a user
   (let* ((user (potato.core:load-user (potato.core:user/id (potato.core:current-user))))
          (data `((:api-token . ,(potato.core:user/api-token user))
                  (:image-assigned-p . ,(string/= (potato.core:user/image-name user) ""))
