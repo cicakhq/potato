@@ -4,6 +4,7 @@
 
 To do a standardlone installation, the following dependencies must be installed:
 
+  - git
   - SBCL (compiled with SB-UNICODE support)
   - CouchDB (tested with 1.6.0)
   - RabbitMQ (tested with 3.4.3)
@@ -19,7 +20,14 @@ To do a standardlone installation, the following dependencies must be installed:
 
 On a clean Ubuntu system, these dependencies are available from the following packages:
 
-`couchdb-server rabbitmq-server memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy`
+`git couchdb-server rabbitmq-server memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy`
+
+### Initialize submodules
+
+```shell
+git submodule init
+git submodule update
+```
 
 ### SBCL installation
 
