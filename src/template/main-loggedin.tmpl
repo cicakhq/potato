@@ -43,6 +43,50 @@
       </ul>
     </section>
 
+    <section>
+      <h2>Tips for new users</h2>
+
+      <h3>Markup</h3>
+      <p>
+        When typing messages, a limited form of Markdown is supported.
+        You can use following markup:
+        <ul>
+          <li><code>*bold*</code> — Text surrounded by asterisks will be <b>bold</b>.</li>
+          <li><code>_italics_</code> — Text surrounded by underscores will be <i>italics</i>.</li>
+          <li><code>`code`</code> — Backquotes indicate source code formatting.</li>
+          <li><code>```multiline code```</code> — Triple backquotes is used for source code blocks that consist of multiple lines.</li>
+          <li><code>\( \frac{1}{x} \)</code> — Inline LaTeX maths expression</li>
+          <li><code>$$ \sqrt{f(x^2) + x} $$</code> — LaTeX maths expression as a standalone formula.</li>
+        </ul>
+      </p>
+
+      <h3>File uploads</h3>
+      <p>
+        You can also drag&amp;drop a file from the file manager to the
+        channel in order to upload a file. If the file is an image, it
+        will be displayed inline in the channel. Currently there is no
+        upload button that gives you a file selector. This is indeed a
+        bug, and will be fixed soon.
+      </p>
+
+      <h3>Notifying a user</h3>
+      <p>
+        You can directly refer to a user in a message by typing @
+        followed by the user's name. If the user does not read the
+        message within a set period of time (on this server, this
+        value is hardcoded to 5 minutes) then an email is sent to that
+        user to notify him or her that there are unread messages.
+      </p>
+      <p>
+        You can send a private message to the user by clicking on
+        their name on the right-hand side of the channel view. This
+        opens a dedicated private channel for you and that other user.
+        A private message to a user will always activate the
+        notification behaviour as described above, regardless of
+        whether the message explicitly contained a username.
+      </p>
+    </section>
+
     <% if allow-create-domain %>
     <section id="create-domain">
       <h2>Domains</h2>
