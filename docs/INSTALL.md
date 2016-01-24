@@ -161,7 +161,7 @@ package `nodejs`.
 The following command installs gulp globally:
 
 ```
-sudo npm install -g gulp`
+sudo npm install -g gulp
 ```
 
 ### Install npm
