@@ -17,6 +17,8 @@ Open source chat platform
   - Private messages are implemented as a special channel, giving the private chats
     identical functionality as the main channels
   - API that allows for writing external clients
+  - Messages can be edited and deleted. The edit history of a message
+    is preserved in the database.
 
 # Clients
 
