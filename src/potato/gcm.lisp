@@ -33,6 +33,9 @@
 (defun make-memcached-key-for-gcm-keys (uid)
   (format nil "gcm-~a" (encode-name uid)))
 
+(potato.db:define-hook-fn flush-cached-gcm-keys gcm-registration (obj :type (:save :delete))
+  (cl-memcached:mc-del (make-memcached-key-for-gcm-keys (gcm-registration/user obj))))
+
 (defun gcm-keys-for-user (uid)
   (potato.common.memcached:with-memcached (make-memcached-key-for-gcm-keys uid)
     (let ((result (clouchdb:invoke-view "gcm" "gcm_for_user" :key uid)))
