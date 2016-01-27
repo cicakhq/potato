@@ -33,8 +33,11 @@
 (defun make-memcached-key-for-gcm-keys (uid)
   (format nil "gcm-~a" (encode-name uid)))
 
+(defun flush-cached-gcm-keys-for-user-id (uid)
+  (cl-memcached:mc-del (make-memcached-key-for-gcm-keys uid)))
+
 (potato.db:define-hook-fn flush-cached-gcm-keys gcm-registration (obj :type (:save :delete))
-  (cl-memcached:mc-del (make-memcached-key-for-gcm-keys (gcm-registration/user obj))))
+  (flush-cached-gcm-keys-for-user-id (gcm-registration/user obj)))
 
 (defun gcm-keys-for-user (uid)
   (potato.common.memcached:with-memcached (make-memcached-key-for-gcm-keys uid)
@@ -63,11 +66,33 @@
             (t
              :not-changed)))))
 
-(defun push-gcm-message (gcm-key message-id data)
+(defun unregister-gcm-key (uid token)
+  (clouchdb:delete-document (make-gcm-registration-key uid token))
+  (flush-cached-gcm-keys-for-user-id uid))
+
+(defun process-reply (uid gcm-key message)
+  ;; If the result was successful, there is no need to do anything
+  (unless (= (st-json:getjso "success" message) 1)
+    (let ((results (st-json:getjso "results" message)))
+      (if (not (alexandria:sequence-of-length-p results 1))
+          ;; There should never be anything but a single entry in this list.
+          (log:error "Unexpected result from GCM server: ~s" message)
+          ;; ELSE: Check the result status
+          (alexandria:if-let ((error-message (st-json:getjso "error" (first results))))
+            (cond ((equal error-message "NotRegistered")
+                   (log:debug "Unregistering token. user=~s, token=~s" uid gcm-key)
+                   (unregister-gcm-key uid gcm-key))
+                  (t
+                   (log:error "Unexpected error type after sending GCM to server. user=~s, token=~s, result=~s"
+                              uid gcm-key message)))
+            ;; ELSE: Got an error message without error code
+            (log:error "Error without error message after sending GCM to server. user=~s, token=~s, result=~s"
+                       uid gcm-key message))))))
+
+(defun push-gcm-message (uid gcm-key message-id data)
   (let ((content (st-json:jso "to" gcm-key
                               "message_id" message-id
                               "data" data)))
-    ;;(setq content (st-json:jso "to" gcm-key "data" (st-json:jso "user" "uu" "from" "koko")))
     (log:debug "Content = ~s" content)
     (multiple-value-bind (body code headers orig-url stream should-close reason)
         (drakma:http-request "https://gcm-http.googleapis.com/gcm/send"
@@ -75,10 +100,13 @@
                              :content-type "application/json"
                              :additional-headers `((:authorization . ,(concatenate 'string "key=" *gcm-authorisation-key*)))
                              :content (babel:string-to-octets (st-json:write-json-to-string content) :encoding :utf-8))
-      (declare (ignore body headers orig-url))
+      (declare (ignore headers orig-url))
       (unwind-protect
-           (unless (= code hunchentoot:+http-ok+)
-             (log:error "Error sending message to GCM service. code=~s, reason=~s" code reason))
+           (if (= code hunchentoot:+http-ok+)
+               ;; Successful delivery. We need to check whether the send was successful
+               (process-reply uid gcm-key (st-json:read-json-from-string (babel:octets-to-string body :encoding :utf-8)))
+               ;; ELSE: Error from service. We might want to push the message back on to the queue here?
+               (log:error "Error sending message to GCM service. code=~s, reason=~s" code reason))
         (when should-close (close stream))
         t))))
 
@@ -95,11 +123,12 @@
       (loop
         for key in (gcm-keys-for-user user)
         do (log:info "Sending to key = ~s" key)
-        do (push-gcm-message key message-id (st-json:jso "message_id" message-id
-                                                         "sender_id" from
-                                                         "sender_name" from-name
-                                                         "notification_type" (symbol-name notification-type)
-                                                         "text" (maybe-truncate-text text)))))))
+        do (push-gcm-message user key message-id
+                             (st-json:jso "message_id" message-id
+                                          "sender_id" from
+                                          "sender_name" from-name
+                                          "notification_type" (symbol-name notification-type)
+                                          "text" (maybe-truncate-text text)))))))
 
 (defun gcm-listener-loop ()
   (with-rabbitmq-connected (conn)
