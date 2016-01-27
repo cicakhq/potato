@@ -1,13 +1,54 @@
-(defpackage :potato.gcm
-  (:use :cl :potato :potato.common)
-  (:export #:start-gcm-listener
-           #:*gcm-authorisation-key*))
-
 (in-package :potato.gcm)
 
 (declaim #.potato.common::*compile-decl*)
 
 (defvar *gcm-authorisation-key* nil)
+
+(defclass gcm-registration ()
+  ((user      :type string
+              :reader gcm-registration/user
+              :initarg :user
+              :persisted-p t
+              :documentation "User ID")
+   (gcm-token :type string
+              :reader gcm-registration/gcm-token
+              :initarg :gcm-token
+              :persisted-p t
+              :documentation "GCM registration key"))
+  (:metaclass potato.db:persisted-entry-class))
+
+(defun make-gcm-registration-key (user token)
+  (concatenate 'string "gcmkey-" (encode-name (potato.core:ensure-user-id user)) "-" (encode-name token)))
+
+(defmethod initialize-instance :after ((obj gcm-registration) &key)
+  (let ((id (make-gcm-registration-key (gcm-registration/user obj) (gcm-registration/gcm-token obj))))
+    (cond ((null (potato.db:persisted-entry/couchdb-id obj))
+           (setf (potato.db:persisted-entry/couchdb-id obj) id))
+          ((string/= (potato.db:persisted-entry/couchdb-id obj) id)
+           (error "GCM registration ID does not match user. id=~s, reg/user=~s, reg/token=~s"
+                  (potato.db:persisted-entry/couchdb-id obj)
+                  (gcm-registration/user obj)
+                  (gcm-registration/gcm-token obj))))))
+
+(defun gcm-enabled-p ()
+  (if *gcm-authorisation-key* t nil))
+
+(defun register-gcm (user token)
+  (let* ((uid (potato.core:ensure-user-id user))
+         (id (make-gcm-registration-key uid token))
+         (reg (potato.db:load-instance 'gcm-registration id :error-if-not-found nil)))
+    (labels ((make-and-save-token ()
+               (let ((new-reg (make-instance 'gcm-registration :user uid :gcm-token token)))
+                 (potato.db:save-instance new-reg))))
+      (cond ((not reg)
+             (make-and-save-token)
+             :new-registration)
+            ((string/= (gcm-registration/gcm-token reg) token)
+             (potato.db:remove-instance reg)
+             (make-and-save-token)
+             :token-updated)
+            (t
+             :not-changed)))))
 
 (defun push-gcm-message (gcm-key message-id)
   (let ((content (st-json:jso "to" gcm-key

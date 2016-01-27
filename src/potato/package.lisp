@@ -410,3 +410,10 @@
 
 (defpackage :potato.slashcommand
   (:use :cl :potato :potato.common))
+
+(defpackage :potato.gcm
+  (:use :cl :potato :potato.common)
+  (:export #:start-gcm-listener
+           #:*gcm-authorisation-key*
+           #:register-gcm
+           #:gcm-enabled-p))

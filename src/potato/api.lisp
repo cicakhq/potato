@@ -383,3 +383,19 @@ name and group are required, while the topic parameter is optional."
                     (potato.core:user-is-in-channel-p (potato.upload:file/channel file) (potato.core:current-user)))
          (raise-api-error "File does not exist" hunchentoot:+http-not-found+))
        (potato.upload:download-file-to-client file)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;  GCM
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (register-gcm-token "/register-gcm" nil ())
+  (api-case-method
+    (:post
+     (unless (potato.gcm:gcm-enabled-p)
+       (raise-api-error "GCM is not enabled" hunchentoot:+http-service-unavailable+ '("reason" "gcm_disabled")))
+     (json-bind ((token "token"))
+         (parse-and-check-input-as-json)
+       (ecase (potato.gcm:register-gcm (potato.core:current-user) token)
+         (:not-changed (st-json:jso "result" "ok" "detail" "already_registered"))
+         (:token-updated (st-json:jso "result" "ok" "detail" "token_updated"))
+         (:new-registration (st-json:jso "result" "ok" "detail" "token_registered")))))))
