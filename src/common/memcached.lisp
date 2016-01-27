@@ -20,3 +20,14 @@
     (when cached
       (let ((state (potato.common:decode-conspack-with-interning (fifth (car cached)))))
         state))))
+
+(defmacro with-memcached (key &body body)
+  (let ((key-sym (gensym))
+        (obj-sym (gensym))
+        (result-sym (gensym)))
+    `(let ((,key-sym ,key))
+       (let ((,result-sym (find-cached-object-if-exists ,key)))
+         (or ,result-sym
+             (let ((,obj-sym (progn ,@body)))
+               (cl-memcached:mc-set ,key-sym (conspack:encode ,obj-sym))
+               ,obj-sym))))))

@@ -416,4 +416,5 @@
   (:export #:start-gcm-listener
            #:*gcm-authorisation-key*
            #:register-gcm
-           #:gcm-enabled-p))
+           #:gcm-enabled-p
+           #:gcm-registration))
