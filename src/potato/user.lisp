@@ -58,13 +58,6 @@
                           :persisted-allow-missing-value t
                           :persisted-missing-default "1.png"
                           :documentation "The image to use if IMAGE-NAME is not set")
-   (android-gcm-key       :type (or null string)
-                          :initarg :android-gcm-key
-                          :initform nil
-                          :accessor user/android-gcm-key
-                          :persisted-p t
-                          :persisted-allow-missing-value t
-                          :persisted-missing-default nil)
    (new-login             :type t
                           :initform t
                           :initarg :new-login
