@@ -1,10 +1,13 @@
 (defpackage :potato.gcm
   (:use :cl :potato :potato.common)
-  (:export #:start-gcm-listener))
+  (:export #:start-gcm-listener
+           #:*gcm-authorisation-key*))
 
 (in-package :potato.gcm)
 
 (declaim #.potato.common::*compile-decl*)
+
+(defvar *gcm-authorisation-key* nil)
 
 (defun push-gcm-message (gcm-key message-id)
   (let ((content (st-json:jso "to" gcm-key
