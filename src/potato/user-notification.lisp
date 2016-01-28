@@ -283,7 +283,8 @@ notifications. The typical way of doing so is to send an email."))
                                                                              :text (potato.core:message/text message)
                                                                              :from (potato.core:message/from message)
                                                                              :from-name (potato.core:message/from-name message)
-                                                                             :notification-type notification-type)))))))))))))
+                                                                             :notification-type notification-type
+                                                                             :channel (potato.core:message/channel message))))))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; RabbitMQ notifications system

@@ -109,6 +109,7 @@
 (defun push-gcm-message (uid gcm-key message-id data)
   (let ((content (st-json:jso "to" gcm-key
                               "message_id" message-id
+                              "time_to_live" (* 4 24 60 60)
                               "data" data)))
     (log:debug "Content = ~s" content)
     (multiple-value-bind (body code headers orig-url stream should-close reason)
@@ -135,7 +136,7 @@
 
 (defun process-gcm-user-notification (msg)
   (let ((message (cl-rabbit:envelope/message msg)))
-    (destructuring-bind (&key user message-id from from-name text notification-type &allow-other-keys)
+    (destructuring-bind (&key user message-id from from-name text notification-type channel &allow-other-keys)
         (binary-to-lisp (cl-rabbit:message/body message))
       (loop
         for key in (gcm-keys-for-user user)
@@ -144,6 +145,7 @@
                              (st-json:jso "message_id" message-id
                                           "sender_id" from
                                           "sender_name" from-name
+                                          "channel" channel
                                           "notification_type" (symbol-name notification-type)
                                           "text" (maybe-truncate-text text)))))))
 
