@@ -29,7 +29,8 @@
   (values))
 
 (potato.common.application:define-component all-services
-  (:dependencies state-server::state-server potato-index::index-manager main message-processor-server email-updates-server))
+  (:dependencies state-server::state-server potato-index::index-manager
+                 main message-processor-server email-updates-server potato.gcm::gcm-sender))
 
 (defun reset-db ()
   (clouchdb:delete-db :if-missing :ignore)
