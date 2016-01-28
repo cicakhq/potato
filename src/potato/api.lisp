@@ -385,6 +385,17 @@ name and group are required, while the topic parameter is optional."
        (potato.upload:download-file-to-client file)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Notifications
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-mark-notifications "/channel/([^/]+)/clear-notifications" t (cid))
+  (api-case-method
+    (:post
+     (let ((channel (potato.core:load-channel-with-check cid)))
+       (potato.user-notification:mark-notifications-for-user-channel (potato.core:current-user) channel)
+       (st-json:jso "result" "ok")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  GCM
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
