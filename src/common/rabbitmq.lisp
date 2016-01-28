@@ -163,7 +163,7 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
 
      (cl-rabbit:exchange-declare conn 1 *user-notifications-exchange-name* "topic" :durable t)
      ;; GCM message processor queue
-     (cl-rabbit:queue-declare conn 1 :queue *gcm-queue-name* :durable t :arguments '(("x-message-ttl" . 30000)))
+     (cl-rabbit:queue-declare conn 1 :queue *gcm-queue-name* :durable t :arguments `(("x-message-ttl" . ,(* 60 60 1000))))
      (cl-rabbit:queue-bind conn 1
                            :queue *gcm-queue-name*
                            :exchange *user-notifications-exchange-name*
