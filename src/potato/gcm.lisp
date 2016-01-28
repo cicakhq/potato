@@ -11,7 +11,7 @@
               :persisted-p t
               :documentation "User ID")
    (gcm-token :type string
-              :reader gcm-registration/gcm-token
+              :accessor gcm-registration/gcm-token
               :initarg :gcm-token
               :persisted-p t
               :documentation "GCM registration key"))
@@ -70,6 +70,32 @@
   (clouchdb:delete-document (make-gcm-registration-key uid token))
   (flush-cached-gcm-keys-for-user-id uid))
 
+(defun update-gcm-key (uid old-token new-token)
+  (let ((reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key uid old-token) :error-if-not-found nil)))
+    (when reg
+      (setf (gcm-registration/gcm-token reg) new-token)
+      (potato.db:save-instance reg))))
+
+(defun process-single-reply (uid gcm-key result)
+  (alexandria:if-let ((message-id (st-json:getjso "message_id" result)))
+    ;; The message has been sent, but we may have to update the token
+    (alexandria:when-let ((new-id (st-json:getjso "registration_id" result)))
+      (update-gcm-key uid gcm-key new-id))
+    ;; ELSE: Check error
+    (alexandria:if-let ((error-message (st-json:getjso "error" result)))
+      ;; Check the error and possibly unregister the key
+      (string-case:string-case (error-message)
+        ;; TODO: Resend the message (go through a delayed rabbitmq queue?)
+        ("Unavailable"
+         (log:warn "Need to resend message here: ~s" result))
+        ("NotRegistered"
+         (unregister-gcm-key uid gcm-key))
+        (t
+         (log:error "Unexpected error message from GCM request: ~s" result)
+         (unregister-gcm-key uid gcm-key)))
+      ;; ELSE: A GCM server reply should always contain either a message id or an error message
+      (log:error "Unexpected reply from GCM request. user=~s, token=~s, result=~s" uid gcm-key result))))
+
 (defun process-reply (uid gcm-key message)
   ;; If the result was successful, there is no need to do anything
   (unless (= (st-json:getjso "success" message) 1)
@@ -78,16 +104,7 @@
           ;; There should never be anything but a single entry in this list.
           (log:error "Unexpected result from GCM server: ~s" message)
           ;; ELSE: Check the result status
-          (alexandria:if-let ((error-message (st-json:getjso "error" (first results))))
-            (cond ((equal error-message "NotRegistered")
-                   (log:debug "Unregistering token. user=~s, token=~s" uid gcm-key)
-                   (unregister-gcm-key uid gcm-key))
-                  (t
-                   (log:error "Unexpected error type after sending GCM to server. user=~s, token=~s, result=~s"
-                              uid gcm-key message)))
-            ;; ELSE: Got an error message without error code
-            (log:error "Error without error message after sending GCM to server. user=~s, token=~s, result=~s"
-                       uid gcm-key message))))))
+          (process-single-reply uid gcm-key (first results))))))
 
 (defun push-gcm-message (uid gcm-key message-id data)
   (let ((content (st-json:jso "to" gcm-key
