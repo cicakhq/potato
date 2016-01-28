@@ -203,7 +203,7 @@
                  (st-json:jso "result" "ok"
                               "id" (potato.core:message/id message))))
       (:get (let* ((accept (hunchentoot:header-in* "accept"))
-                   (mode (if (progn (log:info "accept=~s" accept) accept)
+                   (mode (if accept
                              (string-case:string-case (accept)
                                                       ("text/plain" :text)
                                                       ("text/html" :html)

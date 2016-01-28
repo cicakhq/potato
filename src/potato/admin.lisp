@@ -30,7 +30,6 @@
                                          :key (list (potato.core:domain/id domain)
                                                     (potato.core:user/id (potato.core:current-user))
                                                     potato.core:+GROUP-USER-TYPE-ADMIN+))))
-      (log:info "result: ~s" result)
       (st-json:jso "groups" (mapcar (lambda (v)
                                       (let ((value (getfield :|value| v)))
                                         (st-json:jso "id" (getfield :|group| value)
