@@ -353,6 +353,13 @@
               ,(zs (lambda (key values rereduce)
                      (sum values))))))
 
+  (mkview "gcm"
+          `((:|gcm_for_user|
+              ,(zs (lambda (doc)
+                     (with-slots (type user gcm_token) doc
+                       (when (eql type #.(docname 'potato.gcm:gcm-registration))
+                         (emit user gcm_token))))))))
+
   (delete-document "_design/index_filter" :if-missing :ignore)
   (create-document `((:|filters| . ((:|index_updates| . ,(zs (lambda (doc req)
                                                                (with-slots (type updated) doc

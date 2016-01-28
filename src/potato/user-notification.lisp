@@ -276,19 +276,23 @@ notifications. The typical way of doing so is to send an email."))
                                                                       channel-id
                                                                       (encode-name-for-routing-key user-id))
                                                  :properties props
-                                                 :body (lisp-to-binary (list user-id
-                                                                             created-date
-                                                                             (potato.core:message/id message)
-                                                                             (potato.db:persisted-entry/couchdb-id notification))))))))))))))
+                                                 :body (lisp-to-binary (list :user user-id
+                                                                             :created-date created-date
+                                                                             :message-id (potato.core:message/id message)
+                                                                             :notification-id (potato.db:persisted-entry/couchdb-id notification)
+                                                                             :text (potato.core:message/text message)
+                                                                             :from (potato.core:message/from message)
+                                                                             :from-name (potato.core:message/from-name message)
+                                                                             :notification-type notification-type)))))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; RabbitMQ notifications system
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun process-user-notification-message-and-build-json (content)
-  (destructuring-bind (uid created-date message-id notification-id) content
-    (log:trace "Received user notification. uid=~s, created-date=~s, message-id=~s, notification-id=~s"
-               uid created-date message-id notification-id)
+  (destructuring-bind (&key user created-date message-id notification-id &allow-other-keys) content
+    (log:trace "Received user notification. user=~s, created-date=~s, message-id=~s, notification-id=~s"
+               user created-date message-id notification-id)
     (with-user-notification-db
       (let* ((v (potato.db:load-instance 'potato.user-notification:user-notification notification-id)))
         (st-json:jso "type" "usernot"

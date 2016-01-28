@@ -30,6 +30,22 @@
                   (gcm-registration/user obj)
                   (gcm-registration/gcm-token obj))))))
 
+(defun make-memcached-key-for-gcm-keys (uid)
+  (format nil "gcm-~a" (encode-name uid)))
+
+(defun flush-cached-gcm-keys-for-user-id (uid)
+  (cl-memcached:mc-del (make-memcached-key-for-gcm-keys uid)))
+
+(potato.db:define-hook-fn flush-cached-gcm-keys gcm-registration (obj :type (:save :delete))
+  (flush-cached-gcm-keys-for-user-id (gcm-registration/user obj)))
+
+(defun gcm-keys-for-user (uid)
+  (potato.common.memcached:with-memcached (make-memcached-key-for-gcm-keys uid)
+    (let ((result (clouchdb:invoke-view "gcm" "gcm_for_user" :key uid)))
+      (loop
+        for row in (getfield :|rows| result)
+        collect (getfield :|value| row)))))
+
 (defun gcm-enabled-p ()
   (if *gcm-authorisation-key* t nil))
 
@@ -50,24 +66,69 @@
             (t
              :not-changed)))))
 
-(defun push-gcm-message (gcm-key message-id)
+(defun unregister-gcm-key (uid token)
+  (clouchdb:delete-document (make-gcm-registration-key uid token))
+  (flush-cached-gcm-keys-for-user-id uid))
+
+(defun process-reply (uid gcm-key message)
+  ;; If the result was successful, there is no need to do anything
+  (unless (= (st-json:getjso "success" message) 1)
+    (let ((results (st-json:getjso "results" message)))
+      (if (not (alexandria:sequence-of-length-p results 1))
+          ;; There should never be anything but a single entry in this list.
+          (log:error "Unexpected result from GCM server: ~s" message)
+          ;; ELSE: Check the result status
+          (alexandria:if-let ((error-message (st-json:getjso "error" (first results))))
+            (cond ((equal error-message "NotRegistered")
+                   (log:debug "Unregistering token. user=~s, token=~s" uid gcm-key)
+                   (unregister-gcm-key uid gcm-key))
+                  (t
+                   (log:error "Unexpected error type after sending GCM to server. user=~s, token=~s, result=~s"
+                              uid gcm-key message)))
+            ;; ELSE: Got an error message without error code
+            (log:error "Error without error message after sending GCM to server. user=~s, token=~s, result=~s"
+                       uid gcm-key message))))))
+
+(defun push-gcm-message (uid gcm-key message-id data)
   (let ((content (st-json:jso "to" gcm-key
                               "message_id" message-id
-                              "data" (st-json:jso "field1" "abc" "field2" "otherdata"))))
-    (drakma:http-request "https://gcm-http.googleapis.com/gcm/send"
-                         :method :post
-                         :content-type "application/json"
-                         :content (st-json:write-json-to-string content)
-                         :additional-headers `((:authorization . "key=AIzaSyBVxTvHCGVd-a0HVHzKYKb-eWsE7MeSRr4")))))
+                              "data" data)))
+    (log:debug "Content = ~s" content)
+    (multiple-value-bind (body code headers orig-url stream should-close reason)
+        (drakma:http-request "https://gcm-http.googleapis.com/gcm/send"
+                             :method :post
+                             :content-type "application/json"
+                             :additional-headers `((:authorization . ,(concatenate 'string "key=" *gcm-authorisation-key*)))
+                             :content (babel:string-to-octets (st-json:write-json-to-string content) :encoding :utf-8))
+      (declare (ignore headers orig-url))
+      (unwind-protect
+           (if (= code hunchentoot:+http-ok+)
+               ;; Successful delivery. We need to check whether the send was successful
+               (process-reply uid gcm-key (st-json:read-json-from-string (babel:octets-to-string body :encoding :utf-8)))
+               ;; ELSE: Error from service. We might want to push the message back on to the queue here?
+               (log:error "Error sending message to GCM service. code=~s, reason=~s" code reason))
+        (when should-close (close stream))
+        t))))
+
+(defun maybe-truncate-text (text)
+  (if (> (length text) 1000)
+      ;; TODO: Need to cut at the appropriate grapheme cluster boundary
+      (subseq text 0 1000)
+      text))
 
 (defun process-gcm-user-notification (msg)
   (let ((message (cl-rabbit:envelope/message msg)))
-    (destructuring-bind (user-id created-date message-id)
-        (read-from-string (babel:octets-to-string (cl-rabbit:message/body message) :encoding :utf-8))
-      (declare (ignore created-date))
-      (let ((user (potato.db:load-instance 'potato.core:user user-id)))
-        (alexandria:when-let ((gcm-key (potato.core:user/android-gcm-key user)))
-          (push-gcm-message gcm-key message-id))))))
+    (destructuring-bind (&key user message-id from from-name text notification-type &allow-other-keys)
+        (binary-to-lisp (cl-rabbit:message/body message))
+      (loop
+        for key in (gcm-keys-for-user user)
+        do (log:info "Sending to key = ~s" key)
+        do (push-gcm-message user key message-id
+                             (st-json:jso "message_id" message-id
+                                          "sender_id" from
+                                          "sender_name" from-name
+                                          "notification_type" (symbol-name notification-type)
+                                          "text" (maybe-truncate-text text)))))))
 
 (defun gcm-listener-loop ()
   (with-rabbitmq-connected (conn)
@@ -78,3 +139,10 @@
 
 (defun start-gcm-listener ()
   (start-monitored-thread #'gcm-listener-loop "GCM listener loop"))
+
+(potato.common.application:define-component gcm-sender
+  (:dependencies potato.common::generic potato.db::db)
+  (:start
+   (if (gcm-enabled-p)
+       (start-gcm-listener)
+       (log:warn "GCM key not configured. Not starting GCM sender."))))

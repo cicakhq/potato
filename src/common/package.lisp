@@ -145,7 +145,9 @@
            #:init-memcached
            #:*memcached-port*
            #:*memcached-hostname*
-           #:find-cached-object-if-exists))
+           #:find-cached-object-if-exists
+           #:with-memcached-check
+           #:with-memcached))
 
 (defpackage :potato.common.application
   (:use :cl :potato.common)
