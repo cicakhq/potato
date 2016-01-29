@@ -232,7 +232,8 @@
            #:check-group-access
            #:send-typing-start-notification-to-state-server
            #:channel/deleted
-           #:load-channel-users))
+           #:load-channel-users
+           #:name-for-private-channel-counterpart))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

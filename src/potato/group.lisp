@@ -181,6 +181,24 @@
 (defun user-is-admin-in-group-p (group user)
   (equal (user-role-for-group group user) +GROUP-USER-TYPE-ADMIN+))
 
+(defun name-for-private-channel-counterpart (group user)
+  (let ((uid (ensure-user-id user))
+        (group (ensure-group group)))
+    (unless (eq (group/type group) :private)
+      (error "Group is not private: ~s" (group/id group)))
+    (let ((users (group/users group)))
+      (unless (= (length users) 2)
+        (error "Private group does not have 2 users: ~s" (group/id group)))
+      (let* ((u1 (getfield :|user_id| (first users)))
+             (u2 (getfield :|user_id| (second users)))
+             (counterpart-id (cond ((equal u1 uid)
+                                    u2)
+                                   ((equal u2 uid)
+                                    u1)
+                                   (t
+                                    (error "User is not a member of group. user=~s, group=~s" uid (group/id group))))))
+        (car (find-descriptions-for-users (list counterpart-id)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  Web functions for group management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

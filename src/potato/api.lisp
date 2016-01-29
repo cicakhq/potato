@@ -120,11 +120,15 @@
             (getfield :|rows| result))))
 
 (defun api-load-channels-for-group (group)
-  (loop
-     for channel in (potato.core:find-channels-for-group group)
-     unless (potato.core:channel/deleted channel)
-     collect (st-json:jso "id" (potato.core:channel/id channel)
-                          "name" (potato.core:channel/name channel))))
+  (let ((is-private-p (eq (potato.core:group/type group) :private)))
+    (loop
+      for channel in (potato.core:find-channels-for-group group)
+      unless (potato.core:channel/deleted channel)
+        collect (st-json:jso "id" (potato.core:channel/id channel)
+                             "name" (if is-private-p
+                                        (potato.core:name-for-private-channel-counterpart group (potato.core:current-user))
+                                        (potato.core:channel/name channel))
+                             "private" (st-json:as-json-bool is-private-p)))))
 
 
 (defun api-load-domain-info (domain-id include-groups-p include-channels-p)
@@ -224,7 +228,7 @@
 
 (define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
   (api-case-method
-    (:get (let* ((channel (potato.core:load-channel-with-check channel-id))
+    (:get (let* ((channel (potato.core:load-channel-with-check channel-id :if-not-joined :load))
                  (result (potato.core:user-descriptions-for-channel-members channel)))
             (st-json:jso "members" (mapcar #'(lambda (v)
                                                (destructuring-bind (id description nickname user-image)
@@ -391,7 +395,7 @@ name and group are required, while the topic parameter is optional."
 (define-api-method (api-mark-notifications "/channel/([^/]+)/clear-notifications" t (cid))
   (api-case-method
     (:post
-     (let ((channel (potato.core:load-channel-with-check cid)))
+     (let ((channel (potato.core:load-channel-with-check cid :if-not-joined :load)))
        (potato.user-notification:mark-notifications-for-user-channel (potato.core:current-user) channel)
        (st-json:jso "result" "ok")))))
 
