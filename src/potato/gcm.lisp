@@ -11,7 +11,7 @@
               :persisted-p t
               :documentation "User ID")
    (gcm-token :type string
-              :accessor gcm-registration/gcm-token
+              :reader gcm-registration/gcm-token
               :initarg :gcm-token
               :persisted-p t
               :documentation "GCM registration key"))
@@ -71,10 +71,8 @@
   (flush-cached-gcm-keys-for-user-id uid))
 
 (defun update-gcm-key (uid old-token new-token)
-  (let ((reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key uid old-token) :error-if-not-found nil)))
-    (when reg
-      (setf (gcm-registration/gcm-token reg) new-token)
-      (potato.db:save-instance reg))))
+  (clouchdb:delete-document (make-gcm-registration-key uid old-token))
+  (register-gcm uid new-token))
 
 (defun process-single-reply (uid gcm-key result)
   (alexandria:if-let ((message-id (st-json:getjso "message_id" result)))
