@@ -177,6 +177,9 @@
                  "group_type" (symbol-name (potato.core:channel-users/group-type channel-users))
                  "unread_count" (or (getfield :|count| user-data :accept-missing t) 0))))
 
+;;; This function is almost a complete clone of the one in api.lisp.
+;;; They should be merged or perhaps one of them should be removed
+;;; altogether.
 (potato.core:define-json-handler-fn-login (load-channels-for-user-screen "/load_channels_for_user" data nil ())
   "Return a list of all channels accessible to the current user for the given domain."
   (potato.core:with-authenticated-user ()

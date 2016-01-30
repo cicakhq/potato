@@ -276,6 +276,39 @@
                                                                    "name" (potato.core:group/name group)
                                                                    "channels" (api-load-channels-for-group group))))))))
 
+;;; TODO: This function is almost a complete clone of the one in
+;;; channel-web.lisp. They should be merged or perhaps one of them
+;;; should be removed altogether.
+(define-api-method (api-channels2-screen "/channels2" nil ())
+  (api-case-method
+    (:get
+     (let* ((uid (potato.core:user/id (potato.core:current-user)))
+            (result (clouchdb:invoke-view "user" "channels_by_domain_and_user"
+                                          :start-key (list uid nil)
+                                          :end-key (list uid 'clouchdb:json-map)))
+            (rows (getfield :|rows| result))
+            (counterpart-ids (mapcan (lambda (v)
+                                       (let ((counterpart (nth 6 (getfield :|value| v))))
+                                         (when counterpart
+                                           (list counterpart))))
+                                     rows))
+            (counterpart-names (mapcar #'cons counterpart-ids
+                                       (potato.core:find-descriptions-for-users counterpart-ids))))
+       (st-json:jso "channels" (mapcar (lambda (v)
+                                         (destructuring-bind (cid name hide group group-type unread-count cpt-id)
+                                             (getfield :|value| v)
+                                           (st-json:jso "id" cid
+                                                        "name" (if cpt-id
+                                                                   (or (cdr (assoc cpt-id counterpart-names
+                                                                                   :test #'string=))
+                                                                       (error "No cpt name"))
+                                                                   name)
+                                                        "hide" (st-json:as-json-bool hide)
+                                                        "group" group
+                                                        "group_type" group-type
+                                                        "unread_count" unread-count )))
+                                       rows))))))
+
 (define-api-method (api-channel-info-screen "/channel/([a-z0-9]+)" t (cid))
   (api-case-method
     (:get (let ((channel (potato.core:load-channel-with-check cid)))
