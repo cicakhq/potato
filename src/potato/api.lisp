@@ -326,7 +326,8 @@
                                        "hide" (st-json:as-json-bool hide)
                                        "group" group
                                        "group_type" group-type
-                                       "unread_count" unread-count)
+                                       "unread_count" unread-count
+                                       "private_user" (or cpt-id :null))
                           current-channels)))
              finally (collect-current-domain))
            ;; At this point, there may be some domains left that has
