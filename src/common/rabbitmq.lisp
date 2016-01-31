@@ -14,6 +14,7 @@
 (defparameter *channel-content-exchange-name* "channel-content-ex")
 (defparameter *channel-exchange-name* "channel-ex")
 (defparameter *user-notifications-exchange-name* "user-notifications-ex")
+(defparameter *gcm-unread-state-exchange-name* "gcm-unread-ex")
 (defparameter *gcm-queue-name* "user-notifications-gcm-send")
 
 (defparameter *message-send-exchange-name* "message-send-ex"
@@ -162,11 +163,17 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
      (cl-rabbit:exchange-declare conn 1 *channel-exchange-name* "topic" :durable t)
 
      (cl-rabbit:exchange-declare conn 1 *user-notifications-exchange-name* "topic" :durable t)
+
      ;; GCM message processor queue
+     (cl-rabbit:exchange-declare conn 1 *gcm-unread-state-exchange-name* "topic" :durable t)
      (cl-rabbit:queue-declare conn 1 :queue *gcm-queue-name* :durable t :arguments `(("x-message-ttl" . ,(* 8 60 60 1000))))
      (cl-rabbit:queue-bind conn 1
                            :queue *gcm-queue-name*
                            :exchange *user-notifications-exchange-name*
+                           :routing-key "#")
+     (cl-rabbit:queue-bind conn 1
+                           :queue *gcm-queue-name*
+                           :exchange *gcm-unread-state-exchange-name*
                            :routing-key "#")
 
      (cl-rabbit:exchange-declare conn 1 *state-server-reader-exchange-name* "topic" :durable t)

@@ -62,6 +62,9 @@ consists of two elements: the user id and the new unread count for the
 user. CHANNEL-ID is the id of the channel for which this update
 applies."
   (with-pooled-rabbitmq-connection (conn)
+    ;; First, send one notification to each user in the list. These
+    ;; are the messages that are picked up by the queue handler that
+    ;; pushes a message to an active web client.
     (dolist (entry user-id-list)
       (let* ((uid (first entry))
              (msg (make-instance 'user-unread-state-rabbitmq-message
@@ -71,7 +74,13 @@ applies."
         (cl-rabbit:basic-publish conn 1
                                  :exchange *unread-state-exchange-name*
                                  :routing-key (format nil "~a.~a" (encode-name-for-routing-key uid) channel-id)
-                                 :body (conspack:encode msg))))))
+                                 :body (conspack:encode msg))))
+    ;; Next, send a single message to a separate queue that is read by
+    ;; the GCM handler.
+    (cl-rabbit:basic-publish conn 1
+                             :exchange *gcm-unread-state-exchange-name*
+                             :routing-key channel-id
+                             :body (lisp-to-binary (list channel-id user-id-list)))))
 
 (defun update-unread-state-after-post-message (mapping)
   "After a message is posted on a channel, this function increments

@@ -126,7 +126,8 @@
            #:*slashcommand-request-exchange-name*
            #:*slashcommand-unrouted-command-exchange*
            #:*slashcommand-unrouted-command-queue*
-           #:json-bind))
+           #:json-bind
+           #:*gcm-unread-state-exchange-name*))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)

@@ -147,12 +147,20 @@
                                           "notification_type" (symbol-name notification-type)
                                           "text" (maybe-truncate-text text)))))))
 
+(defun process-unread (msg)
+  (let ((message (cl-rabbit:envelope/message msg)))
+    (destructuring-bind (cid users)
+        (binary-to-lisp (cl-rabbit:message/body message))
+      (log:debug "GCM unread on channel=~s, users=~s" cid users))))
+
 (defun gcm-listener-loop ()
   (with-rabbitmq-connected (conn)
     (cl-rabbit:basic-consume conn 1 *gcm-queue-name* :no-ack t)
     (loop
        for msg = (cl-rabbit:consume-message conn)
-       do (process-gcm-user-notification msg))))
+       do (string-case:string-case ((cl-rabbit:envelope/exchange msg))
+            (#.*user-notifications-exchange-name* (process-gcm-user-notification msg))
+            (#.*gcm-unread-state-exchange-name* (process-unread msg))))))
 
 (defun start-gcm-listener ()
   (start-monitored-thread #'gcm-listener-loop "GCM listener loop"))
