@@ -5,16 +5,30 @@
 (defvar *gcm-authorisation-key* nil)
 
 (defclass gcm-registration ()
-  ((user      :type string
-              :reader gcm-registration/user
-              :initarg :user
-              :persisted-p t
-              :documentation "User ID")
-   (gcm-token :type string
-              :reader gcm-registration/gcm-token
-              :initarg :gcm-token
-              :persisted-p t
-              :documentation "GCM registration key"))
+  ((user         :type string
+                 :reader gcm-registration/user
+                 :initarg :user
+                 :persisted-p t
+                 :documentation "User ID")
+   (gcm-token    :type string
+                 :reader gcm-registration/gcm-token
+                 :initarg :gcm-token
+                 :persisted-p t
+                 :documentation "GCM registration key")
+   (unread       :type list
+                 :initarg :unread
+                 :initform nil
+                 :accessor gcm-registration/unread
+                 :persisted-p t
+                 :persisted-type (:list :string)
+                 :persisted-allow-missing-value t)
+   (notification :type list
+                 :initarg :notification-channels
+                 :initform nil
+                 :accessor gcm-registration/notification-channels
+                 :persisted-p t
+                 :persisted-type (:list :string)
+                 :persisted-allow-missing-value t))
   (:metaclass potato.db:persisted-entry-class))
 
 (defun make-gcm-registration-key (user token)
