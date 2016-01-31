@@ -142,7 +142,7 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
        (let ((,queue-sym ,(ecase (car binding)
                             (:exchange
                              (let ((qs (gensym)))
-                               `(let ((,qs (cl-rabbit:queue-declare ,conn-sym 1 :auto-delete 1 :durable nil)))
+                               `(let ((,qs (cl-rabbit:queue-declare ,conn-sym 1 :auto-delete t :durable nil)))
                                   (cl-rabbit:queue-bind ,conn-sym 1 :queue ,qs :exchange ,(cadr binding) :routing-key "#")
                                   ,qs)))
                             (:queue
