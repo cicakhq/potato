@@ -299,6 +299,7 @@
          (labels ((collect-domain (domain channels)
                     (push (st-json:jso "id" (potato.core:domain/id domain)
                                        "name" (potato.core:domain/name domain)
+                                       "domain-type" (symbol-name (potato.core:domain/domain-type domain))
                                        "channels" channels)
                           tree))
                   (collect-current-domain ()
