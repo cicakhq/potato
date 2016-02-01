@@ -37,7 +37,8 @@
                   :persisted-type :boolean
                   :persisted-allow-missing-value t
                   :persisted-missing-default nil))
-  (:metaclass potato.db:persisted-entry-class))
+  (:metaclass potato.db:persisted-entry-class)
+  (:memcached-enabled-p t))
 
 (defmethod print-object ((obj domain) stream)
   (print-unreadable-safely (name) obj stream

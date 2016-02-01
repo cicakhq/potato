@@ -38,6 +38,7 @@
 (define-conspack-encoders user-unread-state-rabbitmq-message)
 (define-conspack-encoders channel)
 (define-conspack-encoders channel-users)
+(define-conspack-encoders domain)
 (define-conspack-encoders group)
 (define-conspack-encoders display-config)
 (define-conspack-encoders notification-keywords)
