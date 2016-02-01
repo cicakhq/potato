@@ -285,11 +285,11 @@
                                           :start-key (list uid nil)
                                           :end-key (list uid 'clouchdb:json-map)))
             (rows (getfield :|rows| result))
-            (counterpart-ids (mapcan (lambda (v)
-                                       (let ((counterpart (nth 6 (getfield :|value| v))))
-                                         (when counterpart
-                                           (list counterpart))))
-                                     rows))
+            (counterpart-ids (loop
+                               for v in rows
+                               for counterpart = (nth 6 (getfield :|value| v))
+                               when counterpart
+                                 collect counterpart))
             (counterpart-names (mapcar #'cons counterpart-ids
                                        (potato.core:find-descriptions-for-users counterpart-ids))))
        (let ((current-domain nil)
