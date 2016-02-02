@@ -418,4 +418,5 @@
            #:*gcm-authorisation-key*
            #:register-gcm
            #:gcm-enabled-p
-           #:gcm-registration))
+           #:gcm-registration
+           #:update-unread-subscription))

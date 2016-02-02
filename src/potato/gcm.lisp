@@ -88,6 +88,16 @@
   (clouchdb:delete-document (make-gcm-registration-key uid old-token))
   (register-gcm uid new-token))
 
+(defun update-unread-subscription (user token channel add-p)
+  (let ((cid (potato.core:ensure-channel-id channel))
+        (reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key (potato.core:ensure-user-id user) token))))
+    (unless reg
+      (potato.core:raise-not-found-error "Incorrect GCM registration"))
+    (if add-p
+        (pushnew cid (gcm-registration/unread reg) :test #'equal)
+        (setf (gcm-registration/unread reg) (remove cid (gcm-registration/unread reg) :test #'equal)))
+    (potato.db:save-instance reg)))
+
 (defun process-single-reply (uid gcm-key result)
   (alexandria:if-let ((message-id (st-json:getjso "message_id" result)))
     ;; The message has been sent, but we may have to update the token

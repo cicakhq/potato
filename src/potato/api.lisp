@@ -479,3 +479,14 @@ name and group are required, while the topic parameter is optional."
          (:not-changed (st-json:jso "result" "ok" "detail" "already_registered"))
          (:token-updated (st-json:jso "result" "ok" "detail" "token_updated"))
          (:new-registration (st-json:jso "result" "ok" "detail" "token_registered")))))))
+
+(define-api-method (update-unread-subscriptions "/channel/([^/]+)/unread-notification" t (cid))
+  (api-case-method
+    (:post
+     (let ((data (parse-and-check-input-as-json))
+           (channel (potato.core:load-channel-with-check cid)))
+       (potato.gcm:update-unread-subscription (potato.core:current-user)
+                                              (st-json:getjso "token" data)
+                                              channel
+                                              (st-json:from-json-bool (st-json:getjso "add" data)))
+       (st-json:jso "result" "ok")))))
