@@ -49,7 +49,8 @@
       (if cached
           (fifth (car cached))
           (let ((cached-data (%load-user-image-maybe-empty user)))
-            (cl-memcached:mc-set key cached-data)
+            (when cached-data
+              (cl-memcached:mc-set key cached-data))
             cached-data)))))
 
 (defgeneric image-url-for-user (user)
@@ -63,11 +64,16 @@
 
 (defun download-user-image (user)
   (let ((content (user-load-image user)))
-    (unless content
-      (error "User has image, or no content found."))
-    (setf (hunchentoot:content-type*) "image/png")
-    (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
-    content))
+    (if content
+        (progn
+          (setf (hunchentoot:content-type*) "image/png")
+          (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
+          content)
+        ;; ELSE: No image, return 404
+        (progn
+          (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
+          (setf (hunchentoot:content-type*) "text/html")
+          "<html><body>No image assigned to user</body></html>"))))
 
 (define-handler-fn-login (user-image-screen "/user_image/([^/]+)/([A-Za-z0-9]+)" t (user-id name))
   (log:trace "Getting image for user-id=~s, name=~s" user-id name)
