@@ -252,7 +252,8 @@
            #:user-load-image
            #:persisted-entry/couchdb-revision
            #:image-url-for-user
-           #:user-image-name))
+           #:user-image-name
+           #:download-user-image))
 
 (defpackage :potato.db
   (:use :cl :potato :potato.common :potato.core)

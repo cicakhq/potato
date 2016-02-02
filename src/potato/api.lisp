@@ -97,15 +97,19 @@
                                                         (symbol-name ,method-sym))
                                                 hunchentoot:+http-method-not-allowed+)))))))))
 
-(defmacro define-api-method ((name url regexp (&rest bind-vars)) &body body)
-  `(lofn:define-handler-fn (,name ,(concatenate 'string +api-url-prefix+ url) ,regexp ,bind-vars)
-     (log:trace "Call to API method ~s, URL: ~s" ',name (hunchentoot:request-uri*))
-     (let ((result (verify-api-token-and-run ',name #'(lambda () ,@body))))
-       (lofn:with-hunchentoot-stream (out "application/json")       
-         (st-json:write-json result out)
-         ;; Write a final newline to make the output a bit easier to
-         ;; read when using tools such as curl
-         (format out "~c" #\Newline)))))
+(defmacro define-api-method ((name url regexp (&rest bind-vars) &key (result-as-json t)) &body body)
+  (let ((result-sym (gensym "RESULT-")))
+    `(lofn:define-handler-fn (,name ,(concatenate 'string +api-url-prefix+ url) ,regexp ,bind-vars)
+       (log:trace "Call to API method ~s, URL: ~s" ',name (hunchentoot:request-uri*))
+       ,(if result-as-json
+            `(let ((,result-sym (verify-api-token-and-run ',name (lambda () ,@body))))
+               (lofn:with-hunchentoot-stream (out "application/json")
+                 (st-json:write-json ,result-sym out)
+                 ;; Write a final newline to make the output a bit easier to
+                 ;; read when using tools such as curl
+                 (format out "~c" #\Newline)))
+            ;; ELSE: Don't process the result
+            `(verify-api-token-and-run ',name (lambda () ,@body))))))
 
 #+nil(defun api-get-channels-for-group (group-id &optional show-subscriptions-p subscribed-channels)
   (let ((result (clouchdb:invoke-view "channel" "channels_for_group" :key group-id)))
@@ -178,6 +182,13 @@
     (:get (lofn:with-checked-parameters ((include-groups :type :boolean)
                                          (include-channels :type :boolean))
             (api-load-domain-info domain-id include-groups include-channels)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; User API calls
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
+  (potato.user-image:download-user-image uid))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message API calls

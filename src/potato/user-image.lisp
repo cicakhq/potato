@@ -61,6 +61,14 @@
           (format nil "/assets/img/users/~a" (user/default-image-name user))
           (format nil "/user_image/~a/~a" (user/id user) image-name)))))
 
+(defun download-user-image (user)
+  (let ((content (user-load-image user)))
+    (unless content
+      (error "User has image, or no content found."))
+    (setf (hunchentoot:content-type*) "image/png")
+    (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
+    content))
+
 (define-handler-fn-login (user-image-screen "/user_image/([^/]+)/([A-Za-z0-9]+)" t (user-id name))
   (log:trace "Getting image for user-id=~s, name=~s" user-id name)
   (let* ((user (load-user user-id))
@@ -68,12 +76,7 @@
     (cond ((string/= image-name name)
            (hunchentoot:redirect (image-url-for-user user)))
           (t
-           (let ((content (user-load-image user)))
-             (unless content
-               (error "User has image, or no content found."))
-             (setf (hunchentoot:content-type*) "image/png")
-             (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
-             content)))))
+           (download-user-image user)))))
 
 (define-handler-fn-login (upload-image-screen "/upload_image" nil ())
   (with-authenticated-user ()
