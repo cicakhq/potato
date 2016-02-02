@@ -70,7 +70,7 @@
           (t
            (let ((content (user-load-image user)))
              (unless content
-               (error "User has image, not no content found."))
+               (error "User has image, or no content found."))
              (setf (hunchentoot:content-type*) "image/png")
              (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
              content)))))
