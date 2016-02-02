@@ -128,9 +128,8 @@
           ;; ELSE: Check the result status
           (process-single-reply uid gcm-key (first results))))))
 
-(defun push-gcm-message (uid gcm-key message-id data)
+(defun push-gcm-message (uid gcm-key data)
   (let ((content (st-json:jso "to" gcm-key
-                              "message_id" message-id
                               "time_to_live" (* 4 24 60 60)
                               "data" data)))
     (log:debug "Content = ~s" content)
@@ -163,8 +162,9 @@
       (loop
         for key in (gcm-keys-for-user user)
         do (log:info "Sending to key = ~s" key)
-        do (push-gcm-message user key message-id
-                             (st-json:jso "message_id" message-id
+        do (push-gcm-message user key
+                             (st-json:jso "potato_message_type" "message"
+                                          "message_id" message-id
                                           "sender_id" from
                                           "sender_name" from-name
                                           "channel" channel
@@ -175,7 +175,17 @@
   (let ((message (cl-rabbit:envelope/message msg)))
     (destructuring-bind (cid users)
         (binary-to-lisp (cl-rabbit:message/body message))
-      (log:debug "GCM unread on channel=~s, users=~s" cid users))))
+      (let ((res (clouchdb:invoke-view "gcm" "unread_channel" :key cid)))
+        (loop
+          for row in (getfield :|rows| res)
+          for v = (getfield :|value| row)
+          for uid = (first v)
+          for token = (second v)
+          for e = (find uid users :key #'first :test #'equal)
+          when e
+            do (push-gcm-message uid token (st-json:jso "potato_message_type" "unread"
+                                                        "channel" cid
+                                                        "unread" (princ-to-string (second e)))))))))
 
 (defun gcm-listener-loop ()
   (with-rabbitmq-connected (conn)
