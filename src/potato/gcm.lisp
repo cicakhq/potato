@@ -84,9 +84,21 @@
   (clouchdb:delete-document (make-gcm-registration-key uid token))
   (flush-cached-gcm-keys-for-user-id uid))
 
+(defun copy-registration (uid reg token)
+  (make-instance 'gcm-registration
+                 :user uid
+                 :gcm-token token
+                 :unread (gcm-registration/unread reg)
+                 :notification-channels (gcm-registration/notification-channels reg)))
+
 (defun update-gcm-key (uid old-token new-token)
-  (clouchdb:delete-document (make-gcm-registration-key uid old-token))
-  (register-gcm uid new-token))
+  (let ((reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key uid old-token) :error-if-not-found nil)))
+    (let ((new-reg (if reg
+                       (progn
+                         (clouchdb:delete-document (make-gcm-registration-key uid old-token))
+                         (copy-registration uid reg new-token))
+                       (make-instance 'gcm-registration :user uid :gcm-token new-token))))
+      (potato.db:save-instance new-reg))))
 
 (defun update-unread-subscription (user token channel add-p)
   (let ((cid (potato.core:ensure-channel-id channel))
