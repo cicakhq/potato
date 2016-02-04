@@ -5,7 +5,12 @@
 (deftype timer-trigger () '(and real (satisfies plusp)))
 
 (defclass checked-dhs-sequences-sorted-list (potato.common:dhs-sequences-sorted-list)
-  ())
+  ()
+  (:documentation "Special version of dhs-sequences-sorted-list which
+verifies that removed objects actually exists in the list, and throws
+an error if not. This is purely to be used for testing, since its use
+in the timer queue has a race condition when a timer expires at the
+same time an object is being removed from the list."))
 
 (defmethod potato.common:sorted-list-remove :around ((list checked-dhs-sequences-sorted-list) element)
   (let ((element (call-next-method)))
@@ -60,9 +65,13 @@
                        :value-formatter (lambda (v)
                                           (cons (timer/trigger-time v)
                                                 (timer/index v))))
+        ;; Fallback that can be used if a bug is found in the red-black implementation
         #+nil(make-instance 'potato.common:plain-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
-        #+nil(make-instance 'potato.common:dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
-        (make-instance 'checked-dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
+        ;; Standard sorted list to use in production deployments
+        (make-instance 'potato.common:dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
+        ;; Don't use the checked sorted list in production. See the note about the race condition in the class documentation
+        #+nil(make-instance 'checked-dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
+        ;; Used to debug possible errors in the red-black implementation
         #+nil(make-instance 'potato.common::logged-dhs-sequences-sorted-list
                        :test #'timer< :test-equal #'eq :key #'identity
                        :name (timer-queue/name obj)
