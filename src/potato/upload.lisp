@@ -181,7 +181,8 @@
     (with-pooled-rabbitmq-connection (conn)
       (cl-rabbit:basic-publish conn 1
                                :exchange *chat-image-converter-acceptor-exchange-name*
-                               :body (lisp-to-binary (list (file/id file) (potato.core:message/id message)))))))
+                               :body (lisp-to-binary (list (file/id file) (potato.core:message/id message)))))
+    message))
 
 (potato.core:define-handler-fn-login (upload-success-result-screen "/s3/success" nil ())
   (check-s3-active)

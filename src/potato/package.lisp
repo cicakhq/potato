@@ -306,7 +306,8 @@
            #:file/location
            #:*file-upload-directory*
            #:*default-upload-location*
-           #:download-file-to-client))
+           #:download-file-to-client
+           #:process-multipart-upload))
 
 (defpackage :potato.user-notification
   (:use :cl :potato :potato.common)

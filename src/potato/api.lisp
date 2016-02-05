@@ -187,6 +187,19 @@
 ;; User API calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
+  (api-case-method
+    (:get (let* ((channel (potato.core:load-channel-with-check channel-id :if-not-joined :load))
+                 (result (potato.core:user-descriptions-for-channel-members channel)))
+            (st-json:jso "members" (mapcar #'(lambda (v)
+                                               (destructuring-bind (id description nickname user-image)
+                                                   v
+                                                 (st-json:jso "id" id
+                                                              "description" description
+                                                              "nickname" nickname
+                                                              "image_name" user-image)))
+                                           result))))))
+
 (define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
   (potato.user-image:download-user-image uid))
 
@@ -237,28 +250,31 @@
                                                               (if (or (null from) (equal from "now")) nil from))))
                   (st-json:jso "messages" (mapcar (lambda (v) (funcall translate-function v)) messages)))))))))
 
-(define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
-  (api-case-method
-    (:get (let* ((channel (potato.core:load-channel-with-check channel-id :if-not-joined :load))
-                 (result (potato.core:user-descriptions-for-channel-members channel)))
-            (st-json:jso "members" (mapcar #'(lambda (v)
-                                               (destructuring-bind (id description nickname user-image)
-                                                   v
-                                                 (st-json:jso "id" id
-                                                              "description" description
-                                                              "nickname" nickname
-                                                              "image_name" user-image)))
-                                           result))))))
-
 (define-api-method (api-message-screen "/channel/([a-z0-9]+)/create" t (channel-id))
   (api-case-method
-    (:post (let* ((data (parse-and-check-input-as-json))
-                  (channel (potato.core:load-channel-with-check channel-id))
-                  (text (st-json:getjso "text" data)))
-             (check-message-length (length text))
-             (let ((result (potato.workflow:send-message-to-channel (potato.core:current-user) channel text)))
-               (st-json:jso "result" "ok"
-                            "id" (getfield :|id| result)))))))
+    (:post
+     (let* ((data (parse-and-check-input-as-json))
+            (channel (potato.core:load-channel-with-check channel-id))
+            (text (st-json:getjso "text" data)))
+       (check-message-length (length text))
+       (let ((result (potato.workflow:send-message-to-channel (potato.core:current-user) channel text)))
+         (st-json:jso "result" "ok"
+                      "id" (getfield :|id| result)))))))
+
+(define-api-method (api-send-file-screen "/channel/([a-z0-9]+)/upload" t (cid))
+  (api-case-method
+    (:post
+     (let ((data (st-json:read-json-from-string (hunchentoot:post-parameter "content"))))
+       (log:info "Got data: ~s" data))
+     (destructuring-bind (uploaded-file uploaded-name uploaded-content-type)
+         (hunchentoot:post-parameter "body")
+       (let ((message (potato.upload:process-multipart-upload potato.upload::*file-upload-manager*
+                                                              cid
+                                                              uploaded-name
+                                                              uploaded-content-type
+                                                              uploaded-file)))
+         (st-json:jso "result" "ok"
+                      "id" (potato.core:message/id message)))))))
 
 (define-api-method (api-type-screen "/channel/([a-z0-9]+)/type" t (cid))
   (api-case-method
@@ -454,7 +470,7 @@ name and group are required, while the topic parameter is optional."
                                                                     :channel-updates-p channel-updates-p))
            (st-json:jso "result" "ok")))))))
 
-(define-api-method (api-download-screen "/download/([^/]+)" t (key))
+(define-api-method (api-download-screen "/download/([^/]+)" t (key) :result-as-json nil)
   (api-case-method
     (:get
      (let ((file (potato.db:load-instance 'potato.upload:file key :error-if-not-found nil)))
