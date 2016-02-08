@@ -117,12 +117,6 @@ credentials. This function returns the current session."
     (error "Attempt to access logged in user outside of authentication form"))
   *current-auth-user*)
 
-(lofn:define-handler-fn (oauth2callback-screen "/oauth2callback" nil ())
-  (hunchentoot:log-message* :info "oauth2callback called"))
-
-(lofn:define-handler-fn (login-auth-screen "/login_auth" nil ())
-  (hunchentoot:log-message* :info "oauth2callback called"))
-
 (defun create-user-if-needed-and-update-session (user-fields)
   (log:trace "User authenticated. username=~s, description=~s" (first user-fields) (second user-fields))
   (let ((user (load-user-by-email (car user-fields) :error-if-not-found nil)))
