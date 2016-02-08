@@ -108,7 +108,8 @@
     (if add-p
         (pushnew cid (gcm-registration/unread reg) :test #'equal)
         (setf (gcm-registration/unread reg) (remove cid (gcm-registration/unread reg) :test #'equal)))
-    (potato.db:save-instance reg)))
+    (potato.db:save-instance reg)
+    reg))
 
 (defun process-single-reply (uid gcm-key result)
   (alexandria:if-let ((message-id (st-json:getjso "message_id" result)))
