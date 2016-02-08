@@ -203,8 +203,9 @@ credentials. This function returns the current session."
       (when (empty-string-or-nil-p (user/api-token user))
         (generate-and-modify-api-token user)
         (save-user user))
-      (hunchentoot:redirect (format nil "potato://authenticated?key=~a"
-                                    (hunchentoot:url-encode (user/api-token user)))))))
+      (hunchentoot:redirect (format nil "potato://authenticated?key=~a&user_id=~a"
+                                    (hunchentoot:url-encode (user/api-token user))
+                                    (hunchentoot:url-encode (user/id user)))))))
 
 (defun handle-login ()
   (lofn:with-parameters (username password remember (mobile "m") redirect)
