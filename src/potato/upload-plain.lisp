@@ -31,14 +31,19 @@ been saved."))
     (error "Local uploads are not enabled")))
 
 (defun process-multipart-upload (upload-manager cid filename content-type uploaded-file)
-  (let* ((channel (potato.core:load-channel-with-check cid))
-         (file (upload-manager/create-file upload-manager (potato.core:current-user) channel filename nil)))
-    (setf (file/mime-type file) content-type)
-    (potato.db:save-instance file)
-    (with-open-file (stream uploaded-file :direction :input :element-type '(unsigned-byte 8))
-      (upload-manager/copy-stream-to-storage upload-manager stream file))
-    (uiop:delete-file-if-exists uploaded-file)
-    (send-file-upload-message-to-channel file)))
+  (ecase *default-upload-location*
+    (:s3
+     (let ((file (create-file-s3 (potato.core:current-user) cid filename content-type uploaded-file)))
+       (send-file-upload-message-to-channel file)))
+    (:file
+     (let* ((channel (potato.core:load-channel-with-check cid))
+            (file (upload-manager/create-file upload-manager (potato.core:current-user) channel filename nil)))
+       (setf (file/mime-type file) content-type)
+       (potato.db:save-instance file)
+       (with-open-file (stream uploaded-file :direction :input :element-type '(unsigned-byte 8))
+         (upload-manager/copy-stream-to-storage upload-manager stream file))
+       (uiop:delete-file-if-exists uploaded-file)
+       (send-file-upload-message-to-channel file)))))
 
 (defun upload-file (upload-manager)
   (let ((filename (hunchentoot:post-parameter "qqfilename"))        
