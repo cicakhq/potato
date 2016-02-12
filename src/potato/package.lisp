@@ -287,7 +287,9 @@
            #:persisted-entry-clear-modifications-list))
 
 (defpackage :potato.search
-  (:use :cl :potato :potato.common :potato.core))
+  (:use :cl :potato :potato.common :potato.core)
+  (:export
+   #:search-messages-json))
 
 (defpackage :potato.upload
   (:use :cl :potato :potato.common)

@@ -490,3 +490,15 @@ name and group are required, while the topic parameter is optional."
      (let ((channel (potato.core:load-channel-with-check cid :if-not-joined :load)))
        (potato.user-notification:mark-notifications-for-user-channel (potato.core:current-user) channel)
        (st-json:jso "result" "ok")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Search
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-search-channel-screen "/channel/([^/]+)/search" t (cid))
+  (api-case-method
+    (:get
+     (lofn:with-checked-parameters ((query :name "query" :type :string :required true :allow-blank nil :trimmed true)
+                                    (star-only-p :name "star-only" :type :boolean :required nil))
+       (let ((channel (potato.core:load-channel-with-check cid)))
+         (potato.search:search-messages-json query (potato.core:channel/id channel) nil star-only-p))))))
