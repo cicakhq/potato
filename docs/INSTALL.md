@@ -22,7 +22,7 @@ On a clean Ubuntu system, these dependencies are available from the following pa
 
 `git couchdb-server rabbitmq-server memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy`
 
-### Initialize submodules
+### Initialise submodules
 
 ```shell
 git submodule init
