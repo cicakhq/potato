@@ -24,6 +24,8 @@ On a clean Ubuntu system, these dependencies are available from the following pa
 
 ### Initialise submodules
 
+potato depends on a number of submodules which are downloaded using the following command:
+
 ```shell
 git submodule init
 git submodule update
