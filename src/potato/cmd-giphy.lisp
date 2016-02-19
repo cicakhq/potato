@@ -7,7 +7,7 @@
   (log:info "Got gif command: ~s" args))
 
 (defun process-command-loop ()
-  (potato.slashcommand:command-processor-loop args
+  (potato.slashcommand:command-processor-loop (args)
    ("gif" (process-gif-command args))))
 
 (potato.common.application:define-component slashcommand-giphy

@@ -21,7 +21,11 @@
                                                     (potato.core:channel/id channel)
                                                     (encode-name-for-routing-key (potato.core:ensure-user-id user))
                                                     cmd)
-                               :body (lisp-to-binary (list cmd args))))))
+                               :body (lisp-to-binary (list cmd args))
+                               :properties `((:headers . (("channel" . ,(potato.core:channel/id channel))
+                                                          ("domain" . ,(potato.core:channel/domain channel))
+                                                          ("user" . ,(potato.core:ensure-user-id user))
+                                                          ("cmd" . ,cmd))))))))
 
 (potato.core:define-json-handler-fn-login (slashcommand-screen "/command" data nil ())
   (potato.core:with-authenticated-user ()
@@ -43,36 +47,52 @@
       (cl-rabbit:basic-consume conn 1 queue :no-ack t)
       (loop
         for msg = (cl-rabbit:consume-message conn)
-        do (destructuring-bind (cmd args)
-               (binary-to-lisp (cl-rabbit:message/body (cl-rabbit:envelope/message msg)))
-             (funcall callback-fn cmd args))))))
+        do (funcall callback-fn msg)))))
 
-(defmacro command-processor-loop (sym def &rest more-definitions)
-  (check-type sym symbol)
-  (let ((all-defs (cons def more-definitions))
+(defmacro command-processor-loop ((args-sym &optional uid-sym channel-sym domain-sym) &body all-defs)
+  (check-type args-sym symbol)
+  (check-type uid-sym (or null symbol))
+  (check-type channel-sym (or null symbol))
+  (check-type domain-sym (or null symbol))
+  (let ((msg-sym (gensym "MESSAGE-"))
         (cmd-sym (gensym "CMD-"))
-        (args-sym (gensym "ARGS-")))
-    `(poll-for-commands ',(mapcar #'car all-defs)
-                        (lambda (,cmd-sym ,args-sym)
-                          (string-case:string-case (,cmd-sym)
-                            ,@(loop
-                                for definition in all-defs
-                                collect (destructuring-bind (cmd-def &rest body-def)
-                                            definition
-                                          (check-type cmd-def string)
-                                          (check-type body-def list)
-                                          `(,cmd-def (let ((,sym ,args-sym))
-                                                       ,@body-def)))))))))
+        (args-int-sym (gensym "ARGS-"))
+        (body-sym (gensym "BODY-"))
+        (headers-sym (gensym "HEADERS-")))
+    `(poll-for-commands
+      ',(mapcar #'car all-defs)
+      (lambda (,msg-sym)
+        (let ((,body-sym (cl-rabbit:envelope/message ,msg-sym)))
+          (destructuring-bind (,cmd-sym ,args-int-sym)
+              (binary-to-lisp (cl-rabbit:message/body ,body-sym))
+            (let ((,headers-sym (cdr (assoc :headers (cl-rabbit:message/properties ,body-sym)))))
+              (declare (ignorable ,headers-sym))
+              (string-case:string-case (,cmd-sym)
+                ,@(loop
+                    for definition in all-defs
+                    collect (destructuring-bind (cmd-def &rest body-def)
+                                definition
+                              (check-type cmd-def string)
+                              (check-type body-def list)
+                              `(,cmd-def (let ((,args-sym ,args-int-sym)
+                                               ,@(if uid-sym
+                                                     (list `(,uid-sym (cdr (assoc "user" ,headers-sym :test #'equal)))))
+                                               ,@(if channel-sym
+                                                     (list `(,channel-sym (cdr (assoc "channel" ,headers-sym :test #'equal)))))
+                                               ,@(if domain-sym
+                                                     (list `(,domain-sym (cdr (assoc "domain" ,headers-sym :test #'equal))))))
+                                           ,@body-def))))))))))))
 
 ;;;
 ;;;  Default slashcommand processor
 ;;;
 
-(defun process-foo-command (args)
-  (log:info "Foo command: ~s" args))
+(defun process-foo-command (args uid cid domain-id)
+  (log:info "Foo command from user=~s, channel=~d, domain=~s: ~s" uid cid domain-id args))
 
 (defun slashcommand-default-loop ()
-  (command-processor-loop args ("foo" (process-foo-command args))))
+  (command-processor-loop (args uid cid domain-id)
+    ("foo" (process-foo-command args uid cid domain-id))))
 
 (potato.common.application:define-component slashcommand-default
   (:dependencies potato.common::rabbitmq)
