@@ -75,6 +75,7 @@
                                        (:file "register2")
                                        (:file "gcm")
                                        (:file "slashcommand")
+                                       (:file "cmd-giphy")
                                        (:file "web")
                                        (:file "private-web")
                                        (:file "channel-web")

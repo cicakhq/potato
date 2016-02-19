@@ -414,7 +414,9 @@
   (:export #:start-ws-server))
 
 (defpackage :potato.slashcommand
-  (:use :cl :potato :potato.common))
+  (:use :cl :potato :potato.common)
+  (:export
+   #:command-processor-loop))
 
 (defpackage :potato.gcm
   (:use :cl :potato :potato.common)

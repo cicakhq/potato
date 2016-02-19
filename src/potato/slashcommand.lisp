@@ -33,28 +33,46 @@
       (send-slashcommand channel (potato.core:current-user) command args)
       (st-json:jso "result" "ok"))))
 
+(defun poll-for-commands (commands callback-fn)
+  (with-rabbitmq-connected (conn)
+    (let ((queue (cl-rabbit:queue-declare conn 1 :auto-delete t)))
+      (dolist (command commands)
+        (cl-rabbit:queue-bind conn 1 :queue queue
+                                     :exchange *slashcommand-request-exchange-name*
+                                     :routing-key (format nil "*.*.*.~a" command)))
+      (cl-rabbit:basic-consume conn 1 queue :no-ack t)
+      (loop
+        for msg = (cl-rabbit:consume-message conn)
+        do (destructuring-bind (cmd args)
+               (binary-to-lisp (cl-rabbit:message/body (cl-rabbit:envelope/message msg)))
+             (funcall callback-fn cmd args))))))
+
+(defmacro command-processor-loop (sym def &rest more-definitions)
+  (check-type sym symbol)
+  (let ((all-defs (cons def more-definitions))
+        (cmd-sym (gensym "CMD-"))
+        (args-sym (gensym "ARGS-")))
+    `(poll-for-commands ',(mapcar #'car all-defs)
+                        (lambda (,cmd-sym ,args-sym)
+                          (string-case:string-case (,cmd-sym)
+                            ,@(loop
+                                for definition in all-defs
+                                collect (destructuring-bind (cmd-def &rest body-def)
+                                            definition
+                                          (check-type cmd-def string)
+                                          (check-type body-def list)
+                                          `(,cmd-def (let ((,sym ,args-sym))
+                                                       ,@body-def)))))))))
+
 ;;;
 ;;;  Default slashcommand processor
 ;;;
 
-(defun process-msg (msg)
-  (destructuring-bind (cmd args)
-      (binary-to-lisp (cl-rabbit:message/body (cl-rabbit:envelope/message msg)))
-    (string-case:string-case (cmd)
-      ("foo" (log:info "Foo: ~s" args)))))
+(defun process-foo-command (args)
+  (log:info "Foo command: ~s" args))
 
 (defun slashcommand-default-loop ()
-  (with-rabbitmq-connected (conn)
-    (let ((queue (cl-rabbit:queue-declare conn 1 :auto-delete t)))
-      (dolist (cmd '("foo"))
-        (cl-rabbit:queue-bind conn 1 :queue queue
-                                     :exchange *slashcommand-request-exchange-name*
-                                     :routing-key (format nil "*.*.*.~a" cmd)))
-      (cl-rabbit:basic-consume conn 1 queue)
-      (loop
-        for msg = (cl-rabbit:consume-message conn)
-        do (cl-rabbit:basic-ack conn 1 (cl-rabbit:envelope/delivery-tag msg))
-        do (process-msg msg)))))
+  (command-processor-loop args ("foo" (process-foo-command args))))
 
 (potato.common.application:define-component slashcommand-default
   (:dependencies potato.common::rabbitmq)
