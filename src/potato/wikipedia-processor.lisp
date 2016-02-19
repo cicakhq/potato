@@ -3,6 +3,8 @@
 
 (in-package :potato.content-processor.wikipedia)
 
+(declaim #.potato.common::*compile-decl*)
+
 (defun find-wikipedia-summary (keyword)
   (multiple-value-bind (body code headers orig-url stream should-close reason)
       (drakma:http-request (format nil "https://en.wikipedia.org/w/api.php?action=query&titles=~a&prop=extracts&exintro=&explaintext=&exsentences=1&format=json" keyword)

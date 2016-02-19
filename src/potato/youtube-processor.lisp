@@ -4,6 +4,8 @@
 
 (in-package :potato.content-processor.youtube)
 
+(declaim #.potato.common::*compile-decl*)
+
 (defvar *youtube-key* nil
   "API key for accessing the Youtube API")
 
