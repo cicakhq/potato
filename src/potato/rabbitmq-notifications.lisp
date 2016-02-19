@@ -5,7 +5,7 @@
 (alexandria:define-constant +crlf+ (format nil "~c~c" #\Return #\Newline) :test 'equal)
 (alexandria:define-constant +nl+ (format nil "~c" #\Newline) :test 'equal)
 (alexandria:define-constant +all-services+
-    '(:content-p t :user-state-p t :user-notifications-p t :unread-p t :channel-updates-p t)
+    '(:content-p t :user-state-p t :user-notifications-p t :unread-p t :channel-updates-p t :slashcommand-error-p t)
   :test 'equal)
 
 (defvar *notifications-timer-queue* (potato.common.timer:make-timer-queue :name "RabbitMQ Notifications timer queue"))
@@ -126,15 +126,20 @@
      (b cl-rabbit:queue-bind cl-rabbit-async:async-queue-bind)
      (a add-new-channel-binding add-new-channel-binding-async))
     (user channels services)
-  (destructuring-bind (&key content-p user-state-p user-notifications-p unread-p channel-updates-p) services
+  (destructuring-bind (&key
+                         content-p user-state-p user-notifications-p
+                         unread-p channel-updates-p slashcommand-error-p)
+      services
     (when (and (not content-p)
                (not user-state-p)
                (not user-notifications-p)
                (not unread-p)
-               (not channel-updates-p))
+               (not channel-updates-p)
+               (not slashcommand-error-p))
       (error "At least one service must be enabled"))
-    (let ((uid (potato.core:ensure-user-id user))
-          (cid-list (mapcar #'potato.core:ensure-channel-id channels)))
+    (let* ((uid (potato.core:ensure-user-id user))
+           (encoded-uid (encode-name-for-routing-key uid))
+           (cid-list (mapcar #'potato.core:ensure-channel-id channels)))
       (let ((queue-name (make-queue-name uid cid-list)))
         (d queue-name nil)
         (dolist (cid cid-list)
@@ -142,11 +147,15 @@
         (when user-notifications-p
           (b :queue queue-name
              :exchange *user-notifications-exchange-name*
-             :routing-key (format nil "*.~a" (encode-name-for-routing-key uid))))
+             :routing-key (format nil "*.~a" encoded-uid)))
         (when unread-p
           (b :queue queue-name
              :exchange *unread-state-exchange-name*
-             :routing-key (format nil "~a.*" (encode-name-for-routing-key uid))))
+             :routing-key (format nil "~a.*" encoded-uid)))
+        (when slashcommand-error-p
+          (b :queue queue-name
+             :exchange *slashcommand-unrouted-command-exchange*
+             :routing-key (format nil "*.*.~a.*" encoded-uid)))
         queue-name))))
 
 (defun process-channel-message (msg msg-formatter)
@@ -207,6 +216,12 @@
                  "channel" (potato.core:user-unread-state-rabbitmq-message/channel content)
                  "count" (potato.core:user-unread-state-rabbitmq-message/count content))))
 
+(defun process-unrouted-command (msg)
+  (let ((headers (cdr (assoc :headers (cl-rabbit:message/properties (cl-rabbit:envelope/message msg))))))
+    (st-json:jso "type" "illegal-command"
+                 "cmd" (cdr (assoc "cmd" headers :test #'equal))
+                 "channel" (cdr (assoc "channel" headers :test #'equal)))))
+
 (defun process-message (msg subscription-consumer-tag msg-formatter)
   (let ((consumer (cl-rabbit:envelope/consumer-tag msg)))
     (unless (equal consumer subscription-consumer-tag)
@@ -219,11 +234,12 @@
     (let ((exchange (cl-rabbit:envelope/exchange msg)))
       (log:trace "Processing message on exchange: ~s" exchange)
       (string-case:string-case (exchange :default nil)
-        (#.*channel-content-exchange-name*     (process-channel-message msg msg-formatter))
-        (#.*state-server-sender-exchange-name* (process-state-server-message msg))
-        (#.*user-notifications-exchange-name*  (process-user-notification-message msg))
-        (#.*unread-state-exchange-name*        (process-unread-message msg))
-        (#.*channel-exchange-name*             (potato.rabbitmq-channels:process-channel-update msg))))))
+        (#.*channel-content-exchange-name*          (process-channel-message msg msg-formatter))
+        (#.*state-server-sender-exchange-name*      (process-state-server-message msg))
+        (#.*user-notifications-exchange-name*       (process-user-notification-message msg))
+        (#.*unread-state-exchange-name*             (process-unread-message msg))
+        (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))
+        (#.*slashcommand-request-exchange-name*     (process-unrouted-command msg))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Web handlers -- eventsource
@@ -445,13 +461,13 @@
 messages. Each element is a list of two values: the processed message
 and the delivery tag."
   (let ((existing-messages (loop
-                              repeat num-messages
-                              for msg = (consume-message-handle-timeout conn 1/1000)
-                              while msg
-                              for json = (process-message msg subscription-consumer-tag msg-formatter)
-                              if json
-                              collect (list json (cl-rabbit:envelope/delivery-tag msg))
-                              else do (cl-rabbit:basic-ack conn 1 (cl-rabbit:envelope/delivery-tag msg)))))
+                             repeat num-messages
+                             for msg = (consume-message-handle-timeout conn 1/1000)
+                             while msg
+                             for json = (process-message msg subscription-consumer-tag msg-formatter)
+                             if json
+                               collect (list json (cl-rabbit:envelope/delivery-tag msg))
+                             else do (cl-rabbit:basic-ack conn 1 (cl-rabbit:envelope/delivery-tag msg)))))
     (or existing-messages
         (alexandria:when-let ((msg (consume-message-handle-timeout conn timeout)))
           (alexandria:when-let ((json (process-message msg subscription-consumer-tag msg-formatter)))
