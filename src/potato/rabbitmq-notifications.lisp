@@ -216,12 +216,6 @@
                  "channel" (potato.core:user-unread-state-rabbitmq-message/channel content)
                  "count" (potato.core:user-unread-state-rabbitmq-message/count content))))
 
-(defun process-unrouted-command (msg)
-  (let ((headers (cdr (assoc :headers (cl-rabbit:message/properties (cl-rabbit:envelope/message msg))))))
-    (st-json:jso "type" "illegal-command"
-                 "cmd" (cdr (assoc "cmd" headers :test #'equal))
-                 "channel" (cdr (assoc "channel" headers :test #'equal)))))
-
 (defun process-message (msg subscription-consumer-tag msg-formatter)
   (let ((consumer (cl-rabbit:envelope/consumer-tag msg)))
     (unless (equal consumer subscription-consumer-tag)
@@ -238,8 +232,7 @@
         (#.*state-server-sender-exchange-name*      (process-state-server-message msg))
         (#.*user-notifications-exchange-name*       (process-user-notification-message msg))
         (#.*unread-state-exchange-name*             (process-unread-message msg))
-        (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))
-        (#.*slashcommand-request-exchange-name*     (process-unrouted-command msg))))))
+        (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Web handlers -- eventsource
