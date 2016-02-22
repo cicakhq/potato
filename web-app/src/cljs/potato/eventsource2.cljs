@@ -61,7 +61,8 @@
     ;; ELSE: No error, request the next event
     (.send req "/chat_updates6" "POST"
            (.stringify js/JSON (clj->js {:channel (:channel @poll-config)
-                                         :connection (:event @poll-config)})))))
+                                         :connection (:event @poll-config)
+                                         :session_id (:session-id @potato.state/global)})))))
 
 (defn make-xhr-io-req []
   (let [req (new goog.net.XhrIo)]
@@ -170,9 +171,10 @@
 
 (defn start-websocket [cid initial-event]
   (cljs.pprint/cl-format true "Starting websocket for channel: ~s, event: ~s" cid initial-event)
-  (let [ws (new js/WebSocket (cljs.pprint/cl-format false "~a/~a~@[?event=~a~]"
+  (let [ws (new js/WebSocket (cljs.pprint/cl-format false "~a/~a?session_id=~a~@[&event=~a~]"
                                                     (aget js/window "websocketUrl")
                                                     cid
+                                                    (:session-id @potato.state/global)
                                                     initial-event))]
     (.addEventListener ws "message"
                        (fn [event]

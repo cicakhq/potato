@@ -1144,7 +1144,8 @@ highlighted-message - the message that should be highlighted (or
     (when cmd
       (http/post "/command" {:json-params {:channel cid
                                            :command cmd
-                                           :arg (or args "")}}))))
+                                           :arg (or args "")
+                                           :session_id (:session-id @potato.state/global)}}))))
 
 (defn- autocomplete-find [key text]
   (condp = (type key)
@@ -1437,7 +1438,7 @@ highlighted-message - the message that should be highlighted (or
 
 (defn main []
   (println (str "-- main called at " (.format (js/moment))))
-  (let [event-channel    (make-polling-connection (:active-channel (deref potato.state/global)))
+  (let [event-channel    (make-polling-connection (:active-channel @potato.state/global))
         event-publisher  (async/pub event-channel (fn [[tag & _]] tag))
         root-node        (goog.dom/getElement "potato-root")
         connection-state-info-node (goog.dom/getElement "connection-state")

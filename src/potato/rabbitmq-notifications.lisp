@@ -5,7 +5,7 @@
 (alexandria:define-constant +crlf+ (format nil "~c~c" #\Return #\Newline) :test 'equal)
 (alexandria:define-constant +nl+ (format nil "~c" #\Newline) :test 'equal)
 (alexandria:define-constant +all-services+
-    '(:content-p t :user-state-p t :user-notifications-p t :unread-p t :channel-updates-p t :slashcommand-error-p t)
+    '(:content-p t :user-state-p t :user-notifications-p t :unread-p t :channel-updates-p t :session-p t)
   :test 'equal)
 
 (defvar *notifications-timer-queue* (potato.common.timer:make-timer-queue :name "RabbitMQ Notifications timer queue"))
@@ -125,17 +125,17 @@
     ((d declare-notifications-queue declare-notifications-queue-async)
      (b cl-rabbit:queue-bind cl-rabbit-async:async-queue-bind)
      (a add-new-channel-binding add-new-channel-binding-async))
-    (user channels services)
+    (user channels services sid)
   (destructuring-bind (&key
                          content-p user-state-p user-notifications-p
-                         unread-p channel-updates-p slashcommand-error-p)
+                         unread-p channel-updates-p session-p)
       services
     (when (and (not content-p)
                (not user-state-p)
                (not user-notifications-p)
                (not unread-p)
                (not channel-updates-p)
-               (not slashcommand-error-p))
+               (not session-p))
       (error "At least one service must be enabled"))
     (let* ((uid (potato.core:ensure-user-id user))
            (encoded-uid (encode-name-for-routing-key uid))
@@ -152,10 +152,10 @@
           (b :queue queue-name
              :exchange *unread-state-exchange-name*
              :routing-key (format nil "~a.*" encoded-uid)))
-        (when slashcommand-error-p
+        (when (and session-p sid)
           (b :queue queue-name
-             :exchange *slashcommand-unrouted-command-exchange*
-             :routing-key (format nil "*.*.~a.*" encoded-uid)))
+             :exchange *session-notifications-exchange-name*
+             :routing-key (format nil "~a.~a.*" encoded-uid (encode-name-for-routing-key sid))))
         queue-name))))
 
 (defun process-channel-message (msg msg-formatter)
@@ -216,6 +216,14 @@
                  "channel" (potato.core:user-unread-state-rabbitmq-message/channel content)
                  "count" (potato.core:user-unread-state-rabbitmq-message/count content))))
 
+(defun process-session-notification (msg)
+  (let* ((message (cl-rabbit:envelope/message msg))
+         (body (binary-to-lisp (cl-rabbit:message/body message)))
+         (cmd (car body)))
+    (string-case:string-case (cmd)
+      ("unknown-slashcommand" (st-json:jso "unknown-slashcommand" (second body)))
+      (t (log:warn "Unexpected session command: ~s" cmd)))))
+
 (defun process-message (msg subscription-consumer-tag msg-formatter)
   (let ((consumer (cl-rabbit:envelope/consumer-tag msg)))
     (unless (equal consumer subscription-consumer-tag)
@@ -232,7 +240,8 @@
         (#.*state-server-sender-exchange-name*      (process-state-server-message msg))
         (#.*user-notifications-exchange-name*       (process-user-notification-message msg))
         (#.*unread-state-exchange-name*             (process-unread-message msg))
-        (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))))))
+        (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))
+        (#.*session-notifications-exchange-name*    (process-session-notification msg))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Web handlers -- eventsource
@@ -289,8 +298,8 @@
                                       (handler-case
                                           (progn ,@body)
                                         (#+sbcl sb-int:closed-stream-error #-sbcl error (condition)
-                                                (log:warn "Error while writing to client: ~a" condition)
-                                                (msgl-stop-queue)))))))
+                                          (log:warn "Error while writing to client: ~a" condition)
+                                          (msgl-stop-queue)))))))
 
       (labels ((refresh-web-session ()
                  (let ((now (get-universal-time)))
@@ -377,10 +386,12 @@
                           (unless (zerop num-consumers)
                             (error "Queue is not idle: ~s" http-event)))
                         ;; ELSE: Need to declare a new queue
-                        (let ((queue (create-and-bind-notifications-queue-async rchannel user (list channel) services)))
-                          (setq http-event queue)
-                          (format stream "id:~a~a~a" queue +nl+ +nl+)
-                          (finish-output stream)))
+                        (progn
+                          (log:warn "No support for client sessions in eventsource implementation")
+                          (let ((queue (create-and-bind-notifications-queue-async rchannel user (list channel) services nil)))
+                            (setq http-event queue)
+                            (format stream "id:~a~a~a" queue +nl+ +nl+)
+                            (finish-output stream))))
                  (potato.core:refresh-user user channel (* *ping-interval* 2))
                  (bordeaux-threads:with-lock-held (lock)
                    (let ((v (cl-rabbit-async:async-basic-consume rchannel http-event :no-ack t)))
@@ -388,11 +399,11 @@
                  (bordeaux-threads:with-lock-held (lock)
                    (schedule-notification-timer))
                  (loop
-                    for finished-p = (multiple-value-bind (sockets remaining)
-                                         (usocket:wait-for-input (list socket) :ready-only t)
-                                       (declare (ignore remaining))
-                                       (member socket sockets))
-                    until finished-p)
+                   for finished-p = (multiple-value-bind (sockets remaining)
+                                        (usocket:wait-for-input (list socket) :ready-only t)
+                                      (declare (ignore remaining))
+                                      (member socket sockets))
+                   until finished-p)
                  (log:trace "Connection dropped")
 
                  ;; Unwind form
@@ -488,7 +499,10 @@ and the delivery tag."
                       :reader request-long-poll/msg-formatter)
    (json-formatter-fn :type function
                       :initarg :json-formatter-fn
-                      :reader request-long-poll/json-formatter-fn))
+                      :reader request-long-poll/json-formatter-fn)
+   (client-session    :type (or null string)
+                      :initarg :client-session
+                      :reader request-long-poll/client-session))
   (:documentation "Lofn request-poll condition that is used when starting the long poll loop"))
 
 (defmethod lofn:start-poll ((condition request-long-poll) socket)
@@ -499,6 +513,7 @@ and the delivery tag."
         (msg-formatter (request-long-poll/msg-formatter     condition))
         (fmt-fn        (request-long-poll/json-formatter-fn condition))
         (services      (request-long-poll/services          condition))
+        (sid           (request-long-poll/client-session    condition))
         (result-written-p nil)
         (timeout       30))
 
@@ -514,7 +529,7 @@ and the delivery tag."
                          (unless (zerop num-consumers)
                            (error "Queue is not idle: ~s" event))
                          (values event num-messages)))
-                     (let ((n (create-and-bind-notifications-queue conn 1 (potato.core:current-user) channels services)))
+                     (let ((n (create-and-bind-notifications-queue conn 1 (potato.core:current-user) channels services sid)))
                        (values n 0)))
                (dolist (channel channels)
                  (potato.core:refresh-user user channel (* timeout 2)))
@@ -547,7 +562,7 @@ and the delivery tag."
                                  stream))
         (close stream)))))
 
-(defun process-long-poll (channels event services msg-formatter json-formatter-fn)
+(defun process-long-poll (channels event sid services msg-formatter json-formatter-fn)
   (let ((stream (flexi-streams:make-flexi-stream (hunchentoot:send-headers) :external-format :utf-8)))
     (signal 'request-long-poll
             :user (potato.core:current-user)
@@ -556,16 +571,18 @@ and the delivery tag."
             :stream stream
             :services services
             :msg-formatter msg-formatter
-            :json-formatter-fn json-formatter-fn)))
+            :json-formatter-fn json-formatter-fn
+            :client-session sid)))
 
 (lofn:define-handler-fn (channel-updates6 "/chat_updates6" nil ())
   (handler-case
       (potato.core:with-authenticated-user ()
         (let* ((data (st-json:read-json-from-string (hunchentoot:raw-post-data :force-text t)))
                (channel (potato.core:load-channel-with-check (st-json:getjso "channel" data)))
-               (event (nil-if-json-null (st-json:getjso "connection" data))))
+               (event (nil-if-json-null (st-json:getjso "connection" data)))
+               (sid (nil-if-json-null (st-json:getjso "session_id" data))))
           (verify-queue-name event (list (potato.core:channel/id channel)))
-          (process-long-poll (list channel) event
+          (process-long-poll (list channel) event sid
                              +all-services+
                              #'potato.core:notification-message-cd->json-html
                              (lambda (queue notifications)

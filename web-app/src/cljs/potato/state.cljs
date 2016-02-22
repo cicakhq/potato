@@ -18,6 +18,7 @@
                        ;; The key is the user id, and the value is a map of the following form:
                        ;; {:description "name" :image-name "foo.jpg"}
                        :user-to-name-map {}
-                       :outstanding-notifications []}))
+                       :outstanding-notifications []
+                       :session-id (str (random-uuid))}))
 
 (defonce connection (atom {:error false}))

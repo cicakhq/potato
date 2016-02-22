@@ -9,7 +9,7 @@
     (potato.core:raise-web-parameter-error "Illegal command format: ~s" cmd))
   (string-downcase cmd))
 
-(defun send-slashcommand (channel user cmd args)
+(defun send-slashcommand (channel user sid cmd args)
   (check-type cmd string)
   (check-type args string)
   (let ((channel (potato.core:ensure-channel channel)))
@@ -25,17 +25,21 @@
                                :properties `((:headers . (("channel" . ,(potato.core:channel/id channel))
                                                           ("domain" . ,(potato.core:channel/domain channel))
                                                           ("user" . ,(potato.core:ensure-user-id user))
-                                                          ("cmd" . ,cmd))))))))
+                                                          ("cmd" . ,cmd)
+                                                          ,@(if sid (list (cons "session" sid))))))))))
 
 (potato.core:define-json-handler-fn-login (slashcommand-screen "/command" data nil ())
   (potato.core:with-authenticated-user ()
-    (let ((channel (potato.core:load-channel-with-check (st-json:getjso "channel" data)))
-          (command (validate-command-name (st-json:getjso "command" data)))
-          (args (st-json:getjso "arg" data)))
-      (unless (stringp args)
-        (potato.core:raise-web-parameter-error "arg parameter must be a string"))
-      (send-slashcommand channel (potato.core:current-user) command args)
-      (st-json:jso "result" "ok"))))
+    (json-bind ((cid "channel")
+                (command "command")
+                (args "arg")
+                (sid "session_id" :required nil))
+        data
+      (let ((channel (potato.core:load-channel-with-check cid)))
+        (unless (stringp args)
+          (potato.core:raise-web-parameter-error "arg parameter must be a string"))
+        (send-slashcommand channel (potato.core:current-user) sid command args)
+        (st-json:jso "result" "ok")))))
 
 (defun poll-for-commands (commands callback-fn)
   (with-rabbitmq-connected (conn)
@@ -48,6 +52,36 @@
       (loop
         for msg = (cl-rabbit:consume-message conn)
         do (funcall callback-fn msg)))))
+
+(defun slashcommand-process-unrouted-loop ()
+  "Main loop that reads messages from a queue that accepts all
+unrouted messages. The messages are then forwarded to the session that
+initially sent the message. The client can then show an error message
+to the user."
+  (with-rabbitmq-connected (conn)
+    (cl-rabbit:basic-consume conn 1 *slashcommand-unrouted-command-queue* :no-ack t)
+    (loop
+      for msg = (cl-rabbit:consume-message conn)
+      for message = (cl-rabbit:envelope/message msg)
+      for props = (cl-rabbit:message/properties message)
+      for headers = (getfield :headers props :accept-missing t)
+      ;; Unrouted messages should be sent as an error message back to
+      ;; the session that issues the command.
+      do (let ((cid (cdr (assoc "channel" headers :test #'equal)))
+               (uid (cdr (assoc "user" headers :test #'equal)))
+               (sid (cdr (assoc "session" headers :test #'equal)))
+               (cmd (cdr (assoc "cmd" headers :test #'equal))))
+           (if (not (and cid uid sid cmd))
+               (log:warn "Unrouted message without channel, user or session set: ~s, headers: ~s" msg headers)
+               ;; ELSE: All headers set, forward the message to the client
+               (cl-rabbit:basic-publish conn 1
+                                        :exchange *session-notifications-exchange-name*
+                                        :routing-key (format nil "~a.~a.~a"
+                                                             (encode-name-for-routing-key uid)
+                                                             (encode-name-for-routing-key sid)
+                                                             (encode-name-for-routing-key cid))
+                                        :body (lisp-to-binary (append (list "unknown-slashcommand" cmd)
+                                                                      (binary-to-lisp (cl-rabbit:message/body message))))))))))
 
 (defmacro command-processor-loop ((args-sym &optional uid-sym channel-sym domain-sym) &body all-defs)
   (check-type args-sym symbol)
@@ -97,4 +131,5 @@
 (potato.common.application:define-component slashcommand-default
   (:dependencies potato.common::rabbitmq)
   (:start
+   (start-monitored-thread #'slashcommand-process-unrouted-loop "Slashcommand process unrouted")
    (start-monitored-thread #'slashcommand-default-loop "Slashcommand default")))

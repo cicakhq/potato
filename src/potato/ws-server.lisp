@@ -32,7 +32,10 @@
                    :accessor ws-connection/last-web-session-refresh-time)
    (session        :type t
                    :initarg :session
-                   :reader ws-connection/session)))
+                   :reader ws-connection/session)
+   (client-session :type (or null string)
+                   :initarg :client-session
+                   :reader ws-connection/client-session)))
 
 (defmethod print-object ((conn ws-connection) stream)
   (print-unreadable-safely (user channel queue closed-p) conn stream
@@ -113,7 +116,8 @@
                         rchannel
                         (ws-connection/user conn)
                         (list (ws-connection/channel conn))
-                        potato.rabbitmq-notifications:+all-services+))))
+                        potato.rabbitmq-notifications:+all-services+
+                        (ws-connection/client-session conn)))))
             (bordeaux-threads:with-lock-held ((ws-connection/lock conn))
               (let ((v (cl-rabbit-async:async-basic-consume rchannel q :no-ack nil)))
                 (log:trace "Enabled cosume. Consumer tag: ~s" v)
@@ -153,17 +157,19 @@
       (cl-ppcre:scan-to-strings "^/ws/([^/]+)$" (hunchentoot:script-name request))
     (unless match
       (potato.core:raise-not-found-error "Illegal websocket resource"))
-    (let ((cid (aref strings 0))
-          (http-event (hunchentoot:parameter "event")))
-      (potato.core:with-authenticated-user ()
-        (let ((channel (potato.core:load-channel-with-check cid)))
-          (let ((conn (make-instance 'ws-connection
-                                     :channel channel
-                                     :user (potato.core:current-user)
-                                     :queue http-event
-                                     :session (potato.core:find-current-user-session))))
-            (log:trace "returning connection: ~s" conn)
-            conn))))))
+    (let ((cid (aref strings 0)))
+      (lofn:with-checked-parameters ((http-event :name "event" :required nil)
+                                     (sid :name "session_id" :required nil))
+        (potato.core:with-authenticated-user ()
+          (let ((channel (potato.core:load-channel-with-check cid)))
+            (let ((conn (make-instance 'ws-connection
+                                       :channel channel
+                                       :user (potato.core:current-user)
+                                       :queue http-event
+                                       :session (potato.core:find-current-user-session)
+                                       :client-session sid)))
+              (log:trace "returning connection: ~s" conn)
+              conn)))))))
 
 (defmethod hunchentoot:acceptor-dispatch-request :around ((acceptor hunchensocket:websocket-acceptor) request)
   (handler-case

@@ -21,7 +21,8 @@
    (log:info "Email updates started")))
 
 (potato.common.application:define-component main
-  (:dependencies potato.core::main-web-server potato.ws-server::ws-server potato.slashcommand::slashcommand-default))
+  (:dependencies potato.core::main-web-server potato.ws-server::ws-server
+                 potato.slashcommand::slashcommand-default))
 
 (defun start-server-debug ()
   (log4cl:set-log-level log4cl:*root-logger* :debug)

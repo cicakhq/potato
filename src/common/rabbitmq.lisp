@@ -14,6 +14,8 @@
 (defparameter *channel-content-exchange-name* "channel-content-ex")
 (defparameter *channel-exchange-name* "channel-ex")
 (defparameter *user-notifications-exchange-name* "user-notifications-ex")
+(defparameter *session-notifications-exchange-name* "user-session-notifications-ex"
+  "Messages sent to a specific user session. Routing key format is: user.session.channel")
 (defparameter *gcm-unread-state-exchange-name* "gcm-unread-ex")
 (defparameter *gcm-queue-name* "user-notifications-gcm-send")
 
@@ -161,8 +163,8 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
      (cl-rabbit:exchange-declare conn 1 *unread-state-exchange-name* "topic" :durable t)
      (cl-rabbit:exchange-declare conn 1 *channel-content-exchange-name* "topic" :durable t)
      (cl-rabbit:exchange-declare conn 1 *channel-exchange-name* "topic" :durable t)
-
      (cl-rabbit:exchange-declare conn 1 *user-notifications-exchange-name* "topic" :durable t)
+     (cl-rabbit:exchange-declare conn 1 *session-notifications-exchange-name* "topic" :durable t)
 
      ;; GCM message processor queue
      (cl-rabbit:exchange-declare conn 1 *gcm-unread-state-exchange-name* "topic" :durable t)
@@ -176,9 +178,11 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
                            :exchange *gcm-unread-state-exchange-name*
                            :routing-key "#")
 
+     ;; State server
      (cl-rabbit:exchange-declare conn 1 *state-server-reader-exchange-name* "topic" :durable t)
      (cl-rabbit:exchange-declare conn 1 *state-server-sender-exchange-name* "topic" :durable t)
 
+     ;; Image converter
      (cl-rabbit:exchange-declare conn 1 *chat-image-converter-acceptor-exchange-name* "topic" :durable t)
      (cl-rabbit:queue-declare conn 1 :queue *chat-image-converter-acceptor-queue-name* :durable t)
      (cl-rabbit:queue-bind conn 1
@@ -193,6 +197,7 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
                            :exchange *chat-image-converter-response-exchange-name*
                            :routing-key "#")
 
+     ;; Email
      (cl-rabbit:exchange-declare conn 1 *email-exchange-name* "topic" :durable t)
      (cl-rabbit:queue-declare conn 1 :queue *email-queue-name* :durable t)
      (cl-rabbit:queue-bind conn 1
@@ -200,6 +205,7 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
                            :exchange *email-exchange-name*
                            :routing-key "#")
 
+     ;; Message send
      (cl-rabbit:exchange-declare conn 1 *message-send-exchange-name* "topic" :durable t)
 
      ;; Messages on the content processor queue will only live for 10
@@ -212,12 +218,15 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
                            :exchange *message-send-exchange-name*
                            :routing-key "#")
 
-     ;; Exchanges and queues that handle slash commands
+     ;; Slash commands
      (cl-rabbit:exchange-declare conn 1 *slashcommand-unrouted-command-exchange* "topic" :durable t)
      (cl-rabbit:exchange-declare conn 1 *slashcommand-request-exchange-name* "topic"
                                  :durable t
                                  :arguments `(("alternate-exchange" . ,*slashcommand-unrouted-command-exchange*)))
-     (cl-rabbit:queue-declare conn 1 :queue *slashcommand-unrouted-command-queue* :durable t)
+     (cl-rabbit:queue-declare conn 1
+                              :queue *slashcommand-unrouted-command-queue*
+                              :durable t
+                              :arguments '(("x-message-ttl" . 5000)))
      (cl-rabbit:queue-bind conn 1
                            :queue *slashcommand-unrouted-command-queue*
                            :exchange *slashcommand-unrouted-command-exchange*
