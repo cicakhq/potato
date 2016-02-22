@@ -396,9 +396,9 @@ name and group are required, while the topic parameter is optional."
         (t (raise-api-error "Illegal format: ~a" format-name)))
       #'potato.core:notification-message-cd->json-html))
 
-(defun api-get-single-update (channels event-id format-name services)
+(defun api-get-single-update (channels event-id format-name services sid)
   #+nil(:content-p t :user-state-p t :user-notifications-p t :unread-p t :channel-updates-p t)
-  (potato.rabbitmq-notifications:process-long-poll channels event-id services
+  (potato.rabbitmq-notifications:process-long-poll channels event-id sid services
                                                    (make-translation-function format-name)
                                                    (lambda (queue notifications)
                                                      (st-json:jso "event" queue
@@ -422,19 +422,21 @@ name and group are required, while the topic parameter is optional."
 (define-api-method (api-channel-updates-screen "/channel/([^/]+)/updates" t (cid))
   (lofn:with-checked-parameters ((event-id :name "event-id" :required nil)
                                  (format-name :name "format" :required nil)
-                                 (service-names :name "services" :required nil))
+                                 (service-names :name "services" :required nil)
+                                 (sid :name "session_id" :required nil))
     (let ((channel (potato.core:load-channel-with-check cid  :if-not-joined :join))
           (services (if service-names
                         (parse-service-names service-names)
                         '(:content-p t))))
       (api-case-method
-        (:get (api-get-single-update (list channel) event-id format-name services))))))
+        (:get (api-get-single-update (list channel) event-id format-name services sid))))))
 
 (define-api-method (api-channel-updates2-screen "/channel-updates" nil ())
   (lofn:with-checked-parameters ((event-id :name "event-id" :required nil)
                                  (channel-names :name "channels" :required nil)
                                  (format-name :name "format" :required nil)
-                                 (service-names :name "services" :required nil))
+                                 (service-names :name "services" :required nil)
+                                 (sid :name "session_id" :required nil))
     (let* ((services (if service-names
                          (parse-service-names service-names)
                          '(:content-p t)))
@@ -443,7 +445,7 @@ name and group are required, while the topic parameter is optional."
                                (potato.core:load-channel-with-check cid :if-not-joined :join))
                              cids)))
       (api-case-method
-        (:get (api-get-single-update channels event-id format-name services))))))
+        (:get (api-get-single-update channels event-id format-name services sid))))))
 
 (define-api-method (api-channel-updates2-control-screen "/channel-updates/update" nil ())
   (lofn:with-checked-parameters ((event-id :name "event-id" :required t)
