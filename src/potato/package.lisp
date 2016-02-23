@@ -395,7 +395,9 @@
            #:declare-notifications-queue-async
            #:add-new-channel-binding
            #:add-new-channel-binding-async
-           #:verify-queue-name))
+           #:verify-queue-name
+           #:*session-notification-unknown-slashcommand*
+           #:*session-notification-option*))
 
 (defpackage :potato.rabbitmq-channels
   (:use :cl :potato :potato.common)

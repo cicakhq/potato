@@ -60,6 +60,7 @@
                                        (:file "search")
                                        (:file "typing")
                                        (:file "notifications")
+                                       (:file "session-notification")
                                        (:file "rabbitmq-notifications")
                                        (:file "rabbitmq-channels")
                                        (:file "private")

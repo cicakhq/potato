@@ -216,14 +216,6 @@
                  "channel" (potato.core:user-unread-state-rabbitmq-message/channel content)
                  "count" (potato.core:user-unread-state-rabbitmq-message/count content))))
 
-(defun process-session-notification (msg)
-  (let* ((message (cl-rabbit:envelope/message msg))
-         (body (binary-to-lisp (cl-rabbit:message/body message)))
-         (cmd (car body)))
-    (string-case:string-case (cmd)
-      ("unknown-slashcommand" (st-json:jso "unknown-slashcommand" (second body)))
-      (t (log:warn "Unexpected session command: ~s" cmd)))))
-
 (defun process-message (msg subscription-consumer-tag msg-formatter)
   (let ((consumer (cl-rabbit:envelope/consumer-tag msg)))
     (unless (equal consumer subscription-consumer-tag)
