@@ -83,9 +83,10 @@ to the user."
                                         :body (lisp-to-binary (append (list potato.rabbitmq-notifications:*session-notification-unknown-slashcommand* cmd)
                                                                       (binary-to-lisp (cl-rabbit:message/body message))))))))))
 
-(defmacro command-processor-loop ((args-sym &optional uid-sym channel-sym domain-sym) &body all-defs)
+(defmacro command-processor-loop ((args-sym &optional uid-sym sid-sym channel-sym domain-sym) &body all-defs)
   (check-type args-sym symbol)
   (check-type uid-sym (or null symbol))
+  (check-type sid-sym (or null symbol))
   (check-type channel-sym (or null symbol))
   (check-type domain-sym (or null symbol))
   (let ((msg-sym (gensym "MESSAGE-"))
@@ -111,10 +112,17 @@ to the user."
                               `(,cmd-def (let ((,args-sym ,args-int-sym)
                                                ,@(if uid-sym
                                                      (list `(,uid-sym (cdr (assoc "user" ,headers-sym :test #'equal)))))
+                                               ,@(if sid-sym
+                                                     (list `(,sid-sym (cdr (assoc "session" ,headers-sym :test #'equal)))))
                                                ,@(if channel-sym
                                                      (list `(,channel-sym (cdr (assoc "channel" ,headers-sym :test #'equal)))))
                                                ,@(if domain-sym
                                                      (list `(,domain-sym (cdr (assoc "domain" ,headers-sym :test #'equal))))))
+                                           (declare (ignorable ,args-sym
+                                                               ,@(if uid-sym (list uid-sym))
+                                                               ,@(if sid-sym (list sid-sym))
+                                                               ,@(if channel-sym (list channel-sym))
+                                                               ,@(if domain-sym (list domain-sym))))
                                            ,@body-def))))))))))))
 
 ;;;
@@ -124,9 +132,22 @@ to the user."
 (defun process-foo-command (args uid cid domain-id)
   (log:info "Foo command from user=~s, channel=~d, domain=~s: ~s" uid cid domain-id args))
 
+(defun process-option-command (uid sid cid)
+  (with-pooled-rabbitmq-connection (conn)
+    (cl-rabbit:basic-publish conn 1
+                             :exchange *session-notifications-exchange-name*
+                             :routing-key (format nil "~a.~a.~a"
+                                                  (encode-name-for-routing-key uid)
+                                                  (encode-name-for-routing-key sid)
+                                                  (encode-name-for-routing-key cid))
+                             :body (lisp-to-binary
+                                    (list potato.rabbitmq-notifications:*session-notification-option*
+                                          "zz" cid "foo" '(("bar0" "x") ("bar1" "y2")))))))
+
 (defun slashcommand-default-loop ()
-  (command-processor-loop (args uid cid domain-id)
-    ("foo" (process-foo-command args uid cid domain-id))))
+  (command-processor-loop (args uid sid cid domain-id)
+    ("foo" (process-foo-command args uid cid domain-id))
+    ("option" (process-option-command uid sid cid))))
 
 (potato.common.application:define-component slashcommand-default
   (:dependencies potato.common::rabbitmq)

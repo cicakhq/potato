@@ -430,6 +430,9 @@ id's. Returns the updated value."
                                                                             [(:id (:current-user @potato.state/global))]
                                                                             [])}))))))))
 
+(defn- handle-interactive-option [e]
+  (cljs.pprint/cl-format true "Interactive options command: ~s" e))
+
 (defn dispatch-notification-entry [entry async-channel]
   (cljs.pprint/cl-format true "Got server message: ~s" entry)
   (case (:type entry)
@@ -460,6 +463,9 @@ id's. Returns the updated value."
     ;; Star state updated
     "update-star"
     (handle-update-star entry)
+    ;; Interactive options
+    "option"
+    (handle-interactive-option entry)
     ;; Log any unhandled event types
     (cljs.pprint/cl-format true "Unknown type: ~s" entry)))
 

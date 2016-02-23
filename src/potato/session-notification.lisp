@@ -2,13 +2,16 @@
 
 (declaim #.potato.common::*compile-decl*)
 
-(defparameter *session-notification-unknown-slashcommand* "unknown-slashcommand")
-(defparameter *session-notification-option* "option")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *session-notification-unknown-slashcommand* "unknown-slashcommand")
+  (defparameter *session-notification-option* "option"))
 
 (defun make-options-data (data)
-  (destructuring-bind (option-id option-title options)
+  (destructuring-bind (option-id cid option-title options)
       data
-    (st-json:jso "option-code" option-id
+    (st-json:jso "type" "option"
+                 "channel" cid
+                 "option-code" option-id
                  "title" option-title
                  "options" (mapcar (lambda (v)
                                      (destructuring-bind (title response)
@@ -22,6 +25,7 @@
          (body (binary-to-lisp (cl-rabbit:message/body message)))
          (cmd (car body)))
     (string-case:string-case (cmd)
-      (#.*session-notification-unknown-slashcommand* (st-json:jso "unknown-slashcommand" (second body)))
-      (#.*session-notification-option* (st-json:jso "option" (make-options-data (cdr body))))
+      (#.*session-notification-unknown-slashcommand* (st-json:jso "type" "unknown-slashcommand"
+                                                                  "cmd" (second body)))
+      (#.*session-notification-option* (make-options-data (cdr body)))
       (t (log:warn "Unexpected session command: ~s" cmd)))))
