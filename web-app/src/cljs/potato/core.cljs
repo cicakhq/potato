@@ -431,7 +431,20 @@ id's. Returns the updated value."
                                                                             [])}))))))))
 
 (defn- handle-interactive-option [e]
-  (cljs.pprint/cl-format true "Interactive options command: ~s" e))
+  (cljs.pprint/cl-format true "Interactive options command: ~s" e)
+  (let [cid (:channel e)]
+    (om/transact! (state-root) [:channels cid :options]
+      (fn [_]
+        ;; We rewrite the JSON message from the server into the
+        ;; internal form here. The internal form is currently almost
+        ;; identical to the external form, so this conversion probably
+        ;; looks a bit weird.
+        {:title (:title e)
+         :code (:option-code e)
+         :options (map (fn [option]
+                         {:title (:title option)
+                          :code (:response option)})
+                       (:options e))}))))
 
 (defn dispatch-notification-entry [entry async-channel]
   (cljs.pprint/cl-format true "Got server message: ~s" entry)
