@@ -418,7 +418,8 @@
 (defpackage :potato.slashcommand
   (:use :cl :potato :potato.common)
   (:export
-   #:command-processor-loop))
+   #:command-processor-loop
+   #:process-incoming-slashcommand))
 
 (defpackage :potato.gcm
   (:use :cl :potato :potato.common)

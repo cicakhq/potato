@@ -413,6 +413,7 @@ name and group are required, while the topic parameter is optional."
                               ("notifications" '(:user-notifications-p t))
                               ("unread" '(:unread-p t))
                               ("channel" '(:channel-updates-p t))
+                              ("session" '(:session-p t))
                               (t (raise-api-error (format nil "Illegal service name: '~a'" part)
                                                   hunchentoot:+http-bad-request+))))))
     (unless services
@@ -504,3 +505,12 @@ name and group are required, while the topic parameter is optional."
                                     (star-only-p :name "star-only" :type :boolean :required nil))
        (let ((channel (potato.core:load-channel-with-check cid)))
          (potato.search:search-messages-json query (potato.core:channel/id channel) nil star-only-p))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Slashcommand
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-send-slashcommand "/command" nil ())
+  (api-case-method
+    (:post
+     (potato.slashcommand:process-incoming-slashcommand (parse-and-check-input-as-json)))))

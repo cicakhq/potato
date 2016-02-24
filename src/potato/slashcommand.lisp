@@ -28,18 +28,21 @@
                                                           ("cmd" . ,cmd)
                                                           ,@(if sid (list (cons "session" sid))))))))))
 
+(defun process-incoming-slashcommand (data)
+  (json-bind ((cid "channel")
+              (command "command")
+              (args "arg")
+              (sid "session_id" :required nil))
+      data
+    (let ((channel (potato.core:load-channel-with-check cid)))
+      (unless (stringp args)
+        (potato.core:raise-web-parameter-error "arg parameter must be a string"))
+      (send-slashcommand channel (potato.core:current-user) sid command args)
+      (st-json:jso "result" "ok"))))
+
 (potato.core:define-json-handler-fn-login (slashcommand-screen "/command" data nil ())
   (potato.core:with-authenticated-user ()
-    (json-bind ((cid "channel")
-                (command "command")
-                (args "arg")
-                (sid "session_id" :required nil))
-        data
-      (let ((channel (potato.core:load-channel-with-check cid)))
-        (unless (stringp args)
-          (potato.core:raise-web-parameter-error "arg parameter must be a string"))
-        (send-slashcommand channel (potato.core:current-user) sid command args)
-        (st-json:jso "result" "ok")))))
+    (process-incoming-slashcommand data)))
 
 (defun poll-for-commands (commands callback-fn)
   (with-rabbitmq-connected (conn)
