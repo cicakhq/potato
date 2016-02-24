@@ -24,7 +24,7 @@
             [cljs-http.client :as http]
             [clojure.string]
             [clojure.set]
-            [cljs.core.async  :as async]
+            [cljs.core.async :as async]
             [cljsjs.moment]
             [cljs.pprint]
             [potato.state]
