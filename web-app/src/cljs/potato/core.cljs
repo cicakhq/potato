@@ -434,17 +434,7 @@ id's. Returns the updated value."
   (cljs.pprint/cl-format true "Interactive options command: ~s" e)
   (let [cid (:channel e)]
     (om/transact! (state-root) [:channels cid :options]
-      (fn [_]
-        ;; We rewrite the JSON message from the server into the
-        ;; internal form here. The internal form is currently almost
-        ;; identical to the external form, so this conversion probably
-        ;; looks a bit weird.
-        {:title (:title e)
-         :code (:option-code e)
-         :options (map (fn [option]
-                         {:title (:title option)
-                          :code (:response option)})
-                       (:options e))}))))
+      (fn [_] e))))
 
 (defn dispatch-notification-entry [entry async-channel]
   (cljs.pprint/cl-format true "Got server message: ~s" entry)
@@ -1346,6 +1336,34 @@ highlighted-message - the message that should be highlighted (or
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
                                           other-users-typing)))))))))
 
+(defn render-session-options [options owner opts]
+  (reify
+    om/IDisplayName (display-name [_] "session-options")
+    om/IInitState   (init-state [_] {})
+    om/IDidMount
+    (did-mount [_]
+      nil)
+    om/IRenderState
+    (render-state [_ _]
+      (apply om.dom/div #js {:className "session-options"}
+             (when options
+               (list
+                (om.dom/div #js {:className "options-title"}
+                  (:title options))
+                (apply om.dom/div #js {:className "options-list"}
+                       (map (fn [e]
+                              (let [title (:title e)
+                                    image-url (:image-url e)
+                                    code (:response e)]
+                                (apply om.dom/div #js {:className "options-value"}
+                                       (list
+                                        (om.dom/div #js {:className "options-value-title"}
+                                          title)
+                                        (if image-url
+                                          (list (om.dom/img #js {:src image-url} "Image")))
+                                        (om.dom/button nil (or (:button-text e) "Select"))))))
+                            (:options options)))))))))
+
 (defn channel-view [channel owner opts]
   (reify
       om/IDisplayName (display-name [_] "channel-view")
@@ -1382,7 +1400,9 @@ highlighted-message - the message that should be highlighted (or
                                                                    :react-key (str "channel-history-" cid)}))))
                   (list (om/build channel-history (:messages channel) {:opts {:channel-id cid}
                                                                        :react-key (str "channel-content-" cid)})
-                        (om/build channel-input channel))))))))
+                        (om/build channel-input channel)))
+                 (let [options (:options channel)]
+                   (list (om/build render-session-options options))))))))
 
 (defn connection-state-build-root [conn owner]
   (reify

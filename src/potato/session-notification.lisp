@@ -14,10 +14,13 @@
                  "option-code" option-id
                  "title" option-title
                  "options" (mapcar (lambda (v)
-                                     (destructuring-bind (title response)
+                                     (destructuring-bind (title response &key image-url button-text)
                                          v
-                                       (st-json:jso "title" title
-                                                    "response" response)))
+                                       (apply #'st-json:jso
+                                              "title" title
+                                              "response" response
+                                              (append (if image-url (list "image-url" image-url))
+                                                      (if button-text (list "button-text" button-text))))))
                                    options))))
 
 (defun make-unknown-slashcomamnd-data (data)
