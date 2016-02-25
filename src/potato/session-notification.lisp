@@ -20,12 +20,16 @@
                                                     "response" response)))
                                    options))))
 
+(defun make-unknown-slashcomamnd-data (data)
+  (st-json:jso "type" "unknown-slashcommand"
+               "cmd" (first data)
+               "channel" (second data)))
+
 (defun process-session-notification (msg)
   (let* ((message (cl-rabbit:envelope/message msg))
          (body (binary-to-lisp (cl-rabbit:message/body message)))
          (cmd (car body)))
     (string-case:string-case (cmd)
-      (#.*session-notification-unknown-slashcommand* (st-json:jso "type" "unknown-slashcommand"
-                                                                  "cmd" (second body)))
+      (#.*session-notification-unknown-slashcommand* (make-unknown-slashcomamnd-data (cdr body)))
       (#.*session-notification-option* (make-options-data (cdr body)))
       (t (log:warn "Unexpected session command: ~s" cmd)))))

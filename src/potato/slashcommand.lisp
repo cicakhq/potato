@@ -83,8 +83,9 @@ to the user."
                                                              (encode-name-for-routing-key uid)
                                                              (encode-name-for-routing-key sid)
                                                              (encode-name-for-routing-key cid))
-                                        :body (lisp-to-binary (append (list potato.rabbitmq-notifications:*session-notification-unknown-slashcommand* cmd)
-                                                                      (binary-to-lisp (cl-rabbit:message/body message))))))))))
+                                        :body (lisp-to-binary (list potato.rabbitmq-notifications:*session-notification-unknown-slashcommand*
+                                                                    cmd
+                                                                    cid))))))))
 
 (defmacro command-processor-loop ((args-sym &optional uid-sym sid-sym channel-sym domain-sym) &body all-defs)
   (check-type args-sym symbol)
