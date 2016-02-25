@@ -148,7 +148,8 @@ to the user."
                                     (list potato.rabbitmq-notifications:*session-notification-option*
                                           "zz" cid "foo"
                                           '(("bar0" "x" :image-url "https://38.media.tumblr.com/avatar_497c78dc767d_128.png" :button-text "select-x")
-                                            ("bar1" "y2" :image-url "http://www.digyourowngrave.com/content/worlds_fluffiest_kitten.jpg" :button-text "select-y2")))))))
+                                            ("bar1" "y2" :image-url "http://www.digyourowngrave.com/content/worlds_fluffiest_kitten.jpg" :button-text "select-y2")
+                                            ("bar2" "y3" :image-url "https://media.giphy.com/media/26FPvntWVkwaRWgXS/giphy.gif")))))))
 
 (defun slashcommand-default-loop ()
   (command-processor-loop (args uid sid cid domain-id)
