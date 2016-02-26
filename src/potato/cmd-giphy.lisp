@@ -28,7 +28,7 @@
                                                         (encode-name-for-routing-key cid))
                                    :body (lisp-to-binary
                                           (list potato.rabbitmq-notifications:*session-notification-option*
-                                                "xx" cid "Choose a picture"
+                                                "gif" cid "Choose a picture"
                                                 (loop
                                                   for e in results
                                                   for i from 1 to *max-num-results*
@@ -56,9 +56,17 @@
           (when should-close
             (close stream)))))))
 
+(defun process-gif-reply (args)
+  (log:info "Got gif reply: ~s" args))
+
+(defun process-gif-request (args uid sid cid reply-p)
+  (if reply-p
+      (process-gif-reply args)
+      (process-gif-command args uid sid cid)))
+
 (defun process-command-loop ()
-  (potato.slashcommand:command-processor-loop (args uid sid cid)
-   ("gif" (process-gif-command args uid sid cid))))
+  (potato.slashcommand:command-processor-loop (args uid sid cid domain reply-p)
+   ("gif" (process-gif-request args uid sid cid reply-p))))
 
 (potato.common.application:define-component slashcommand-giphy
   (:dependencies potato.common::rabbitmq)

@@ -9,7 +9,7 @@
     (potato.core:raise-web-parameter-error "Illegal command format: ~s" cmd))
   (string-downcase cmd))
 
-(defun send-slashcommand (channel user sid cmd args)
+(defun send-slashcommand (channel user sid cmd args reply-p)
   (check-type cmd string)
   (check-type args string)
   (let ((channel (potato.core:ensure-channel channel)))
@@ -21,7 +21,7 @@
                                                     (potato.core:channel/id channel)
                                                     (encode-name-for-routing-key (potato.core:ensure-user-id user))
                                                     cmd)
-                               :body (lisp-to-binary (list cmd args))
+                               :body (lisp-to-binary (list cmd args reply-p))
                                :properties `((:headers . (("channel" . ,(potato.core:channel/id channel))
                                                           ("domain" . ,(potato.core:channel/domain channel))
                                                           ("user" . ,(potato.core:ensure-user-id user))
@@ -32,12 +32,13 @@
   (json-bind ((cid "channel")
               (command "command")
               (args "arg")
-              (sid "session_id" :required nil))
+              (sid "session_id" :required nil)
+              (reply-p "reply" :required nil :type :boolean))
       data
     (let ((channel (potato.core:load-channel-with-check cid)))
       (unless (stringp args)
         (potato.core:raise-web-parameter-error "arg parameter must be a string"))
-      (send-slashcommand channel (potato.core:current-user) sid command args)
+      (send-slashcommand channel (potato.core:current-user) sid command args reply-p)
       (st-json:jso "result" "ok"))))
 
 (potato.core:define-json-handler-fn-login (slashcommand-screen "/command" data nil ())
@@ -87,7 +88,7 @@ to the user."
                                                                     cmd
                                                                     cid))))))))
 
-(defmacro command-processor-loop ((args-sym &optional uid-sym sid-sym channel-sym domain-sym) &body all-defs)
+(defmacro command-processor-loop ((args-sym &optional uid-sym sid-sym channel-sym domain-sym reply-sym) &body all-defs)
   (check-type args-sym symbol)
   (check-type uid-sym (or null symbol))
   (check-type sid-sym (or null symbol))
@@ -96,14 +97,16 @@ to the user."
   (let ((msg-sym (gensym "MESSAGE-"))
         (cmd-sym (gensym "CMD-"))
         (args-int-sym (gensym "ARGS-"))
+        (reply-int-sym (gensym "REPLY-"))
         (body-sym (gensym "BODY-"))
         (headers-sym (gensym "HEADERS-")))
     `(poll-for-commands
       ',(mapcar #'car all-defs)
       (lambda (,msg-sym)
         (let ((,body-sym (cl-rabbit:envelope/message ,msg-sym)))
-          (destructuring-bind (,cmd-sym ,args-int-sym)
+          (destructuring-bind (,cmd-sym ,args-int-sym ,reply-int-sym)
               (binary-to-lisp (cl-rabbit:message/body ,body-sym))
+            (declare (ignorable ,reply-int-sym))
             (let ((,headers-sym (cdr (assoc :headers (cl-rabbit:message/properties ,body-sym)))))
               (declare (ignorable ,headers-sym))
               (string-case:string-case (,cmd-sym)
@@ -121,7 +124,9 @@ to the user."
                                                ,@(if channel-sym
                                                      (list `(,channel-sym (cdr (assoc "channel" ,headers-sym :test #'equal)))))
                                                ,@(if domain-sym
-                                                     (list `(,domain-sym (cdr (assoc "domain" ,headers-sym :test #'equal))))))
+                                                     (list `(,domain-sym (cdr (assoc "domain" ,headers-sym :test #'equal)))))
+                                               ,@(if reply-sym
+                                                     (list `(,reply-sym ,reply-int-sym))))
                                            (declare (ignorable ,args-sym
                                                                ,@(if uid-sym (list uid-sym))
                                                                ,@(if sid-sym (list sid-sym))
