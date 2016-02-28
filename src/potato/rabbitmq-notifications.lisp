@@ -542,6 +542,7 @@ and the delivery tag."
                              (finish-output stream)
                              ;; At this point, it should be reasonably safe to ack the messages
                              (mapc (lambda (v) (cl-rabbit:basic-ack conn 1 (second v))) result))
+                        ;; UNWIND FORM: Cancel the subscription
                         (cl-rabbit:basic-cancel conn 1 consumer-tag)))
                  ;; UNWIND FORM: Make sure user is logged out
                  (dolist (channel channels)
