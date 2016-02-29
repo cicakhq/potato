@@ -109,13 +109,19 @@
   (:metaclass potato.db:persisted-entry-class)
   (:documentation "Mapping table for user email addresses"))
 
+(defun make-user-email-key (email)
+  (concatenate 'string "useremail-" (encode-name email)))
+
 (defmethod initialize-instance :after ((obj user-email) &key)
   (setf (potato.db:persisted-entry/couchdb-id obj)
-        (concatenate 'string "useremail-" (encode-name (user-email/email obj)))))
+        (make-user-email-key (user-email/email obj))))
 
 (defmethod print-object ((obj user-email) stream)
   (print-unreadable-safely (user email) obj stream
     (format stream "USER ~s EMAIL ~s" user email)))
+
+(defun load-user-email-by-email (email)
+  (potato.db:load-instance 'user-email (make-user-email-key email)))
 
 (defun user/email-addresses (user)
   (let* ((user-id (ensure-user-id user))

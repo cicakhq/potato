@@ -1,8 +1,8 @@
 (defpackage #:potato-override
   (:use :cl))
 (in-package #:potato-override)
-;;(defparameter *override-decls* '(optimize (speed 3) (safety 1)))
-(defparameter *override-decls* '(optimize (speed 0) (safety 3) (debug 3)))
+(defparameter *override-decls* '(optimize (speed 3) (safety 1)))
+;;(defparameter *override-decls* '(optimize (speed 0) (safety 3) (debug 3)))
 
 (defpackage #:server-config2
   (:use :cl)

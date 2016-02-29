@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<% #| This file is displayed after a user has registered and the activation email has been sent |# %>
+
+<html lang="en">
+  <% include "common_meta.tmpl" %>
+  <head>
+    <% call common_meta  %>
+    <% includeindex "manifest/css.manifest" %>
+    <link href="/assets/css/<% #index "manifest/css.manifest.main.css" %>" rel="stylesheet">
+    <title>Register</title>
+  </head>
+  <body>
+    <% include "potato_header.tmpl" %>
+    <main id="register-key">
+      <h1>An activation email has been sent to the email address you specified.</b></h1>
+      <h2>You can use your new account to log in to the system, but
+      you will not be able to do anything until the account has been
+      acivated. To do so, simply follow the link in the email.</h2>
+      <h2><a href="/login">Back to the login screen</a></h2>
+    </main>
+    <% include "potato_footer.tmpl" %>
+  </body>
+</html>

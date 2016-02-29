@@ -5,9 +5,10 @@
 (defvar *inhibit-no-smtp-server-warning* nil)
 
 (defun show-register-template (args)
-  (lofn:with-parameters (m (redirect-path "redirect_path"))
+  (lofn:with-checked-parameters ((mobile-p :name "m" :required nil :type :boolean)
+                                 (redirect-path :name "redirect_path" :required nil))
     (lofn:show-template-stream "register.tmpl" (append args
-                                                       (list (cons :activate-api (equal m "1"))
+                                                       (list (cons :activate-api mobile-p)
                                                              (cons :redirect-path redirect-path))))))
 
 (defun show-email-conflict-error (email description enable-api redirect-path)
@@ -32,35 +33,51 @@
     user))
 
 (defun register-user-and-redirect (email description password enable-api redirect-path)
-  (when (load-user-by-email email :error-if-not-found nil)
-    (show-email-conflict-error email description enable-api redirect-path)
-    (return-from register-user-and-redirect))
+  (let ((loaded-user (load-user-by-email email :error-if-not-found nil)))
+    (when loaded-user
+      (when (potato.core:user/activated-p loaded-user)
+        (show-email-conflict-error email description enable-api redirect-path)
+        (return-from register-user-and-redirect))
+      ;; There is already a user linked to this email, but the user
+      ;; has not been activated. In this case we can simply delete
+      ;; that link. Keep the user in order to keep the database
+      ;; consistency intact.
+      (let ((useremail (potato.core:load-user-email-by-email email)))
+        (potato.db:remove-instance useremail))))
 
   (handler-case
       (let ((user (potato.workflow:register-user email description password enable-api nil)))
         (send-activation-email user)
-        (if redirect-path
-            (hunchentoot:redirect (format nil "~a?api-key=~a" redirect-path (user/api-token user)))
-            (hunchentoot:redirect "/")))
+        (hunchentoot:redirect (cond ((null redirect-path)
+                                     "/activate")
+                                    (enable-api
+                                     (format nil "~a?email=~a&api-key=~a"
+                                             redirect-path
+                                             (user/primary-email user)
+                                             (user/api-token user)))
+                                    (t
+                                     redirect-path))))
     (clouchdb:id-or-revision-conflict ()
       (show-email-conflict-error email description enable-api redirect-path))))
 
 (defun handle-register-user ()
-  (lofn:with-parameters (email description password1 activate-api redirect-path)
-    (let ((email-trimmed (string-downcase (potato.core:trim-string email)))
-          (description-trimmed (potato.core:trim-string description))
-          (enable-api (string= activate-api "1"))
+  (lofn:with-checked-parameters ((email :required t :trimmed t)
+                                 (description :required t :trimmed t)
+                                 (password :name "password1" :required t)
+                                 (mobile-p :name "m" :type :boolean))
+    (let ((email-trimmed (string-downcase email))
           (errors nil))
       (unless (is-allowed-email-p email-trimmed)
         (push (cons :email-error "Illegal email address") errors))
-      (cond ((< (length password1) 1)
+      (cond ((< (length password) 1)
              (push (cons :password-error "Password is too short") errors)))
-      (when (string= description-trimmed "")
+      (when (string= description "")
         (push (cons :description-error "Name can't be blank") errors))
       ;; If errors, send back to the registration page
       (if errors
           (show-register-template errors)
-          (register-user-and-redirect email description password1 enable-api redirect-path)))))
+          (register-user-and-redirect email description password mobile-p
+                                      (if mobile-p "potato://sent-registration"))))))
 
 (lofn:define-handler-fn (register-screen "/register" nil ())
   (when *authenticator-function*
@@ -100,15 +117,19 @@
   (save-user user))
 
 (lofn:define-handler-fn (activate-screen "/activate" nil ())
-  (lofn:with-parameters ((user-id "user") (activate-code "id"))
-    (let ((user (load-user (decode-name user-id))))
-      (cond ((user/activated-p user)
-             "User is already activated")
-            ((string= (user/activate-code user) activate-code)
-             (activate-user user)
-             (lofn:show-template-stream "user_activated_notification.tmpl" nil))
-            (t
-             "Illegal activation code")))))
+  (lofn:with-checked-parameters ((user-id :name "user")
+                                 (activate-code :name "id"))
+    (if (and user-id activate-code)
+        (let ((user (load-user (decode-name user-id))))
+          (cond ((user/activated-p user)
+                 "User is already activated")
+                ((string= (user/activate-code user) activate-code)
+                 (activate-user user)
+                 (lofn:show-template-stream "user_activated_notification.tmpl" nil))
+                (t
+                 "Illegal activation code")))
+        ;; ELSE: Display a message telling the user to wait for the email
+        (lofn:show-template-stream "activation_helper.tmpl" nil))))
 
 (define-handler-fn-login (send-activation-email-screen "/send_activation_email" nil ())
   (with-authenticated-user (t)
