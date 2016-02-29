@@ -43,7 +43,10 @@
         (hunchentoot:redirect (cond ((null redirect-path)
                                      "/activate")
                                     (enable-api
-                                     (format nil "~a?api-key=~a" redirect-path (user/api-token user)))
+                                     (format nil "~a?email=~a&api-key=~a"
+                                             redirect-path
+                                             (user/primary-email user)
+                                             (user/api-token user)))
                                     (t
                                      redirect-path))))
     (clouchdb:id-or-revision-conflict ()
@@ -66,9 +69,7 @@
       (if errors
           (show-register-template errors)
           (register-user-and-redirect email description password mobile-p
-                                      (if mobile-p
-                                          (format nil "potato://sent-registration?email=~a"
-                                                  (url-rewrite:url-encode email-trimmed))))))))
+                                      (if mobile-p "potato://sent-registration"))))))
 
 (lofn:define-handler-fn (register-screen "/register" nil ())
   (when *authenticator-function*
