@@ -2,7 +2,7 @@
 
 (declaim #.potato.common::*compile-decl*)
 
-(defparameter *signout-delay-time* 1)
+(defparameter *signout-delay-time* 4)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Old channel state sync code that can't be removed yet since the
