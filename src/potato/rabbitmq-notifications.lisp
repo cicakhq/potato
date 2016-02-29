@@ -511,7 +511,7 @@ and the delivery tag."
 
     (unwind-protect
          (let ((potato.core::*current-auth-user* user))
-           (with-pooled-rabbitmq-connection (conn)
+           (with-rabbitmq-connected (conn)
              (multiple-value-bind (name num-messages)
                  (if event
                      (progn
