@@ -233,7 +233,8 @@
            #:send-typing-start-notification-to-state-server
            #:channel/deleted
            #:load-channel-users
-           #:name-for-private-channel-counterpart))
+           #:name-for-private-channel-counterpart
+           #:load-user-email-by-email))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

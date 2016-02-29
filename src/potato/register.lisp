@@ -33,9 +33,17 @@
     user))
 
 (defun register-user-and-redirect (email description password enable-api redirect-path)
-  (when (load-user-by-email email :error-if-not-found nil)
-    (show-email-conflict-error email description enable-api redirect-path)
-    (return-from register-user-and-redirect))
+  (let ((loaded-user (load-user-by-email email :error-if-not-found nil)))
+    (when loaded-user
+      (when (potato.core:user/activated-p loaded-user)
+        (show-email-conflict-error email description enable-api redirect-path)
+        (return-from register-user-and-redirect))
+      ;; There is already a user linked to this email, but the user
+      ;; has not been activated. In this case we can simply delete
+      ;; that link. Keep the user in order to keep the database
+      ;; consistency intact.
+      (let ((useremail (potato.core:load-user-email-by-email email)))
+        (potato.db:remove-instance useremail))))
 
   (handler-case
       (let ((user (potato.workflow:register-user email description password enable-api nil)))
