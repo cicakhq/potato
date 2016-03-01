@@ -261,6 +261,15 @@
          (st-json:jso "result" "ok"
                       "id" (getfield :|id| result)))))))
 
+(define-api-method (api-leave-channel-screen "/channel/([a-z0-9]+)/leave" t (cid))
+  (api-case-method
+    (:post
+     (let ((channel (potato.core:load-channel-with-check cid :if-not-joined :ignore)))
+       (when channel
+         (potato.core:remove-user-from-channel channel (potato.core:current-user)))
+       (st-json:jso "status" "ok"
+                    "detail" (if channel "leave_success" "was_not_joined"))))))
+
 (define-api-method (api-send-file-screen "/channel/([a-z0-9]+)/upload" t (cid))
   (api-case-method
     (:post
