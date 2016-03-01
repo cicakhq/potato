@@ -289,19 +289,35 @@
 ;;;  Channel management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun groups-from-domain (domain)
+  (loop
+    for group in (potato.core:find-groups-in-domain domain)
+    when (potato.core:user-role-for-group group (potato.core:current-user))
+      collect (st-json:jso "id" (potato.core:group/id group)
+                           "name" (potato.core:group/name group)
+                           "channels" (api-load-channels-for-group group))))
+
+(defun group-and-channels-from-domain (domain)
+  (st-json:jso "id" (potato.core:domain/id domain)
+               "name" (potato.core:domain/name domain)
+               "groups" (groups-from-domain domain)))
+
 (define-api-method (api-channels-screen "/channels" nil ())
   (api-case-method
-    (:get (loop
-             for domain-user in (potato.core:load-domains-for-user (potato.core:current-user))
-             for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
-             collect (st-json:jso "id" (potato.core:domain/id domain)
-                                  "name" (potato.core:domain/name domain)
-                                  "groups" (loop
-                                              for group in (potato.core:find-groups-in-domain domain)
-                                              when (potato.core:user-role-for-group group (potato.core:current-user))
-                                              collect (st-json:jso "id" (potato.core:group/id group)
-                                                                   "name" (potato.core:group/name group)
-                                                                   "channels" (api-load-channels-for-group group))))))))
+    (:get
+     (loop
+       for domain-user in (potato.core:load-domains-for-user (potato.core:current-user))
+       for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
+       collect (group-and-channels-from-domain domain)))))
+
+(define-api-method (api-channels-for-domain-screen "/domain/([^/]+)/channels" t (domain-id))
+  (api-case-method
+    (:get
+     (let ((domain (potato.db:load-instance 'potato.core:domain domain-id :error-if-not-found nil)))
+       (unless (and domain
+                    (potato.core:user-is-in-domain-p domain (potato.core:current-user)))
+         (raise-api-error "Domain does not exist" hunchentoot:+http-not-found+))
+       (st-json:jso "groups" (groups-from-domain domain))))))
 
 (define-api-method (api-channels2-screen "/channels2" nil ())
   (api-case-method
