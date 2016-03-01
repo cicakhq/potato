@@ -267,7 +267,7 @@
      (let ((channel (potato.core:load-channel-with-check cid :if-not-joined :ignore)))
        (when channel
          (potato.core:remove-user-from-channel channel (potato.core:current-user)))
-       (st-json:jso "status" "ok"
+       (st-json:jso "result" "ok"
                     "detail" (if channel "leave_success" "was_not_joined"))))))
 
 (define-api-method (api-send-file-screen "/channel/([a-z0-9]+)/upload" t (cid))
