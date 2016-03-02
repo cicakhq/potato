@@ -26,7 +26,7 @@
              :initarg :domain
              :reader channel/domain
              :persisted-p t)
-   (deleted :type t
+   (deleted  :type t
              :initform nil
              :accessor channel/deleted
              :persisted-p t
