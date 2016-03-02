@@ -143,15 +143,7 @@
            "name" (potato.core:domain/name domain)
            "type" (symbol-name (potato.core:domain/domain-type domain))
            (if (or include-groups-p include-channels-p)
-               (list "groups" (mapcar (lambda (group)
-                                        (apply #'st-json:jso
-                                               "id" (potato.core:group/id group)
-                                               "name" (potato.core:group/name group)
-                                               "type" (symbol-name (potato.core:group/type group))
-                                               (if (and include-channels-p
-                                                        (potato.core:user-role-for-group group (potato.core:current-user)))
-                                                   (list "channels" (api-load-channels-for-group group)))))
-                                      (potato.core:find-groups-in-domain id)))))))
+               (list "groups" (groups-from-domain domain include-channels-p))))))
 
 (defun parse-and-check-input-as-json ()
   (let ((json-text (hunchentoot:raw-post-data :force-text t)))
@@ -270,6 +262,15 @@
        (st-json:jso "result" "ok"
                     "detail" (if channel "leave_success" "was_not_joined"))))))
 
+(define-api-method (api-set-channel-visibility-screen "/channel/([a-z0-9]+)/show" t (cid))
+  (api-case-method
+    (:post
+     (json-bind ((show "show" :required t :type :boolean))
+         (parse-and-check-input-as-json)
+       (let ((channel (potato.core:load-channel-with-check cid)))
+         (potato.core:update-channel-visibility-for-user channel (potato.core:current-user) show)
+         (st-json:jso "result" "ok"))))))
+
 (define-api-method (api-send-file-screen "/channel/([a-z0-9]+)/upload" t (cid))
   (api-case-method
     (:post
@@ -298,18 +299,21 @@
 ;;;  Channel management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun groups-from-domain (domain)
+(defun groups-from-domain (domain include-channels-p)
   (loop
     for group in (potato.core:find-groups-in-domain domain)
     when (potato.core:user-role-for-group group (potato.core:current-user))
-      collect (st-json:jso "id" (potato.core:group/id group)
-                           "name" (potato.core:group/name group)
-                           "channels" (api-load-channels-for-group group))))
+      collect (apply #'st-json:jso
+                     "id" (potato.core:group/id group)
+                     "name" (potato.core:group/name group)
+                     "type" (symbol-name (potato.core:group/type group))
+                     (if include-channels-p
+                         (list "channels" (api-load-channels-for-group group))))))
 
 (defun group-and-channels-from-domain (domain)
   (st-json:jso "id" (potato.core:domain/id domain)
                "name" (potato.core:domain/name domain)
-               "groups" (groups-from-domain domain)))
+               "groups" (groups-from-domain domain t)))
 
 (define-api-method (api-channels-screen "/channels" nil ())
   (api-case-method
@@ -318,15 +322,6 @@
        for domain-user in (potato.core:load-domains-for-user (potato.core:current-user))
        for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
        collect (group-and-channels-from-domain domain)))))
-
-(define-api-method (api-channels-for-domain-screen "/domain/([^/]+)/channels" t (domain-id))
-  (api-case-method
-    (:get
-     (let ((domain (potato.db:load-instance 'potato.core:domain domain-id :error-if-not-found nil)))
-       (unless (and domain
-                    (potato.core:user-is-in-domain-p domain (potato.core:current-user)))
-         (raise-api-error "Domain does not exist" hunchentoot:+http-not-found+))
-       (st-json:jso "groups" (groups-from-domain domain))))))
 
 (define-api-method (api-channels2-screen "/channels2" nil ())
   (api-case-method
