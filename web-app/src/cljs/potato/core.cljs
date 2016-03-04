@@ -660,7 +660,6 @@ id's. Returns the updated value."
 
 (defn toggle-hidden [message]
   (let [hidden (message-hidden-p message)]
-    (cljs.pprint/cl-format true "Hidden → ~s" (not hidden))
     (send-update-hidden (:id message) (not hidden))))
 
 (defn gear-menu [message owner opts]
