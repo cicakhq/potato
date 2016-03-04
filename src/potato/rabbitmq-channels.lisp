@@ -46,6 +46,15 @@
                         "channel" cid
                         "message" msgid
                         "add" (st-json:as-json-bool add-p)))))
+      (:update-hidden
+       (destructuring-bind (cid msgid uid add-p)
+           (cdr content)
+         ;; Only send hidden updates to the user who updated the star
+         (when (equal uid (potato.core:user/id (potato.core:current-user)))
+           (st-json:jso "type" "update-hidden"
+                        "channel" cid
+                        "message" msgid
+                        "add" (st-json:as-json-bool add-p)))))
       (t
        (log:warn "Unpexted channel update command: ~s" (car content))))))
 

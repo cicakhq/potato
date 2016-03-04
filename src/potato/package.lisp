@@ -234,7 +234,9 @@
            #:channel/deleted
            #:load-channel-users
            #:name-for-private-channel-counterpart
-           #:load-user-email-by-email))
+           #:load-user-email-by-email
+           #:message/hidden-users
+           #:update-message-hidden-with-check))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

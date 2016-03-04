@@ -223,6 +223,15 @@
       (potato.core:update-message-star-with-check message-id enable-p)
       (st-json:jso "result" "ok"))))
 
+(potato.core:define-json-handler-fn-login (update-hidden-screen "/update_hidden" data nil ())
+  (potato.core:with-authenticated-user ()
+    (let ((message-id (st-json:getjso "message" data))
+          (enable-p (st-json:from-json-bool (st-json:getjso "enable" data))))
+      (log:trace "Updating hidden for message: ~s, user: ~s, enable: ~s"
+                 message-id (potato.core:user/id (potato.core:current-user)) enable-p)
+      (potato.core:update-message-hidden-with-check message-id enable-p)
+      (st-json:jso "result" "ok"))))
+
 (potato.core:define-handler-fn-login (create-channel-screen "/createchannel" nil ())
   (potato.core:with-authenticated-user ()
     (lofn:case-method

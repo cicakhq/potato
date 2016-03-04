@@ -18,5 +18,6 @@
 (def remove-channel         "/remove_channel")
 (def update-channel         "/update_channel")
 (def update-star            "/update_star")
+(def update-hidden          "/update_hidden")
 
 (defonce channel-root       (aget js/window "channelUrl"))

@@ -121,6 +121,10 @@
   (http/post potato.urls/update-star {:json-params {:message message-id
                                                     :enable enable-p}}))
 
+(defn- send-update-hidden [message-id enable-p]
+  (http/post potato.urls/update-hidden {:json-params {:message message-id
+                                                      :enable enable-p}}))
+
 (defn- update-index-of-message [msg]
   (let [i (:update-index msg)]
     (or i 0)))
@@ -430,6 +434,18 @@ id's. Returns the updated value."
                                                                             [(:id (:current-user @potato.state/global))]
                                                                             [])}))))))))
 
+(defn- handle-update-hidden [e]
+  (let [cid (:channel e)
+        msgid (:message e)
+        enable-p (:add e)]
+    (om/transact! (state-root) [:channels cid]
+      (fn [channel]
+        (update-message channel msgid
+                        (fn [msg]
+                          (increment-message-index (conj msg {:hidden_users (if enable-p
+                                                                              [(:id (:current-user @potato.state/global))]
+                                                                              [])}))))))))
+
 (defn- handle-interactive-option [e]
   (cljs.pprint/cl-format true "Interactive options command: ~s" e)
   (let [cid (:channel e)]
@@ -466,6 +482,9 @@ id's. Returns the updated value."
     ;; Star state updated
     "update-star"
     (handle-update-star entry)
+    ;; Hidden updated
+    "update-hidden"
+    (handle-update-hidden entry)
     ;; Interactive options
     "option"
     (handle-interactive-option entry)
@@ -636,6 +655,14 @@ id's. Returns the updated value."
 (defn delete-message [message]
   (http/post potato.urls/delete-chat {:json-params {:message (:id message)}}))
 
+(defn message-hidden-p [message]
+  (some #{(:id (:current-user @potato.state/global))} (:hidden_users message)))
+
+(defn toggle-hidden [message]
+  (let [hidden (message-hidden-p message)]
+    (cljs.pprint/cl-format true "Hidden → ~s" (not hidden))
+    (send-update-hidden (:id message) (not hidden))))
+
 (defn gear-menu [message owner opts]
   (reify
     om/IDisplayName (display-name [_] "gear-menu")
@@ -656,8 +683,10 @@ id's. Returns the updated value."
                                           :onMouseEnter #(goog.dom.classlist/add    (.-currentTarget %) "chat-popup-item-active")
                                           :onMouseLeave #(goog.dom.classlist/remove (.-currentTarget %) "chat-popup-item-active")}
                       (:label menuentry)))
-                  [ {:label "Edit"   :onclick #(edit-message message opts)}
-                    {:label "Delete" :onclick #(delete-message message)}])))))
+                  (concat [{:label "Hide" :onclick #(toggle-hidden message)}]
+                          (if (:can-edit-p opts)
+                            [{:label "Edit"   :onclick #(edit-message message opts)}
+                             {:label "Delete" :onclick #(delete-message message)}])))))))
 
 (defn compute-image-size [current-width current-height max-width max-height]
   (let [scaling-width (if (> current-width max-width)
@@ -697,11 +726,10 @@ id's. Returns the updated value."
     (render-state [_ {:keys [menu-opened editing-callback editing editable]}]
       (let [current-user (:current-user (deref potato.state/global))
             isDeleted    (:deleted message)
-            hasGearMenu  (and editable
-                              (not isDeleted)
-                              (or  (= (:from message) (:id current-user))
-                                   (:is-admin? current-user)))
-            isEmpty      (== (count (:text message)) 0)]
+            canEdit      (or (= (:from message) (:id current-user)))
+            hasGearMenu  (and editable (not isDeleted))
+            isEmpty      (== (count (:text message)) 0)
+            isHidden     (message-hidden-p message)]
         (om.dom/blockquote
             (clj->js ((fn [c]
                         (if hasGearMenu
@@ -711,7 +739,7 @@ id's. Returns the updated value."
                       {:className "chat-blockquote"
                        :style (display (not editing))}))
             (om.dom/div #js {:className "chat-content-text"}
-              (if (and (:image message) (not isDeleted))
+              (if (and (:image message) (not isDeleted) (not isHidden))
                 (let [[width height] (compute-image-size (:width (:image message))
                                                          (:height (:image message))
                                                          max-image-width
@@ -726,13 +754,21 @@ id's. Returns the updated value."
                 (om.dom/span #js {:className "chat-deleted"}
                   message-deleted nonbreak-space (display-time (:updated_date message)))
                 (om.dom/div #js {:className (if isEmpty "empty")}
-                  (if (and (:unconfirmed message) (:raw_field message))
+                  (cond
+                    ;; Hidden
+                    isHidden
+                    (om.dom/span nil "Hidden"
+                     )
+                    ;; Unconfirmed
+                    (and (:unconfirmed message) (:raw_field message))
                     (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:raw_field message)}} nil)
+                    ;; This is a normal message
+                    true
                     (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:text message)}} nil))
                   (if (:updated message)
                     (om.dom/span #js {:className "chat-updated"}
                       message-updated nonbreak-space (display-time (:updated_date message))))
-                  (if (:extra_html message)
+                  (if (and (not isHidden) (:extra_html message))
                     (om.dom/div #js {:className "extra-html"
                                      :dangerouslySetInnerHTML #js {:__html (:extra_html message)}})))))
           ;; Display the star next to the message
@@ -748,7 +784,7 @@ id's. Returns the updated value."
             (goog.events/listen (:root-node (om/get-shared owner))
                                 goog.events.EventType/CLICK
                                 #(om/set-state! owner :menu-opened false))
-            (om/build gear-menu message {:opts {:on-edit editing-callback}})))))))
+            (om/build gear-menu message {:opts {:on-edit editing-callback :can-edit-p canEdit}})))))))
 
 (defn- at-magic-callback [owner text event editable type]
   (let [cid     (:active-channel (deref potato.state/global))

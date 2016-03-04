@@ -93,7 +93,12 @@
                   :initarg :star-users
                   :initform nil
                   :reader message/star-users
-                  :documentation "List of id's of users that have starred this message."))
+                  :documentation "List of id's of users that have starred this message.")
+   (hidden-users  :type list
+                  :initarg :hidden-users
+                  :initform nil
+                  :reader message/hidden-users
+                  :documentation "List of id's of users who have hidden this message."))
   (:documentation "Content of a single chat message"))
 
 (defmethod print-object ((obj message) stream)
@@ -187,7 +192,8 @@
                    (let ((image (message/image m))
                          (files (message/file-list m))
                          (deleted (message/deleted m))
-                         (star-users (message/star-users m)))
+                         (star-users (message/star-users m))
+                         (hidden-users (message/hidden-users m)))
                      (with-messages-db
                        (clouchdb:create-document `((:|type|         . "message")
                                                    (:|created_date| . ,formatted-date)
@@ -199,7 +205,8 @@
                                                    ,@(if image (list (cons :|image| (image-descriptor->couch image))))
                                                    ,@(if files (list (cons :|file_list| (make-file-list files))))
                                                    ,@(if deleted (list (cons :|deleted| t)))
-                                                   ,@(if star-users (list (cons :|star_users| star-users))))
+                                                   ,@(if star-users (list (cons :|star_users| star-users)))
+                                                   ,@(if hidden-users (list (cons :|hidden| hidden-users))))
                                                  :id (format nil "~a_~5,'0d" idname index))))
                  (clouchdb:id-or-revision-conflict (condition)
                    (log:warn "Error saving document: ~s, index: ~s" condition index)
@@ -258,7 +265,8 @@
                      :updated       (make-message-updated-from-couchdb (cdr (assoc :|update| result)))
                      :deleted       (if (getfield :|deleted| result :accept-missing t) t nil)
                      :file-list     (mapcar #'make-file-descriptor (getfield :|file_list| result :accept-missing t))
-                     :star-users    (getfield :|star_users| result :accept-missing t)))))
+                     :star-users    (getfield :|star_users| result :accept-missing t)
+                     :hidden-users  (getfield :|hidden| result :accept-missing t)))))
 
 (defun load-message (id)
   (with-messages-db
@@ -355,6 +363,12 @@
                            (if (member recipient-uid star-users :test #'equal)
                                (list "star_users" (list recipient-uid))))
                          (list "star_users" star-users)))
+                   (alexandria:if-let ((hidden-users (message/hidden-users v)))
+                     (if recipient-user
+                         (let ((recipient-uid recipient-user))
+                           (if (member recipient-uid hidden-users :test #'equal)
+                               (list "hidden_users" (list recipient-uid))))
+                         (list "hidden_users" hidden-users)))
                    (if deleted-p
                        (list "deleted" (if deleted-p t :json-false)))
                    (alexandria:if-let ((updated (message/updated v)))
@@ -388,6 +402,25 @@
   (let ((user (or user (current-user))))
     (let ((msg (load-message-with-check msgid user)))
       (update-message-star msg user add-p ))))
+
+(defun update-message-hidden (msg user add-p)
+  (let ((uid (ensure-user-id user))
+        (cid (message/channel msg))
+        (msgid (message/id msg)))
+    (with-messages-db
+      (potato.db:call-clouchdb-update-function "channel" "update_hidden_user" msgid
+                                               `(("user_id" . ,uid)
+                                                 ("add" . ,(if add-p "1" "0")))))
+    (with-pooled-rabbitmq-connection (conn)
+      (cl-rabbit:basic-publish conn 1
+                               :exchange *channel-exchange-name*
+                               :routing-key (format nil "update-hidden.~a" (encode-name-for-routing-key cid))
+                               :body (lisp-to-binary (list :update-hidden cid msgid  uid (if add-p t nil)))))))
+
+(defun update-message-hidden-with-check (msgid add-p &key user)
+  (let ((user (or user (current-user))))
+    (let ((msg (load-message-with-check msgid user)))
+      (update-message-hidden msg user add-p ))))
 
 (defun load-message-range (message &optional (num-rows 5))
   (check-type message message)
