@@ -821,114 +821,114 @@ id's. Returns the updated value."
                                               (not (om/get-state owner :editing)))
                                      (potato.mathjax/add-node node))))]
     (reify
-        om/IDisplayName (display-name [_] "message-view")
-        om/IInitState
-        (init-state [_]
-          {:editing false})
-        om/IDidMount
-        (did-mount [_]
-          (let [user-id     (:id (:current-user (deref potato.state/global)))
-                the-node    (om/get-node owner)]
-            (handle-update-or-mount owner)
-            ;; Check if the screen should be scrolled to this message.
-            ;; TODO: We should really only run this code when the
-            ;; message is the last one in the list. Right now it's being
-            ;; run for all messages, which is never necessary.
-            (when (= (update-index-of-message message) 0)
-              (if (or (:initial-load message) (:client-top message) (= (:from message) user-id))
-                ;; if the message has been inserted by the initial history load, by a scrolling top, or is from me: scroll
-                (scrollToBottom the-node)
-                ;; else this is a new message from somebody else at the bottom
-                (let [rect (.getBoundingClientRect the-node)]
-                  (if (and (>= (.-top rect) 0) (>= (.-left rect) 0)
-                           (<= (.-bottom rect) (or (.-innerHeight js/window) (.-clientHeight (.documentElement js/document))))
-                           (<= (.-right rect) (or (.-innerWidth js/window) (.-clientWidth (.documentElement js/document)))))
-                    ;; if the node is visible: scroll
-                    (scrollToBottom the-node)
-                    ;; if the node isn't visible, test how far we are in the scroll
-                    (let [the-ul      (goog.dom/getAncestorByTagNameAndClass the-node "ul" nil)
-                          the-article (goog.dom/getAncestorByTagNameAndClass the-node "article" nil)]
-                      (if (< (- (.-scrollHeight the-article) (.-scrollTop the-article)) (* 1.5 (.-height (goog.style/getSize the-ul))))
-                        ;; more than half a page away, scroll
-                        (scrollToBottom the-node)
-                        (print "No scroll, too far from bottom")))))))))
-        om/IDidUpdate
-        (did-update [_ _ _]
+      om/IDisplayName (display-name [_] "message-view")
+      om/IInitState
+      (init-state [_]
+        {:editing false})
+      om/IDidMount
+      (did-mount [_]
+        (let [user-id     (:id (:current-user (deref potato.state/global)))
+              the-node    (om/get-node owner)]
           (handle-update-or-mount owner)
-          ;; TODO: add scroll control behaviour
-          ;; - is the node visible; if it is not but above: realign
-          ;; - is the scroll position lower than the existing node
-          )
-        om/IWillUpdate
-        (will-update [_ next-props {:keys [editing]}]
-          (when editing
-            (let [fieldset            (goog.dom/getElementByClass "chat-entry" (om/get-node owner))
-                  keyboard-controller (om/get-shared owner :keyboard-control)
-                  typing-chan         (om/get-shared owner :typing-chan)
-                  editable            (potato.keyboard/append-editable-div {:parent-node     fieldset
-                                                                            :keyboard        keyboard-controller
-                                                                            :typing-callback #(async/put! typing-chan true)
-                                                                            :id              "edit-entry"
-                                                                            :text-content    (:text editing)})
-                  cid                   (:active-channel (deref potato.state/global))]
-              (potato.keyboard/set-event! editable potato.keyboard/ENTER
-                                          {:callback (fn [] (when-not (get-in (deref potato.state/global)
-                                                                              [:channels cid :has-autocomplete-menu])
-                                                              (let [new-text (fixup-input-text (potato.keyboard/content editable))]
-                                                                (http/post potato.urls/update-chat {:json-params {:message (:id message)
-                                                                                                                  :text new-text}})
-                                                                (potato.keyboard/destroy! editable)
-                                                                (potato.keyboard/reset-cursor! keyboard-controller)
-                                                                (om/set-state! owner :editing false)
-                                                                (potato.keyboard/really-focus (goog.dom/getElement "channel-input")))
-                                                              (at-magic-close!)
-                                                              true))
-                                           :act-on-magic true})
-              (potato.keyboard/set-event! editable potato.keyboard/ESC
-                                          {:callback (fn []
-                                                       (when-not (get-in (deref potato.state/global)
-                                                                         [:channels cid :has-autocomplete-menu])
-                                                         (potato.keyboard/destroy! editable)
-                                                         (potato.keyboard/reset-cursor! keyboard-controller)
-                                                         (om/set-state! owner :editing false)
-                                                         (potato.keyboard/really-focus (goog.dom/getElement "channel-input")))
-                                                       (at-magic-close!)
-                                                       true)
-                                           :act-on-magic true})
-              (potato.keyboard/set-magic! editable "@" {:callback (fn [text event editable]
-                                                                    (at-magic-callback owner text event editable :user))})
-              (potato.keyboard/set-magic! editable ":" {:callback (fn [text event editable]
-                                                                    (at-magic-callback owner text event editable :emoji))}))))
-        om/IRenderState
-        (render-state [_ {:keys [update-time editing previous-from previous-date]}]
-          (let [user-entry (-> @potato.state/global :user-to-name-map (get (:from message)))]
-            (om.dom/li
-                #js {:id (str (:key-prefix opts) "-" (:id message))
-                     :className (clojure.string/join " "
-                                                     (remove nil?
-                                                             [(if (and
-                                                                   (== (:from message) previous-from)
-                                                                   (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
-                                                                "chat-monologue")
-                                                              (if (:highlighted-p opts)
-                                                                "chat-highlighted")]))}
-                (let [image (:image-name user-entry)]
-                  (if image
-                    (om.dom/img #js {:className "chat-author-picture"
-                                     :src image})
-                    ;; ELSE: Image information is not available yet, simply display an empty div
-                    (om.dom/div #js {:className "chat-author-picture"})))
-                (om.dom/figure #js {:className (str "chat-entry" (if (:unconfirmed message) " unconfirmed-message"))
-                                    :data-id   (:hash message)}
-                    (om.dom/figcaption nil
-                        (om.dom/address #js {:className "chat-author"
-                                             :title (:nickname user-entry)}
-                                        (or (:description user-entry) ""))
-                        (display-time (:created_date message)))
-                    (om/build message-quote message {:state {:update-time      update-time
-                                                             :editing          editing
-                                                             :editable         (not (:unconfirmed message))
-                                                             :editing-callback #(om/set-state! owner :editing %)}}))))))))
+          ;; Check if the screen should be scrolled to this message.
+          ;; TODO: We should really only run this code when the
+          ;; message is the last one in the list. Right now it's being
+          ;; run for all messages, which is never necessary.
+          (when (= (update-index-of-message message) 0)
+            (if (or (:initial-load message) (:client-top message) (= (:from message) user-id))
+              ;; if the message has been inserted by the initial history load, by a scrolling top, or is from me: scroll
+              (scrollToBottom the-node)
+              ;; else this is a new message from somebody else at the bottom
+              (let [rect (.getBoundingClientRect the-node)]
+                (if (and (>= (.-top rect) 0) (>= (.-left rect) 0)
+                         (<= (.-bottom rect) (or (.-innerHeight js/window) (.-clientHeight (.documentElement js/document))))
+                         (<= (.-right rect) (or (.-innerWidth js/window) (.-clientWidth (.documentElement js/document)))))
+                  ;; if the node is visible: scroll
+                  (scrollToBottom the-node)
+                  ;; if the node isn't visible, test how far we are in the scroll
+                  (let [the-ul      (goog.dom/getAncestorByTagNameAndClass the-node "ul" nil)
+                        the-article (goog.dom/getAncestorByTagNameAndClass the-node "article" nil)]
+                    (if (< (- (.-scrollHeight the-article) (.-scrollTop the-article)) (* 1.5 (.-height (goog.style/getSize the-ul))))
+                      ;; more than half a page away, scroll
+                      (scrollToBottom the-node)
+                      (print "No scroll, too far from bottom")))))))))
+      om/IDidUpdate
+      (did-update [_ _ _]
+        (handle-update-or-mount owner)
+        ;; TODO: add scroll control behaviour
+        ;; - is the node visible; if it is not but above: realign
+        ;; - is the scroll position lower than the existing node
+        )
+      om/IWillUpdate
+      (will-update [_ next-props {:keys [editing]}]
+        (when editing
+          (let [fieldset            (goog.dom/getElementByClass "chat-entry" (om/get-node owner))
+                keyboard-controller (om/get-shared owner :keyboard-control)
+                typing-chan         (om/get-shared owner :typing-chan)
+                editable            (potato.keyboard/append-editable-div {:parent-node     fieldset
+                                                                          :keyboard        keyboard-controller
+                                                                          :typing-callback #(async/put! typing-chan true)
+                                                                          :id              "edit-entry"
+                                                                          :text-content    (:text editing)})
+                cid                   (:active-channel (deref potato.state/global))]
+            (potato.keyboard/set-event! editable potato.keyboard/ENTER
+                                        {:callback (fn [] (when-not (get-in (deref potato.state/global)
+                                                                            [:channels cid :has-autocomplete-menu])
+                                                            (let [new-text (fixup-input-text (potato.keyboard/content editable))]
+                                                              (http/post potato.urls/update-chat {:json-params {:message (:id message)
+                                                                                                                :text new-text}})
+                                                              (potato.keyboard/destroy! editable)
+                                                              (potato.keyboard/reset-cursor! keyboard-controller)
+                                                              (om/set-state! owner :editing false)
+                                                              (potato.keyboard/really-focus (goog.dom/getElement "channel-input")))
+                                                            (at-magic-close!)
+                                                            true))
+                                         :act-on-magic true})
+            (potato.keyboard/set-event! editable potato.keyboard/ESC
+                                        {:callback (fn []
+                                                     (when-not (get-in (deref potato.state/global)
+                                                                       [:channels cid :has-autocomplete-menu])
+                                                       (potato.keyboard/destroy! editable)
+                                                       (potato.keyboard/reset-cursor! keyboard-controller)
+                                                       (om/set-state! owner :editing false)
+                                                       (potato.keyboard/really-focus (goog.dom/getElement "channel-input")))
+                                                     (at-magic-close!)
+                                                     true)
+                                         :act-on-magic true})
+            (potato.keyboard/set-magic! editable "@" {:callback (fn [text event editable]
+                                                                  (at-magic-callback owner text event editable :user))})
+            (potato.keyboard/set-magic! editable ":" {:callback (fn [text event editable]
+                                                                  (at-magic-callback owner text event editable :emoji))}))))
+      om/IRenderState
+      (render-state [_ {:keys [update-time editing previous-from previous-date]}]
+        (let [user-entry (-> @potato.state/global :user-to-name-map (get (:from message)))]
+          (om.dom/li
+              #js {:id (str (:key-prefix opts) "-" (:id message))
+                   :className (clojure.string/join " "
+                                                   (remove nil?
+                                                           [(if (and
+                                                                 (== (:from message) previous-from)
+                                                                 (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
+                                                              "chat-monologue")
+                                                            (if (:highlighted-p opts)
+                                                              "chat-highlighted")]))}
+              (let [image (:image-name user-entry)]
+                (if image
+                  (om.dom/img #js {:className "chat-author-picture"
+                                   :src image})
+                  ;; ELSE: Image information is not available yet, simply display an empty div
+                  (om.dom/div #js {:className "chat-author-picture"})))
+              (om.dom/figure #js {:className (str "chat-entry" (if (:unconfirmed message) " unconfirmed-message"))
+                                  :data-id   (:hash message)}
+                (om.dom/figcaption nil
+                  (om.dom/address #js {:className "chat-author"
+                                       :title (:nickname user-entry)}
+                                  (or (:description user-entry) ""))
+                  (display-time (:created_date message)))
+                (om/build message-quote message {:state {:update-time      update-time
+                                                         :editing          editing
+                                                         :editable         (not (:unconfirmed message))
+                                                         :editing-callback #(om/set-state! owner :editing %)}}))))))))
 
 (defn user-in-list [[uid name nickname active] owner]
   (reify
