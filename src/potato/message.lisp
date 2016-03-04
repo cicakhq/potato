@@ -365,7 +365,7 @@
                          (list "star_users" star-users)))
                    (alexandria:if-let ((hidden-users (message/hidden-users v)))
                      (if recipient-user
-                         (let ((recipient-uid recipient-user))
+                         (let ((recipient-uid (ensure-user-id recipient-user)))
                            (if (member recipient-uid hidden-users :test #'equal)
                                (list "hidden_users" (list recipient-uid))))
                          (list "hidden_users" hidden-users)))
