@@ -268,6 +268,7 @@ Parameters"
                                  :vhost :amazon
                                  :content-disposition (format nil "inline; filename*=~a"
                                                               (encode-rfc5987 (file/name file)))
-                                 :content-type (or (file/mime-type file) "binary/octet-stream"))))
+                                 :content-type (or (file/mime-type file) "binary/octet-stream")
+                                 :ssl t)))
     (log:trace "Redirecting download to URL: ~a" url)
     (hunchentoot:redirect url)))
