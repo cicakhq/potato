@@ -69,14 +69,17 @@
     (goog.events.listen req goog.net.EventType/COMPLETE
       (fn [event]
         (this-as ref
-          (cljs.pprint/cl-format true "Got status from HTTP call: ~s, data: ~s" (.getStatus ref) ref)
           (case (.getStatus ref)
             ;; Handle new event
             200
             (let [res (js->clj (.getResponseJson ref) :keywordize-keys true)]
               (if (= (:result res) "error")
                 ;; Error result from server
-                (handle-poll-error)
+                (if (= (:detail res) "unknown_event")
+                  (do
+                    (aset js/window "location" "/")
+                    (throw "Long poll returned 'unknown_event' result"))
+                  (handle-poll-error))
                 ;; ELSE: Valid result
                 (let [queue (:connection res)]
                   (doseq [msg (:data res)]

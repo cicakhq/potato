@@ -509,51 +509,63 @@ and the delivery tag."
         (result-written-p nil)
         (timeout       30))
 
-    (unwind-protect
-         (let ((potato.core::*current-auth-user* user))
-           (with-rabbitmq-connected (conn)
-             (multiple-value-bind (name num-messages)
-                 (if event
-                     (progn
-                       (multiple-value-bind (queue-name num-messages num-consumers)
-                           (declare-notifications-queue conn 1 event t)
-                         (declare (ignore queue-name))
-                         (unless (zerop num-consumers)
-                           (error "Queue is not idle: ~s" event))
-                         (values event num-messages)))
-                     (let ((n (create-and-bind-notifications-queue conn 1 (potato.core:current-user) channels services sid)))
-                       (values n 0)))
-               (dolist (channel channels)
-                 (potato.core:refresh-user user channel (* timeout 2)))
-               (unwind-protect
-                    (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
-                      (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
-                      (unwind-protect
-                           (let ((result (loop
-                                            with timeout-time = (+ (get-universal-time) timeout)
-                                            for tm = (- timeout-time (get-universal-time))
-                                            while (plusp tm)
-                                            for msglist = (poll-notifications conn consumer-tag num-messages
-                                                                              :msg-formatter msg-formatter :timeout tm)
-                                            until msglist
-                                            finally (return msglist))))
-                             (setq result-written-p t)
-                             (st-json:write-json (funcall fmt-fn name (mapcar #'first result)) stream)
-                             (finish-output stream)
-                             ;; At this point, it should be reasonably safe to ack the messages
-                             (mapc (lambda (v) (cl-rabbit:basic-ack conn 1 (second v))) result))
-                        ;; UNWIND FORM: Cancel the subscription
-                        (cl-rabbit:basic-cancel conn 1 consumer-tag)))
-                 ;; UNWIND FORM: Make sure user is logged out
-                 (dolist (channel channels)
-                   (potato.core:signout-user user channel))))))
-      ;; UNWIND FORM: Don't leak a file descriptor
+    (labels ((write-result (data)
+               (setq result-written-p t)
+               (st-json:write-json data stream)
+               (finish-output stream)))
       (unwind-protect
-           (unless result-written-p
-             (st-json:write-json (st-json:jso "result" "error"
-                                              "message" "Internal error, probably incorrect event-id")
-                                 stream))
-        (close stream)))))
+           (block process-poll
+             (let ((potato.core::*current-auth-user* user))
+               (with-rabbitmq-connected (conn)
+                 (multiple-value-bind (name num-messages)
+                     (if event
+                         (handler-bind ((cl-rabbit:rabbitmq-server-error
+                                          (lambda (condition)
+                                            (when (= (cl-rabbit:rabbitmq-server-error/reply-code condition) 404)
+                                              (write-result (st-json:jso "result" "error"
+                                                                         "detail" "unknown_event"
+                                                                         "message" "Illegal event"))
+                                              (return-from process-poll nil)))))
+                           (multiple-value-bind (queue-name num-messages num-consumers)
+                               (declare-notifications-queue conn 1 event t)
+                             (declare (ignore queue-name))
+                             (unless (zerop num-consumers)
+                               (error "Queue is not idle: ~s" event))
+                             (values event num-messages)))
+                         (let ((n (create-and-bind-notifications-queue conn 1
+                                                                       (potato.core:current-user)
+                                                                       channels services sid)))
+                           (values n 0)))
+                   (dolist (channel channels)
+                     (potato.core:refresh-user user channel (* timeout 2)))
+                   (unwind-protect
+                        (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
+                          (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
+                          (unwind-protect
+                               (let ((result (loop
+                                               with timeout-time = (+ (get-universal-time) timeout)
+                                               for tm = (- timeout-time (get-universal-time))
+                                               while (plusp tm)
+                                               for msglist = (poll-notifications conn consumer-tag num-messages
+                                                                                 :msg-formatter msg-formatter :timeout tm)
+                                               until msglist
+                                               finally (return msglist))))
+                                 (write-result (funcall fmt-fn name (mapcar #'first result)))
+                                 ;; At this point, it should be reasonably safe to ack the messages
+                                 (mapc (lambda (v) (cl-rabbit:basic-ack conn 1 (second v))) result))
+                            ;; UNWIND FORM: Cancel the subscription
+                            (cl-rabbit:basic-cancel conn 1 consumer-tag)))
+                     ;; UNWIND FORM: Make sure user is logged out
+                     (dolist (channel channels)
+                       (potato.core:signout-user user channel)))))))
+        ;; UNWIND FORM: Don't leak a file descriptor
+        (unwind-protect
+             (unless result-written-p
+               (st-json:write-json (st-json:jso "result" "error"
+                                                "detail" "internal_error"
+                                                "message" "Internal error, probably incorrect event-id")
+                                   stream))
+          (close stream))))))
 
 (defun process-long-poll (channels event sid services msg-formatter json-formatter-fn)
   (let ((stream (flexi-streams:make-flexi-stream (hunchentoot:send-headers) :external-format :utf-8)))
