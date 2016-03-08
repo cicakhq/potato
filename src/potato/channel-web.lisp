@@ -50,11 +50,11 @@
 (%define-channel-screen channel-screen "/channel" nil)
 (%define-channel-screen channel-dev-screen "/channel-dev" t)
 
-(potato.core:define-handler-fn-login (channel-by-domain-and-nickname-screen "/c/([^/]+)/([^/]+)" t
+(potato.core:define-handler-fn-login (channel-by-domain-and-nickname-screen "/d/([^/]+)/([^/]+)" t
                                                                             (domain-nickname channel-nickname))
   (handler-case
       (let ((cid (potato.core:find-channel-id-for-nicknames domain-nickname channel-nickname)))
-        (show-channel-screen cid "/channel" "channel.tmpl"))
+        (show-channel-screen cid "/channel" nil))
     (clouchdb:document-missing () (potato.core:raise-not-found-error "No such channel"))))
 
 (potato.core:define-json-handler-fn-login (history-screen "/history" data nil ())
