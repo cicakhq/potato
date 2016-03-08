@@ -86,6 +86,28 @@
             </ul>
           </p>
         </form>
+
+        <h4>Set domain nickname</h4>
+        <form method="post" action="/domain/<% e#domain-id %>/change_nickname">
+          <p>
+            A domain nickname is a short name that can be used to refer
+            to this domain. For example, if the nickname
+            is <code>foo</code>, then the main domain page is accessible
+            using the URL: <code><% #listen-url %>d/foo</code>.
+          </p>
+          <p>
+            The domain can always be accessed using its ID, for this
+            domain: <a href="<% #listen-url %>domain/<% e#domain-id %>"><% #listen-url %>domain/<% #domain-id %></a>
+          </p>
+          <p>
+            <div>
+              Nickname: <input type="text" name="nickname" size="40" value="<% if domain-nickname e#domain-nickname end %>">
+            </div>
+            <div>
+              <button type="submit">Update nickname</button>
+            </div>
+          </p>
+        </form>
       </section>
       <% end %>
     </main>

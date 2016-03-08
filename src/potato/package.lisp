@@ -236,7 +236,8 @@
            #:name-for-private-channel-counterpart
            #:load-user-email-by-email
            #:message/hidden-users
-           #:update-message-hidden-with-check))
+           #:update-message-hidden-with-check
+           #:update-domain-user-role))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

@@ -17,18 +17,21 @@
     `((:email-invite-list  . ,(mapcar (lambda (v) `((:email . ,v))) domain-invitations-list))
       (:domain-invite-list . ,(mapcar (lambda (v) `((:domain . ,v))) (potato.core:domain/email-domains domain))))))
 
-(defun make-domain-url (domain)
-  (alexandria:if-let ((domain-nickname (potato.core:find-domain-nickname-from-domain-id (potato.core:domain/id domain))))
+(defun make-domain-url (domain domain-nickname)
+  (if domain-nickname
     (potato.core:make-potato-url "d/~a" (potato.core:domain-nickname/nickname domain-nickname))
     (potato.core:make-potato-url "domain/~a" (potato.core:domain/id domain))))
 
 (defun make-domain-params (domain)
-  (let ((admin-p (domain-admin-p domain)))
-   (append `((:domain-id      . ,(potato.core:domain/id domain))
-             (:domain-name    . ,(potato.core:domain/name domain))
-             (:new-login      . ,(potato.core:user/new-login (potato.core:current-user)))
-             (:domain-admin-p . ,admin-p)
-             (:domain-url     . ,(make-domain-url domain)))
+  (let ((admin-p (domain-admin-p domain))
+        (domain-nickname (potato.core:find-domain-nickname-from-domain-id (potato.core:domain/id domain))))
+   (append `((:domain-id       . ,(potato.core:domain/id domain))
+             (:domain-name     . ,(potato.core:domain/name domain))
+             (:domain-nickname . ,(if domain-nickname (potato.core:domain-nickname/nickname domain-nickname)))
+             (:new-login       . ,(potato.core:user/new-login (potato.core:current-user)))
+             (:domain-admin-p  . ,admin-p)
+             (:domain-url      . ,(make-domain-url domain domain-nickname))
+             (:listen-url      . ,potato:*external-listen-address*))
            (if admin-p
                (make-admin-params-list domain)
                nil))))
@@ -96,3 +99,15 @@
                      (domain (potato.db:load-instance 'potato.core:domain domain-id)))
                  (potato.workflow:add-user-to-domain-with-check domain user)
                  (hunchentoot:redirect (format nil "/domain/~a" (potato.core:domain/id domain)))))))))
+
+(potato.core:define-handler-fn-login (change-domain-nickname-screen "/domain/([^/]+)/change_nickname" t (domain-id))
+  (potato.core:with-authenticated-user ()
+    (lofn:case-method
+      (:post
+       (with-domain (domain domain-id)
+         (lofn:with-checked-parameters ((nickname :name "nickname" :required t :allow-blank t :trimmed t))
+           (let ((nick (if (equal nickname "") nil nickname)))
+             (potato.core:set-nickname-for-domain domain nick)
+             (hunchentoot:redirect (if nick
+                                       (format nil "/d/~a" nick)
+                                       (format nil "/domain/~a" (potato.core:domain/id domain)))))))))))

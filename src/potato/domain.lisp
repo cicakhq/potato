@@ -71,7 +71,7 @@
            :persisted-p t)
    (role   :type domain-user-role
            :initarg :role
-           :reader domain-user/role
+           :accessor domain-user/role
            :persisted-p t
            :persisted-type :symbol))
   (:metaclass potato.db:persisted-entry-class)
@@ -264,3 +264,11 @@
 (defun remove-user-from-domain (domain user)
   (let ((key (make-user-domain-mapping-id (ensure-user-id user) (ensure-domain-id domain))))
     (clouchdb:delete-document key)))
+
+(defun update-domain-user-role (domain user role)
+  (check-type role domain-user-role)
+  (let ((domain-user (potato.db:load-instance 'domain-user
+                                              (make-user-domain-mapping-id (ensure-user-id user)
+                                                                           (ensure-domain-id domain)))))
+    (setf (domain-user/role domain-user) role)
+    (potato.db:save-instance domain-user)))

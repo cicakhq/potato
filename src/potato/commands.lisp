@@ -174,7 +174,18 @@
     ()
     "Set the nickname for a domain"
     "Sets the nickname for the given domain. If the domain already had a nickname, the old one will become available for a different domain."
-  (potato.core:set-nickname-for-domain domain (if (string= nickname "") nil nickname)))
+  (potato.core:set-nickname-for-domain domain (if (equal nickname "") nil nickname)))
+
+(define-command set-domain-admin "set-domain-admin"
+    ((domain "The id of the domain")
+     (user "The user id of the user that should be set as admin"))
+    ()
+    "Gives admin rights to a domain"
+    "The given user is desigated as an administator of the given domain. This command will only work for users that are already members of the domain."
+  (let ((domain (potato.db:load-instance 'potato.core:domain domain))
+        (user (potato.db:load-instance 'potato.core:user user)))
+    (potato.core:update-domain-user-role domain user :admin))
+  (format t "User updated~%"))
 
 (define-command create-user "create-user"
     ((email "email address")
@@ -199,7 +210,7 @@
     (potato.db:save-instance user)
     (format t "User updated")))
 
-(define-command user-list "users"
+(define-command user-list "list-users"
     ((domain "domain id"))
     ()
     "List users"

@@ -40,12 +40,13 @@
 
 (defun set-nickname-for-domain (domain nickname)
   "Sets the domain nickname to NICKNAME, or remove it if NICKNAME is NIL."
-  (let ((dn (potato.core:find-domain-nickname-from-domain-id (ensure-domain-id domain))))
+  (let* ((domain-id (ensure-domain-id domain))
+         (dn (potato.core:find-domain-nickname-from-domain-id domain-id)))
     (unless (and dn (equal nickname (potato.core:domain-nickname/nickname dn)))
       (when dn
         (potato.db:remove-instance dn))
       (when nickname
-        (let ((domain-nickname (make-instance 'potato.core:domain-nickname :domain domain :nickname nickname)))
+        (let ((domain-nickname (make-instance 'potato.core:domain-nickname :domain domain-id :nickname nickname)))
           (handler-case
               (potato.db:save-instance domain-nickname)
             (clouchdb:id-or-revision-conflict (condition)
