@@ -42,19 +42,20 @@
      collect `((:channel-id   . ,(potato.core:channel/id channel))
                (:channel-name . ,(potato.core:channel/name channel)))))
 
-(defun make-group-channel-tree-for-user-and-domain (domain user)
+(defun make-group-channel-tree-for-user-and-domain (domain user &key (include-private t))
   (let* ((domain-id (potato.core:ensure-domain-id domain))
          (uid (potato.core:user/id user))
          (result (clouchdb:invoke-view "group" "groups_for_user"
                                        :start-key (list domain-id uid nil)
                                        :end-key (list domain-id uid 'clouchdb:json-map))))
     (loop
-       for row in (getfield :|rows| result)
-       for value = (getfield :|value| row)
-       for group-id = (getfield :|group| value)
-       collect `((:group-id   . ,group-id)
-                 (:group-name . ,(getfield :|group_name| value))
-                 (:channels   . ,(load-channel-list group-id))))))
+      for row in (getfield :|rows| result)
+      for value = (getfield :|value| row)
+      for group-id = (getfield :|group| value)
+      when (or include-private (not (equal (getfield :|role| value) potato.core:+GROUP-USER-TYPE-PRIVATE+)))
+        collect `((:group-id   . ,group-id)
+                  (:group-name . ,(getfield :|group_name| value))
+                  (:channels   . ,(load-channel-list group-id))))))
 
 (potato.core:define-json-handler-fn-login (hide-channel-screen "/update_channel" data nil ())
   (potato.core:with-authenticated-user ()

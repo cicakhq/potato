@@ -41,7 +41,7 @@
     (let ((user (potato.core:current-user))
           (domain (potato.db:load-instance 'potato.core:domain domain-id)))
       (cond ((potato.core:user-is-in-domain-p domain user)
-             (let ((channel-tree (potato.web:make-group-channel-tree-for-user-and-domain domain user)))
+             (let ((channel-tree (potato.web:make-group-channel-tree-for-user-and-domain domain user :include-private nil)))
                (show-template-stream-with-default-parameters "domain-main.tmpl"
                                                              (append (make-domain-params domain)
                                                                      (list (cons :groups channel-tree))))))
