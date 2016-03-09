@@ -62,7 +62,8 @@
     (.send req "/chat_updates6" "POST"
            (.stringify js/JSON (clj->js {:channel (:channel @poll-config)
                                          :connection (:event @poll-config)
-                                         :session_id (:session-id @potato.state/global)})))))
+                                         :session-id (:session-id @potato.state/global)
+                                         :is-active true})))))
 
 (defn make-xhr-io-req []
   (let [req (new goog.net.XhrIo)]
@@ -141,7 +142,7 @@
   (when (= (.-readyState ws) (.-OPEN js/WebSocket))
     (let [now (current-time)
           index (find-next-index)]
-      (.send ws (.stringify js/JSON (clj->js {:cmd "refresh" :data index})))
+      (.send ws (.stringify js/JSON (clj->js {:cmd "refresh" :data index :is-active true})))
       (let [timer (.setTimeout js/window (fn [] (handle-websocket-timeout ws)) 5000)
             next-ping-timer (.setTimeout js/window (fn [] (start-websocket-ping ws)) 30000)]
         (swap! websocket-config #(conj % {:last-index index
@@ -209,6 +210,6 @@
   (swap! active-config #(conj % {:error-fn error-fn})))
 
 (defn start-notification-handler [cid]
-  (start-websocket cid nil)
+  #_(start-websocket cid nil)
   ;; This function can be used to force polling instead of trying eventsocket
-  #_(start-poll cid nil))
+  (start-poll cid nil))

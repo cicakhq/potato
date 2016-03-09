@@ -494,7 +494,10 @@ and the delivery tag."
                       :reader request-long-poll/json-formatter-fn)
    (client-session    :type (or null string)
                       :initarg :client-session
-                      :reader request-long-poll/client-session))
+                      :reader request-long-poll/client-session)
+   (active-p          :type t
+                      :initarg :active-p
+                      :reader request-long-poll/active-p))
   (:documentation "Lofn request-poll condition that is used when starting the long poll loop"))
 
 (defmethod lofn:start-poll ((condition request-long-poll) socket)
@@ -506,6 +509,7 @@ and the delivery tag."
         (fmt-fn        (request-long-poll/json-formatter-fn condition))
         (services      (request-long-poll/services          condition))
         (sid           (request-long-poll/client-session    condition))
+        (active-p      (request-long-poll/active-p          condition))
         (result-written-p nil)
         (timeout       30))
 
@@ -536,8 +540,9 @@ and the delivery tag."
                                                                        (potato.core:current-user)
                                                                        channels services sid)))
                            (values n 0)))
-                   (dolist (channel channels)
-                     (potato.core:refresh-user user channel (* timeout 2)))
+                   (when active-p
+                     (dolist (channel channels)
+                       (potato.core:refresh-user user channel (* timeout 2))))
                    (unwind-protect
                         (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
                           (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
@@ -556,8 +561,9 @@ and the delivery tag."
                             ;; UNWIND FORM: Cancel the subscription
                             (cl-rabbit:basic-cancel conn 1 consumer-tag)))
                      ;; UNWIND FORM: Make sure user is logged out
-                     (dolist (channel channels)
-                       (potato.core:signout-user user channel)))))))
+                     (when active-p
+                       (dolist (channel channels)
+                         (potato.core:signout-user user channel))))))))
         ;; UNWIND FORM: Don't leak a file descriptor
         (unwind-protect
              (unless result-written-p
@@ -567,7 +573,7 @@ and the delivery tag."
                                    stream))
           (close stream))))))
 
-(defun process-long-poll (channels event sid services msg-formatter json-formatter-fn)
+(defun process-long-poll (channels event sid services msg-formatter json-formatter-fn active-p)
   (let ((stream (flexi-streams:make-flexi-stream (hunchentoot:send-headers) :external-format :utf-8)))
     (signal 'request-long-poll
             :user (potato.core:current-user)
@@ -577,22 +583,27 @@ and the delivery tag."
             :services services
             :msg-formatter msg-formatter
             :json-formatter-fn json-formatter-fn
-            :client-session sid)))
+            :client-session sid
+            :active-p active-p)))
 
 (lofn:define-handler-fn (channel-updates6 "/chat_updates6" nil ())
   (handler-case
       (potato.core:with-authenticated-user ()
-        (let* ((data (st-json:read-json-from-string (hunchentoot:raw-post-data :force-text t)))
-               (channel (potato.core:load-channel-with-check (st-json:getjso "channel" data)))
-               (event (nil-if-json-null (st-json:getjso "connection" data)))
-               (sid (nil-if-json-null (st-json:getjso "session_id" data))))
-          (verify-queue-name event (list (potato.core:channel/id channel)))
-          (process-long-poll (list channel) event sid
-                             +all-services+
-                             #'potato.core:notification-message-cd->json-html
-                             (lambda (queue notifications)
-                               (st-json:jso "connection" queue
-                                            "data" notifications)))))
+        (json-bind ((cid "channel")
+                    (event "connection" :required nil)
+                    (sid "session-id" :required nil)
+                    (active-p "is-active" :required nil :type :boolean))
+            (st-json:read-json-from-string (hunchentoot:raw-post-data :force-text t))
+          (log:debug "active-p = ~s" active-p)
+          (let ((channel (potato.core:load-channel-with-check cid)))
+            (verify-queue-name event (list (potato.core:channel/id channel)))
+            (process-long-poll (list channel) event sid
+                               +all-services+
+                               #'potato.core:notification-message-cd->json-html
+                               (lambda (queue notifications)
+                                 (st-json:jso "connection" queue
+                                              "data" notifications))
+                               active-p))))
     (potato.core:potato-error (condition)
       (setf (hunchentoot:return-code*) (potato.core:potato-error/response-status condition))
       "User is not logged in")))

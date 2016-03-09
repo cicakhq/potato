@@ -422,7 +422,8 @@ name and group are required, while the topic parameter is optional."
                                                    (make-translation-function format-name)
                                                    (lambda (queue notifications)
                                                      (st-json:jso "event" queue
-                                                                  "data" notifications))))
+                                                                  "data" notifications))
+                                                   t))
 
 (defun parse-service-names (service-names)
   (let ((services (loop

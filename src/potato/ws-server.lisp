@@ -140,7 +140,8 @@
     (let ((data (st-json:read-json-from-string message)))
       (string-case:string-case ((st-json:getjso "cmd" data))
         ("refresh"
-         (potato.core:refresh-user (ws-connection/user conn) (ws-connection/channel conn) 60)
+         (when (st-json:from-json-bool (st-json:getjso "is-active" data))
+           (potato.core:refresh-user (ws-connection/user conn) (ws-connection/channel conn) 60))
          (let ((now (get-universal-time)))
            (when (or (null refresh) (> (+ refresh potato.rabbitmq-notifications::*session-refresh-interval*) now))
              (potato.core::update-persisted-session-data (ws-connection/session conn))
