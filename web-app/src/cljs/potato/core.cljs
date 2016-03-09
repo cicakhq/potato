@@ -756,8 +756,8 @@ id's. Returns the updated value."
                   (cond
                     ;; Hidden
                     isHidden
-                    (om.dom/span nil "Hidden"
-                     )
+                    (om.dom/span nil
+                      "Hidden")
                     ;; Unconfirmed
                     (and (:unconfirmed message) (:raw_field message))
                     (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:raw_field message)}} nil)
