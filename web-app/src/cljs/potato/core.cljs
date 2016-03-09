@@ -1529,8 +1529,8 @@ highlighted-message - the message that should be highlighted (or
         ;; has returned.
         (request-channel-info (:active-channel @potato.state/global))))
     (goog.events/listen (new goog.ui.IdleTimer 0) goog.ui.IdleTimer/Event.BECOME_ACTIVE mark-notifications)
-    ;; Set default idle timer to 5 minutes
-    (let [timer (new goog.ui.IdleTimer 300000)]
+    ;; Set default idle timer to one hour
+    (let [timer (new goog.ui.IdleTimer 1800000)]
       (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_ACTIVE #(potato.eventsource2/set-is-active true))
       (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_IDLE #(potato.eventsource2/set-is-active false)))
     (maybe-send-type-notification typing-chan)
