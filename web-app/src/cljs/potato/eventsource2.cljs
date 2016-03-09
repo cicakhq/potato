@@ -12,7 +12,8 @@
 (defonce active-config (atom {:callback-fn #()
                               :error-fn #()
                               :error-p false
-                              :is-active true}))
+                              :is-active true
+                              :active-updated-fn #()}))
 
 (defonce current-index (atom 0))
 
@@ -41,7 +42,9 @@
       ((:error-fn @active-config) error-p))))
 
 (defn set-is-active [active-p]
-  (swap! active-config #(conj % {:is-active active-p})))
+  (swap! active-config #(conj % {:is-active active-p}))
+  (let [updated (:active-updated-fn @active-config)]
+    (updated)))
 
 ;;; sec:poll
 
@@ -116,6 +119,7 @@
   (let [req (make-xhr-io-req)]
     (notify-fail false)
     (swap! poll-config #(conj % {:channel cid :event event}))
+    (swap! active-config #(conj % {:active-updated-fn (fn [_] nil)}))
     (run-polling-request-loop req)))
 
 ;;; sec:ws
@@ -153,6 +157,12 @@
                                           :last-refresh-send-time now
                                           :timer timer
                                           :next-ping-timer next-ping-timer}))))))
+
+(defn websocket-active-updated [ws]
+  (let [timer (:next-ping-timer @websocket-config)]
+    (when timer
+      (.clearTimeout js/window timer)))
+  (start-websocket-ping ws))
 
 (defn handle-websocket-message [ws msg]
   (case (:type msg)
@@ -205,7 +215,8 @@
                               (conj config {:refresh-reply-received false
                                             :channel cid
                                             :event initial-event
-                                            :connection ws})))))
+                                            :connection ws})))
+    (swap! active-config #(conj % {:active-updated-fn (fn [] (websocket-active-updated ws))}))))
 
 (defn set-callback-fn! [callback-fn]
   (swap! active-config #(conj % {:callback-fn callback-fn})))
