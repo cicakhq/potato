@@ -11,7 +11,8 @@
 
 (defonce active-config (atom {:callback-fn #()
                               :error-fn #()
-                              :error-p false}))
+                              :error-p false
+                              :is-active true}))
 
 (defonce current-index (atom 0))
 
@@ -39,6 +40,9 @@
       (cljs.pprint/cl-format true "Calling error handler function with state: ~s" error-p)
       ((:error-fn @active-config) error-p))))
 
+(defn set-is-active [active-p]
+  (swap! active-config #(conj % {:is-active active-p})))
+
 ;;; sec:poll
 
 (defonce initial-poll-config {:channel nil
@@ -63,7 +67,7 @@
            (.stringify js/JSON (clj->js {:channel (:channel @poll-config)
                                          :connection (:event @poll-config)
                                          :session-id (:session-id @potato.state/global)
-                                         :is-active true})))))
+                                         :is-active (:is-active @active-config)})))))
 
 (defn make-xhr-io-req []
   (let [req (new goog.net.XhrIo)]
@@ -142,7 +146,7 @@
   (when (= (.-readyState ws) (.-OPEN js/WebSocket))
     (let [now (current-time)
           index (find-next-index)]
-      (.send ws (.stringify js/JSON (clj->js {:cmd "refresh" :data index :is-active true})))
+      (.send ws (.stringify js/JSON (clj->js {:cmd "refresh" :data index :is-active (:is-active @active-config)})))
       (let [timer (.setTimeout js/window (fn [] (handle-websocket-timeout ws)) 5000)
             next-ping-timer (.setTimeout js/window (fn [] (start-websocket-ping ws)) 30000)]
         (swap! websocket-config #(conj % {:last-index index
@@ -210,6 +214,6 @@
   (swap! active-config #(conj % {:error-fn error-fn})))
 
 (defn start-notification-handler [cid]
-  #_(start-websocket cid nil)
+  (start-websocket cid nil)
   ;; This function can be used to force polling instead of trying eventsocket
-  (start-poll cid nil))
+  #_(start-poll cid nil))
