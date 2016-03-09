@@ -786,7 +786,7 @@ id's. Returns the updated value."
             (om/build gear-menu message {:opts {:on-edit editing-callback :can-edit-p canEdit}})))))))
 
 (defn- at-magic-callback [owner text event editable type]
-  (let [cid     (:active-channel (deref potato.state/global))
+  (let [cid (:active-channel @potato.state/global)
         channel (get-in (deref potato.state/global) [:channels cid])]
     (when-not (:has-autocomplete-menu channel)
       (om/transact! (state-root)
@@ -1510,6 +1510,9 @@ highlighted-message - the message that should be highlighted (or
       (.setPathPrefix  history potato.urls/channel-root)
       (.setToken       history (str "/" new-channel-id)))))
 
+(defn- send-active-notification []
+  (http/post "/update_active" {:json-params {:channel (:active-channel @potato.state/global)}}))
+
 (defn main []
   (println (str "-- main called at " (.format (js/moment))))
   (let [event-channel    (make-polling-connection (:active-channel @potato.state/global))
@@ -1531,7 +1534,9 @@ highlighted-message - the message that should be highlighted (or
     (goog.events/listen (new goog.ui.IdleTimer 0) goog.ui.IdleTimer/Event.BECOME_ACTIVE mark-notifications)
     ;; Set default idle timer to one hour
     (let [timer (new goog.ui.IdleTimer 1800000)]
-      (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_ACTIVE #(potato.eventsource2/set-is-active true))
+      (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_ACTIVE (fn [_]
+                                                                        (potato.eventsource2/set-is-active true)
+                                                                        (send-active-notification)))
       (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_IDLE #(potato.eventsource2/set-is-active false)))
     (maybe-send-type-notification typing-chan)
 

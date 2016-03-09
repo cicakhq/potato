@@ -235,6 +235,14 @@
         (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))
         (#.*session-notifications-exchange-name*    (process-session-notification msg))))))
 
+
+(potato.core:define-json-handler-fn-login (update-active-screen "/update_active" data nil ())
+  (potato.core:with-authenticated-user ()
+    (json-bind ((cid "channel"))
+        data
+      (let ((channel (potato.core:load-channel-with-check cid)))
+        (potato.core:refresh-user (potato.core:current-user) channel (* *ping-interval* 2))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Web handlers -- eventsource
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -542,7 +550,7 @@ and the delivery tag."
                            (values n 0)))
                    (when active-p
                      (dolist (channel channels)
-                       (potato.core:refresh-user user channel (* timeout 2))))
+                       (potato.core:refresh-user user channel (* *ping-interval* 2))))
                    (unwind-protect
                         (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
                           (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
