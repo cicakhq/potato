@@ -248,10 +248,11 @@ NIL."
   (multiple-value-bind (channel channel-users)
       (load-channel-with-check id :if-not-joined if-not-joined)
     (if channel
-        (or channel-users
-            (load-channel-users (channel/id channel)))
+        (values (or channel-users
+                    (load-channel-users (channel/id channel)))
+                channel)
         ;; ELSE: User is not a member of channel
-        nil)))
+        (values nil nil))))
 
 (defun create-channel (name group initial-user-ids &key topic)
   (let ((group (ensure-group group))

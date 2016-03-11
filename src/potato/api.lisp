@@ -390,12 +390,24 @@
 
 (define-api-method (api-channel-info-screen "/channel/([a-z0-9]+)" t (cid))
   (api-case-method
-    (:get (let ((channel (potato.core:load-channel-with-check cid)))
-            (st-json:jso "id" (potato.core:channel/id channel)
-                         "name" (potato.core:channel/name channel)
-                         "topic" (potato.core:channel/topic channel)
-                         "group" (potato.core:channel/group channel)
-                         "domain" (potato.core:channel/domain channel))))))
+    (:get (multiple-value-bind (channel-users channel)
+              (potato.core:load-channel-users-with-check cid :if-not-joined :load)
+            (let ((group (potato.db:load-instance 'potato.core:group (potato.core:channel/group channel)))
+                  (u (getfield (intern (potato.core:user/id (potato.core:current-user)) "KEYWORD")
+                               (potato.core:channel-users/users channel-users))))
+              (unless u
+                (error "User not found in channel-users, but the initial check succeeded: cid=~s, user=~s"
+                       cid (potato.core:user/id (potato.core:current-user))))
+              (st-json:jso "id" (potato.core:channel/id channel)
+                           "name" (potato.core:channel/name channel)
+                           "topic" (potato.core:channel/topic channel)
+                           "group" (potato.core:channel/group channel)
+                           "group_type" (symbol-name (potato.core:group/type group))
+                           "unread_count" (or (getfield :|count| u) 0)
+                           "domain" (potato.core:channel/domain channel)
+                           "private_user" (if (eq (potato.core:group/type group) :private)
+                                              (potato.private:find-chat-counterpart channel-users (potato.core:current-user))
+                                              :null)))))))
 
 (define-api-method (api-create-channel-screen "/channel/create" nil ())
   "Create a new channel. Input is a JSON structure of the following form:
