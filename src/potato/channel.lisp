@@ -280,7 +280,7 @@ NIL."
             (potato.db:save-instance channel-users)
             (flush-cached-group-channel-tree-for-domain (group/domain group)))
           channel)
-      ;; Reovery forms
+      ;; Recovery forms
       (when channel
         (%recovery/delete-channel channel)))))
 
