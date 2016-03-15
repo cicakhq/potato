@@ -19,7 +19,8 @@
                  :documentation "The content of the most recent version of this message.")
    (extra-html   :type (or null string)
                  :initarg :extra-html
-                 :reader message-updated/extra-html)
+                 :reader message-updated/extra-html
+                 :documentation "Extra HTML content that will be added to the end of the message content.")
    (image        :type list
                  :initarg :image
                  :initform nil
