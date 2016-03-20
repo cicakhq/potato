@@ -235,7 +235,6 @@
         (#.*channel-exchange-name*                  (potato.rabbitmq-channels:process-channel-update msg))
         (#.*session-notifications-exchange-name*    (process-session-notification msg))))))
 
-
 (potato.core:define-json-handler-fn-login (update-active-screen "/update_active" data nil ())
   (potato.core:with-authenticated-user ()
     (json-bind ((cid "channel"))
