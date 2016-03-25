@@ -295,6 +295,13 @@
                    (potato.core:send-typing-end-notification-to-state-server channel (potato.core:current-user)))
                (st-json:jso "result" "ok"))))))
 
+(define-api-method (api-private-channel-for-user-screen "/private/([^/]+)/([^/]+)" t (domain-id uid))
+  (api-case-method
+    (:post
+     (let* ((domain (potato.core:load-domain-with-check domain-id (potato.core:current-user)))
+            (channel (potato.private:find-private-channel-for-users domain uid (potato.core:current-user))))
+       (st-json:jso "channel" (potato.core:channel/id channel))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  Channel management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
