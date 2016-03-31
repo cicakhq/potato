@@ -1,7 +1,5 @@
 (defpackage :potato.web.private
-  (:use :cl :potato :potato.common :potato.web)
-  (:export
-   ))
+  (:use :cl :potato :potato.common :potato.web))
 
 (in-package :potato.web.private)
 
