@@ -386,6 +386,20 @@ Valid values for role is: user, admin"
     (format t "Primary email: ~a~%" (potato.core:user/primary-email user))
     (format t "Email addresses: ~{~a~^, ~}~%" (potato.core:user/email-addresses user))))
 
+(define-command update-password "update-password"
+    ((user "user id")
+     (password "password"))
+    ()
+    "Update user password"
+    "Update the password for a user. If blank, the password will be removed."
+  (let ((user (potato.db:load-instance 'potato.core:user user))
+        (clear (equal password "")))
+    (if clear
+        (setf (potato.core:user/password user) "")
+        (potato.core:user/update-password user password))
+    (potato.db:save-instance user)
+    (format t "Password ~[updated~;cleared~]~%" clear)))
+
 (defun run-command (cmd)
   (multiple-value-bind (match strings)
       (cl-ppcre:scan-to-strings "^([a-zA-Z0-9-]+)(?: +(.*))?$" cmd)
