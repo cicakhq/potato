@@ -39,9 +39,11 @@
             (:quote (cond ((eql ch #\")
                            (setq state :whitespace)
                            (push current-word result)
-                           (setq current-word (clear-current-word)))
-                          ((eql ch #\\)
+                           (setq current-word (clear-current-word))
                            (setq state :post-quote))
+                          ((eql ch #\\)
+                           (setq pre-escape-state state)
+                           (setq state :escape))
                           (t
                            (vector-push-extend ch current-word))))
             (:word (cond ((char-whitespace-p ch)
