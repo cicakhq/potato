@@ -433,3 +433,6 @@
            #:gcm-enabled-p
            #:gcm-registration
            #:update-unread-subscription))
+
+(defpackage :potato.oauth-north
+  (:use :cl :potato :potato.common))

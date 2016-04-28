@@ -26,6 +26,7 @@
                  :hunchensocket
                  ;;:wookie
                  ;;:websocket-driver
+                 :north
                  :cl-markup
                  :potato-common
                  :state-server
@@ -45,6 +46,7 @@
                                        (:file "email")
                                        (:file "session")
                                        (:file "login")
+                                       (:file "oauth-north")
                                        (:file "user-image")
                                        (:file "settings")
                                        (:file "domain")
