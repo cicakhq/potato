@@ -2,6 +2,9 @@
 
 (declaim #.potato.common::*compile-decl*)
 
+(defun make-nonce ()
+  (potato.common:make-random-name 40))
+
 (defclass potato-north-server (north:server)
   ())
 
@@ -16,7 +19,11 @@
 
 (defmethod north:make-session ((server potato-north-server) application callback &key (access nil access-set-p))
   (let ((session (apply #'make-instance 'oauth-session
-                        :key (north:key application) :callback callback
+                        :token (make-nonce)
+                        :token-secret (make-nonce)
+                        :verifier (potato.common:make-random-name 10)
+                        :key (north:key application)
+                        :callback callback
                         (if access-set-p (list :access access)))))
     (clouchdb:create-document `((:|token|        . ,(north:token session))
                                 (:|token_secret| . ,(north:token-secret session))
@@ -44,7 +51,10 @@
   (format nil "potatonorthapplication-~a" key))
 
 (defmethod north:make-application ((server potato-north-server) &key name)
-  (let ((app (make-instance 'potato-north-application :name name)))
+  (let ((app (make-instance 'potato-north-application
+                            :key (make-nonce)
+                            :secret (make-nonce)
+                            :name name)))
     (clouchdb:create-document `((:|key|    . ,(north:key app))
                                 (:|secret| . ,(north:secret app))
                                 (:|name|   . ,(north:name app))
@@ -65,16 +75,20 @@
   )
 
 (defmethod north:revoke-application ((server potato-north-server) application-key)
-  )
+  (clouchdb:delete-document (make-potato-north-application-id application-key)))
 
 (defmethod north:revoke-session ((server potato-north-server) token)
   (clouchdb:delete-document (make-potato-north-oauth-session-id token)))
 
+;;; TODO: The below two methods needs to be implemented in order to
+;;; prevent mitm attacks. This will be implemented using a separate
+;;; service.
+
 (defmethod north:record-nonce ((server potato-north-server) timestamp nonce)
-  )
+  nil)
 
 (defmethod north:find-nonce ((server potato-north-server) timestamp nonce)
-  )
+  nil)
 
 (defvar *server* (make-instance 'potato-north-server))
 
