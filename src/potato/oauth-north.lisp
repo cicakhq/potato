@@ -14,8 +14,10 @@
 (defun make-potato-north-oauth-session-id (token)
   (format nil "potatonorthoauthsession-~a" token))
 
-(defmethod north:make-session ((server potato-north-server) application callback &key access)
-  (let ((session (make-instance 'oauth-session :key (north:key application) :callback callback :access access)))
+(defmethod north:make-session ((server potato-north-server) application callback &key (access nil access-set-p))
+  (let ((session (apply #'make-instance 'oauth-session
+                        :key (north:key application) :callback callback
+                        (if access-set-p (list :access access)))))
     (clouchdb:create-document `((:|token|        . ,(north:token session))
                                 (:|token_secret| . ,(north:token-secret session))
                                 (:|verifier|     . ,(north:verifier session) )
