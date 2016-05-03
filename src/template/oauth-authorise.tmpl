@@ -19,9 +19,9 @@
       <div>
         Are you sure that you want to allow <code><% #application %></code> access to your account?
         <form action="/oauth/authenticate" method="POST">
-          <input type="submit" name="action" value="Allow" />
-          <input type="submit" name="action" value="Deny" />
-          <input type="hidden" name="oauth_token" lquery="<% #oauth-token %>" />
+          <button type="submit" name="action" value="allow">Allow</button>
+          <button type="submit" name="action" value="deny">Deny</button>
+          <input type="hidden" name="oauth_token" lquery="<% #oauth-token %>"/>
         </form>
       </div>
     <% end %>
