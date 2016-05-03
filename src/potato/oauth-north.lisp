@@ -5,6 +5,75 @@
 (defclass potato-north-server (north:server)
   ())
 
+(defclass potato-north-application (north:application)
+  ())
+
+(defclass oauth-session (north:session)
+  ())
+
+(defun make-potato-north-oauth-session-id (token)
+  (format nil "potatonorthoauthsession-~a" token))
+
+(defmethod north:make-session ((server potato-north-server) application callback &key access)
+  (let ((session (make-instance 'oauth-session :key (north:key application) :callback callback :access access)))
+    (clouchdb:create-document `((:|token|        . ,(north:token session))
+                                (:|token_secret| . ,(north:token-secret session))
+                                (:|verifier|     . ,(north:verifier session) )
+                                (:|callback|     . ,(north:callback session))
+                                (:|key|          . ,(north:key session))
+                                (:|access|       . ,(symbol-name (north:access session)))
+                                (:|type|         . "potato_oauth_session"))
+                              :id (make-potato-north-oauth-session-id (north:token session)))
+    session))
+
+(defmethod north:session ((server potato-north-server) token)
+  (let ((doc (clouchdb:get-document (make-potato-north-oauth-session-id token))))
+    (unless (equal (getfield :|type| doc) "potato_oauth_session")
+      (error "Got wrong document type when looking up session"))
+    (make-instance 'oauth-session
+                   :token (getfield :|token| doc)
+                   :token-secret (getfield :|token_secret| doc)
+                   :verifier (getfield :|verifier| doc)
+                   :callback (getfield :|callback| doc)
+                   :key (getfield :|key| doc)
+                   :access (intern (getfield :|access| doc) "KEYWORD"))))
+
+(defun make-potato-north-application-id (key)
+  (format nil "potatonorthapplication-~a" key))
+
+(defmethod north:make-application ((server potato-north-server) &key name)
+  (let ((app (make-instance 'potato-north-application :name name)))
+    (clouchdb:create-document `((:|key|    . ,(north:key app))
+                                (:|secret| . ,(north:secret app))
+                                (:|name|   . ,(north:name app))
+                                (:|type|   . "potato_north_application"))
+                              :id (make-potato-north-application-id (north:key app)))
+    app))
+
+(defmethod north:application ((server potato-north-server) application-key)
+  (let ((doc (clouchdb:get-document (make-potato-north-application-id application-key))))
+    (unless (equal (getfield :|type| doc) "potato_north_application")
+      (error "Got wrong document type when looking up oauth application"))
+    (make-instance 'potato-north-application
+                   :key (getfield :|key| doc)
+                   :secret (getfield :|secret| doc)
+                   :name (getfield :|name| doc))))
+
+(defmethod north:rehash-session ((server potato-north-server) session)
+  )
+
+(defmethod north:revoke-application ((server potato-north-server) application-key)
+  )
+
+(defmethod north:revoke-session ((server potato-north-server) token)
+  (clouchdb:delete-document (make-potato-north-oauth-session-id token)))
+
+(defmethod north:record-nonce ((server potato-north-server) timestamp nonce)
+  )
+
+(defmethod north:find-nonce ((server potato-north-server) timestamp nonce)
+  )
+
 (defvar *server* (make-instance 'potato-north-server))
 
 (defun make-request (request)
