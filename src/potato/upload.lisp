@@ -210,7 +210,7 @@
               (send-file-upload-message-to-channel file)
               (st-json:write-json-to-string (st-json:jso "file" (file/name file))))))))))
 
-(defun create-file-s3-by-stream (user channel filename mime-type stream)
+(defun create-file-s3 (user channel filename mime-type input-file)
   (let ((user (potato.core:ensure-user user))
         (channel (potato.core:ensure-channel channel)))
     (multiple-value-bind (match strings)
@@ -230,7 +230,7 @@
                                   :mime-type mime-type
                                   :location :s3)))
         (potato.db:save-instance file)
-        (zs3:put-stream stream *s3-bucket* key :content-type mime-type)
+        (zs3:put-file input-file *s3-bucket* key :content-type mime-type)
         (let ((result (zs3:head :bucket *s3-bucket* :key key))
               (now (local-time:now)))
           (setf (file/size file) (parse-integer (getfield :content-length result)))
@@ -238,10 +238,6 @@
           (setf (file/confirmed-p file) now)
           (potato.db:save-instance file)
           file)))))
-
-(defun create-file-s3 (user channel filename mime-type input-file)
-  (with-open-file (s input-file :direction :input :element-type '(unsigned-byte 8))
-    (create-file-s3-by-stream user channel filename mime-type s)))
 
 ;;;
 ;;;  Support for downloads from S3
