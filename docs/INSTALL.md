@@ -214,23 +214,13 @@ example when creating a thumbnail image when uploading an image to a
 channel. This conversion is performed using the `convert` program that
 is part of the Imagemagick package.
 
-The configuration option `:imagemagick-convert-program` is used to
-specify the path to the `convert` program. The default is
-`/usr/bin/convert` which will work, but can leave the application
-vulnerable if a user uploads an image that expands to a very large
-size. To prevent this, it is recommended that a wrapper is used which
-uses `ulimit` to limit the maximum memory used as well as the maximum
-file size for the program. Here is an example of such wrapper:
+Since Potato simply sends any uploaded image directly to Imagemagick,
+it is important to configure the policy file to ensure that it can't
+be exploited by uploading an image that expands into a file that is
+multiple GB's in size.
 
-```
-#!/bin/sh
-
-ulimit -m 200000
-ulimit -v 200000
-ulimit -f 400000
-
-exec /usr/bin/convert "$@"
-```
+For more details, see the documentation on the Imagemagick policy file
+here: https://www.imagemagick.org/script/resources.php#configure
 
 ## Initialise the database
 
