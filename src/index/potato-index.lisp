@@ -69,6 +69,12 @@
             (cons "star_user" v))
           (getfield :|star_users| doc :accept-missing t)))
 
+(defun make-files (doc)
+  (loop
+    for file in (getfield :|file_list| doc :accept-missing t)
+    append `(("attachment_name" . ,(getfield :|name| file))
+             ("attachment_size" . ,(princ-to-string (getfield :|size| file))))))
+
 (defun insert-doc-into-index (doc seq-field seq)
   (let* ((message-id (getfield :|_id| doc)))
     (if (cdr (assoc :|deleted| doc))
@@ -81,6 +87,7 @@
                (channel (find-cached-channel channel-id))
                (html (format-message (getfield :|text| doc)))
                (message-star (make-message-star doc))
+               (files (make-files doc))
                (solr-document `(("id"           . ,message-id)
                                 ("potato_type"  . "message")
                                 ("channel_id"   . ,channel-id)
@@ -91,7 +98,8 @@
                                 ("group_id"     . ,(cached-channel-group-id channel))
                                 ("group_name"   . ,(cached-channel-group-name channel))
                                 ("content"      . ,html)
-                                ,@message-star)))
+                                ,@message-star
+                                ,@files)))
           (send-update-to-index solr-document seq-field seq)))))
 
 (defun insert-user-into-index (user-doc seq-field seq)

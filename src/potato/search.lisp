@@ -38,6 +38,8 @@
                    ("f.date.qf" . "created_date")
                    ("f.channel.qf" . "channel_name")
                    ("f.message.qf" . "content")
+                   ("f.filename.qf" . "attachment_name")
+                   ("f.size.qf" . "attachment_size")
                    ("fq" . ,(format nil "potato_type:\"message\" AND ~a~a" search-grouping star-grouping))
                    ("hl" . "true")
                    ("hl.fl" . "content")
