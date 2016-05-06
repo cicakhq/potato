@@ -62,13 +62,10 @@
 
 (defun message-update-main-loop ()
   (with-rabbitmq-connected (conn)
-    (cl-rabbit:basic-consume conn 1 *chat-image-converter-response-queue-name*)
+    (cl-rabbit:basic-consume conn 1 *chat-image-converter-response-queue-name* :no-ack t)
     (loop
        for msg = (cl-rabbit:consume-message conn)
        for decoded-command = (binary-to-lisp (cl-rabbit:message/body (cl-rabbit:envelope/message msg)))
-       ;; We'll always ack the message here until we have a good error
-       ;; handling policy.
-       do (cl-rabbit:basic-ack conn 1 (cl-rabbit:envelope/delivery-tag msg))
        do (dispatch-message-command decoded-command))))
 
 (defun start-message-update-thread ()
