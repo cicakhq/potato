@@ -601,7 +601,6 @@ and the delivery tag."
                     (sid "session-id" :required nil)
                     (active-p "is-active" :required nil :type :boolean))
             (st-json:read-json-from-string (hunchentoot:raw-post-data :force-text t))
-          (log:debug "active-p = ~s" active-p)
           (let ((channel (potato.core:load-channel-with-check cid)))
             (verify-queue-name event (list (potato.core:channel/id channel)))
             (process-long-poll (list channel) event sid
