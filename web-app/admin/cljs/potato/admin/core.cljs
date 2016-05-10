@@ -19,10 +19,10 @@
             [cljs.core.async  :as async]
             [cljsjs.moment]
             [cljs.pprint]
-            [potato.admin.group-edit]
+            [potato.admin.groupedit]
             [potato.admin.channels])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defn main []
   (cljs.pprint/cl-format true "Starting admin")
-  (potato.admin.group-edit/group-admin-main))
+  (potato.admin.groupedit/group-admin-main))

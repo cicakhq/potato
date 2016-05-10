@@ -1,4 +1,4 @@
-(ns potato.admin.group-edit
+(ns potato.admin.groupedit
   (:require [om.core :as om :include-macros true]
             [om.dom :include-macros true]
             [goog.dom]
