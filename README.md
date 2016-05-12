@@ -28,8 +28,8 @@ Currently there are two separate clients:
     enough to be used in production:
     https://github.com/lokedhs/potato-emacs
 
-  - The Android client is not ready for use yet. Help is always
-    appreciated: https://github.com/lokedhs/PotatoAndroidTest 
+  - The Android client is functional, but still ugly. Help is always
+    appreciated: https://github.com/lokedhs/PotatoAndroidTest
     And yes, the name of the project will change, once it works.
 
 # How to install
