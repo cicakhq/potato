@@ -343,7 +343,8 @@
            #:add-email-invitation-for-domain
            #:remove-email-invitation-for-domain
            #:send-message-to-channel
-           #:create-channel-with-check))
+           #:create-channel-with-check
+           #:*user-registration-validation-function*))
 
 (defpackage :potato.register
   (:use :cl :potato :potato.common :potato.core))

@@ -2,6 +2,8 @@
 
 (declaim #.potato.common::*compile-decl*)
 
+(defvar *user-registration-validation-function* nil)
+
 (defun remove-invitation-for-email/domain (email domain)
   (check-type email string)
   (check-type domain domain)
@@ -74,6 +76,12 @@ it's eliminated altogether."
         domain))))
 
 (defun register-user (email description password enable-api activated-p)
+  ;; If a registration validator function is registered, call it to check if the user is allowed
+  (when *user-registration-validation-function*
+    (let ((validator-result (funcall *user-registration-validation-function* email description)))
+      (when validator-result
+        (potato.core:raise-permission-error validator-result))))
+  ;; The user is allowed to be registered, go ahead and create it in the database
   (let ((user (potato.core::make-unregistered-user description password)))
     (when enable-api
       (potato.core::generate-and-modify-api-token user))
