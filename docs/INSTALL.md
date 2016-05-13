@@ -27,7 +27,7 @@ On a clean Ubuntu system, these dependencies are available from the following pa
 Potato depends on a number of submodules which are downloaded using the following command, which is run from the
 the source directory:
 
-```shell
+```
 git submodule init
 git submodule update
 ```
