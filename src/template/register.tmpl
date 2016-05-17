@@ -14,22 +14,35 @@
         <% if activate-api %>
           <input type="hidden" name="redirect-path" value="<% #redirect-path %>">
         <% end %>
-        <input type="email" class="form-control"
-               placeholder="Email address"
-               value="<% if email #email end %>"
-               required autofocus name="email"/>
-        <% if email-error %><span><% #email-error %></span><% end %>
-        <input type="password" class="form-control"
-               placeholder="Password" required name="password1"/>
-        <% if password-error %><span><% #password-error %></span><% end %>
-        <input type="description" class="form-control"
-               placeholder="Display name" required name="description"
-               value="<% if description #description end %>"/>
-        <% if description-error %>
-          <span><% #description-error %></span>
-        <% end %>
-        <button class="btn btn-lg btn-primary btn-block"
-                type="submit" value="Register">Register</button>
+        <div>
+          Email address:
+          <input type="email" class="form-control"
+                 placeholder="Email address"
+                 value="<% if email #email end %>"
+                 required autofocus name="email"/>
+          <% if email-error %><span><% #email-error %></span><% end %>
+        </div>
+        <div>
+          Full name:
+          <input type="description" class="form-control"
+                 placeholder="Display name" required name="description"
+                 value="<% if description #description end %>"/>
+          <% if description-error %><span><% #description-error %></span><% end %>
+        </div>
+        <div>
+          <div>
+            Password:
+            <input type="password" class="form-control" placeholder="Password" required name="password1"/>
+            <% if password-error %><span><% #password-error %></span><% end %>
+          </div>
+          <div>
+            Verify password:
+            <input type="password" class="form-control" placeholder="Password" required name="password2"/>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-lg btn-primary btn-block" type="submit" value="Register">Register</button>
+        </div>
       </form>
     </div> <!-- /container -->
   </body>

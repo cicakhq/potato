@@ -63,20 +63,23 @@
 (defun handle-register-user ()
   (lofn:with-checked-parameters ((email :required t :trimmed t)
                                  (description :required t :trimmed t)
-                                 (password :name "password1" :required t)
+                                 (password1 :name "password1" :required t)
+                                 (password2 :name "password2" :required t)
                                  (mobile-p :name "m" :type :boolean))
     (let ((email-trimmed (string-downcase email))
           (errors nil))
       (unless (is-allowed-email-p email-trimmed)
         (push (cons :email-error "Illegal email address") errors))
-      (cond ((< (length password) 1)
+      (cond ((not (equal password1 password2))
+             (push (cons :password-error "Passwords does not match") errors))
+            ((< (length password1) 1)
              (push (cons :password-error "Password is too short") errors)))
       (when (string= description "")
         (push (cons :description-error "Name can't be blank") errors))
       ;; If errors, send back to the registration page
       (if errors
           (show-register-template errors)
-          (register-user-and-redirect email description password mobile-p
+          (register-user-and-redirect email description password1 mobile-p
                                       (if mobile-p "potato://sent-registration"))))))
 
 (lofn:define-handler-fn (register-screen "/register" nil ())
