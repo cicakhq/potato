@@ -3,6 +3,7 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defvar *inhibit-no-smtp-server-warning* nil)
+(defvar *allow-passwordless-login* nil)
 
 (defclass login-request ()
   ((email        :type string
@@ -78,6 +79,8 @@ email address."
                    (lofn:show-template-stream "register2_loginkey.tmpl" `((:email . ,email)))))))))))
 
 (lofn:define-handler-fn (register2-screen "/register2" nil ())
+  (unless *allow-passwordless-login*
+    (raise-not-found-error "Illegal registration mode"))
   (lofn:case-method
     (:get (lofn:show-template-stream "register2.tmpl" nil))
     (:post (lofn:with-parameters (email) (register2-post-handler email)))))

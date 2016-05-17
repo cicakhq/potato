@@ -1,5 +1,9 @@
 <% if logged-in-p %>
     <% include "main-loggedin.tmpl" %>
 <% else %>
-    <% include "landing.tmpl" %>
+    <% if allow-passwordless-login %>
+        <% include "landing.tmpl" %>
+    <% else %>
+        <% include "login.tmpl" %>
+    <% end %>
 <% end %>

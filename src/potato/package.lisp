@@ -347,7 +347,9 @@
            #:*user-registration-validation-function*))
 
 (defpackage :potato.register
-  (:use :cl :potato :potato.common :potato.core))
+  (:use :cl :potato :potato.common :potato.core)
+  (:export
+   #:*allow-passwordless-login*))
 
 (defpackage :potato.email
   (:use :cl :potato :potato.common :potato.core)
@@ -371,7 +373,8 @@
   (:use :cl :potato :potato.common)
   (:export #:show-template-stream-with-default-parameters
            #:make-group-channel-tree-for-user-and-domain
-           #:*allow-create-domain*))
+           #:*allow-create-domain*
+           ))
 
 (defpackage :potato.api
   (:use :cl :potato :potato.common))

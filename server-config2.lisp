@@ -211,7 +211,8 @@
             (update :allow-create-domain potato.web:*allow-create-domain* (constantly t))
             (update :upload-path potato.upload:*file-upload-directory* #'string-or-nil-p #'convert-path)
             (update :default-upload-mode potato.upload:*default-upload-location* #'valid-upload-location-p)
-            (update :gcm-key potato.gcm:*gcm-authorisation-key* #'string-or-nil-p))
+            (update :gcm-key potato.gcm:*gcm-authorisation-key* #'string-or-nil-p)
+            (update :allow-passwordless-login potato.register:*allow-passwordless-login* (constantly t)))
           result)
         ;; ELSE: Config file not found, print a warning
         (progn
