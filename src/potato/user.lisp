@@ -270,3 +270,12 @@
 
 (potato.db:define-hook-fn flush-user-descriptions user (user :type (:save :delete))
   (cl-memcached:mc-del (concatenate 'string *user-description-memcached-prefix* (user/id user))))
+
+;;;
+;;;  Password reset
+;;;
+
+(defun clear-user-password (user)
+  (check-type user user)
+  (setf (user/password user) "")
+  (potato.db:save-instance user))

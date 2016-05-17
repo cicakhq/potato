@@ -20,7 +20,9 @@
            #:start-server-all-services
            #:setup-initial-database
            #:*websocket-listen-port*
-           #:*external-websocket-listen-address*))
+           #:*external-websocket-listen-address*
+           #:*allow-passwordless-login*
+           #:*allow-password-recovery*))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)
@@ -237,7 +239,8 @@
            #:load-user-email-by-email
            #:message/hidden-users
            #:update-message-hidden-with-check
-           #:update-domain-user-role))
+           #:update-domain-user-role
+           #:clear-user-password))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
@@ -349,7 +352,7 @@
 (defpackage :potato.register
   (:use :cl :potato :potato.common :potato.core)
   (:export
-   #:*allow-passwordless-login*))
+   #:register2-post-handler))
 
 (defpackage :potato.email
   (:use :cl :potato :potato.common :potato.core)

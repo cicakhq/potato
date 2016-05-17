@@ -60,7 +60,8 @@
     </form>
   </main>
   <% if ! use-external-authenticator %>
-  <p id="signup">Not a member? <a href="/register<% if mobile-p r#"?m=1" end %>">Sign up now</a></p>
+    <p class="forgot-password"><a href="/forgot-password">Forgot password?</a></p>
+    <p class="signup">Not a member? <a href="/register<% if mobile-p r#"?m=1" end %>">Sign up now</a></p>
   <% end %>
 </body>
 </html>

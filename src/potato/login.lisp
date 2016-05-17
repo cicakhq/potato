@@ -234,3 +234,9 @@ credentials. This function returns the current session."
     (potato.db:remove-instance ref))
   (hunchentoot:set-cookie "loginkey" :value "" :path "/")
   (hunchentoot:redirect "/"))
+
+(lofn:define-handler-fn (forgot-password-screen "/forgot-password" nil ())
+  (lofn:case-method
+    (:get (lofn:show-template-stream "forgot-password.tmpl" nil))
+    (:post (lofn:with-checked-parameters ((email :name "email" :trimmed t :allow-blank nil :required t))
+             (potato.register:register2-post-handler email t)))))

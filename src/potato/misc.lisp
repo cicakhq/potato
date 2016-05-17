@@ -15,3 +15,6 @@
 (defvar *smtp-username* nil)
 (defvar *smtp-password* nil)
 (defvar *smtp-ssl* nil)
+
+(defvar *allow-passwordless-login* nil)
+(defvar *allow-password-recovery* t)

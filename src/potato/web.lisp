@@ -23,7 +23,7 @@
                                                          (:domain-tree         . ,(potato.core::domain-tree-for-user-as-template-data user))
                                                          (:new-login           . ,(potato.core:user/new-login user))
                                                          (:allow-create-domain . ,*allow-create-domain*)
-                                                         (:allow-passwordless-login . ,potato.register:*allow-passwordless-login*))
+                                                         (:allow-passwordless-login . ,*allow-passwordless-login*))
                                                        nil)))))
 
 (potato.core:define-handler-fn-login (downloads-screen "/downloads" nil ())
