@@ -10,4 +10,5 @@
   :components ((:module "src/sso"
                         :serial t
                         :components ((:file "package")
-                                     (:file "sso")))))
+                                     (:file "sso")
+                                     (:file "regblock")))))
