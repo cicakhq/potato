@@ -34,4 +34,3 @@ qq.Promise.success = function() {};
 var MathJax = {};
 MathJax.Hub = {};
 MathJax.Hub.Queue = function() {};
-
