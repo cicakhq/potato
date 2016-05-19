@@ -22,7 +22,8 @@
            #:*websocket-listen-port*
            #:*external-websocket-listen-address*
            #:*allow-passwordless-login*
-           #:*allow-password-recovery*))
+           #:*allow-password-recovery*
+           #:*user-registration-validation-function*))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)
@@ -295,8 +296,7 @@
 
 (defpackage :potato.search
   (:use :cl :potato :potato.common :potato.core)
-  (:export
-   #:search-messages-json))
+  (:export #:search-messages-json))
 
 (defpackage :potato.upload
   (:use :cl :potato :potato.common)
@@ -346,13 +346,11 @@
            #:add-email-invitation-for-domain
            #:remove-email-invitation-for-domain
            #:send-message-to-channel
-           #:create-channel-with-check
-           #:*user-registration-validation-function*))
+           #:create-channel-with-check))
 
 (defpackage :potato.register
   (:use :cl :potato :potato.common :potato.core)
-  (:export
-   #:register2-post-handler))
+  (:export #:register2-post-handler))
 
 (defpackage :potato.email
   (:use :cl :potato :potato.common :potato.core)
@@ -376,8 +374,7 @@
   (:use :cl :potato :potato.common)
   (:export #:show-template-stream-with-default-parameters
            #:make-group-channel-tree-for-user-and-domain
-           #:*allow-create-domain*
-           ))
+           #:*allow-create-domain*))
 
 (defpackage :potato.api
   (:use :cl :potato :potato.common))
@@ -428,9 +425,8 @@
 
 (defpackage :potato.slashcommand
   (:use :cl :potato :potato.common)
-  (:export
-   #:command-processor-loop
-   #:process-incoming-slashcommand))
+  (:export #:command-processor-loop
+           #:process-incoming-slashcommand))
 
 (defpackage :potato.gcm
   (:use :cl :potato :potato.common)

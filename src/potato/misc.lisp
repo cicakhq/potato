@@ -18,3 +18,5 @@
 
 (defvar *allow-passwordless-login* nil)
 (defvar *allow-password-recovery* t)
+
+(defvar *user-registration-validation-function* nil)
