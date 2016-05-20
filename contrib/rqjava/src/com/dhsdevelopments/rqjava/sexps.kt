@@ -1,10 +1,13 @@
 package com.dhsdevelopments.rqjava
 
 import java.io.*
-import java.nio.file.Files
 import java.util.*
 
 class SexpParser(input: Reader) {
+    companion object {
+        val CHAR_NAME_MAP = buildCharNameMap()
+    }
+
     val reader: PushbackReader
 
     init {
@@ -37,6 +40,8 @@ class SexpParser(input: Reader) {
         return when (ch.toChar()) {
             '(' -> readList()
             '"' -> readString()
+            '|' -> readEscapedSymbol()
+            '#' -> readExtended()
             else -> readAtom(ch)
         }
     }
@@ -55,6 +60,29 @@ class SexpParser(input: Reader) {
         }
     }
 
+    fun readExtended(): Any {
+        val ch = readChar()
+        return when (ch) {
+            '(' -> readList()
+            '\\' -> readSexpChar()
+            else -> throw SexpParseException("Illegal extension char: $ch")
+        }
+    }
+
+    fun readSexpChar(): Char {
+        val s = readSymbolString()
+        if (s.length == 1) {
+            return s[0]
+        }
+        else {
+            val ch = CHAR_NAME_MAP[s.toLowerCase()]
+            if (ch == null) {
+                throw SexpParseException("Illegal character name: s")
+            }
+            return ch
+        }
+    }
+
     fun readString(): String {
         val result = StringBuilder()
         while (true) {
@@ -69,35 +97,52 @@ class SexpParser(input: Reader) {
 
     fun readAtom(ch: Char): Any {
         if (isSymbolChar(ch)) {
-            return readSymbol(ch)
+            unreadChar(ch)
+            return readSymbol()
         }
         else if (ch.isDigit()) {
             unreadChar(ch)
             return readNumber()
         }
         else {
-            throw IOException("Unexpected character: ${ch.toInt()}")
+            throw SexpParseException("Unexpected character: ${ch.toInt()}")
         }
     }
 
-    fun readSymbol(ch: Char): Symbol {
+    fun readSymbol(): Symbol {
+        return Symbol(readSymbolString())
+    }
+
+    fun readSymbolString(): String {
         val buf = StringBuilder()
-        buf.append(ch)
+        buf.append(readChar())
         while (true) {
             val next = readChar()
             if (!isSymbolCharCont(next)) {
                 unreadChar(next)
-                return Symbol(buf.toString())
+                return buf.toString()
             }
             buf.append(next)
         }
     }
 
+    fun readEscapedSymbol(): Symbol {
+        val buf = StringBuilder()
+        while (true) {
+            val ch = readChar()
+            when (ch) {
+                '\\' -> buf.append(readChar())
+                '|' -> return Symbol(buf.toString())
+                else -> buf.append(ch)
+            }
+        }
+    }
+
     fun readNumber(): Int {
         val buf = StringBuilder()
-        while(true) {
+        while (true) {
             val ch = readChar()
-            if(ch >= '0' && ch <= '9') {
+            if (ch >= '0' && ch <= '9') {
                 buf.append(ch);
             }
             else {
@@ -116,8 +161,17 @@ class SexpParser(input: Reader) {
     }
 }
 
+private fun buildCharNameMap(): Map<String, Char> {
+    return mapOf(
+            "newline" to '\n',
+            "return" to '\r',
+            "space" to ' ')
+}
+
+class SexpParseException(s: String) : Exception(s)
+
 class Symbol(val name: String) {
-    override fun toString(): String{
+    override fun toString(): String {
         return "Symbol(name='$name')"
     }
 }
@@ -132,12 +186,11 @@ fun parseSexp(s: Reader): Any {
     return parser.parseSexp()
 }
 
-class TestSexp
-{
+class TestSexp {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            val res = parseSexp("(\"foo\" \"bar\" (palle \"he\\\"llo\") test-bar 12)")
+            val res = parseSexp("(\"foo\" \"bar\" (palle \"he\\\"llo\") test-bar |symbol with spaces| 12 #\\a #\\Space #(1 2 3))")
             println("res = $res\n")
         }
     }
