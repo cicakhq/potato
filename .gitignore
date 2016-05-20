@@ -67,5 +67,4 @@ quicklisp/
 # Potato specific
 cache/
 *.pid
-.idea
 local-config*.lisp
