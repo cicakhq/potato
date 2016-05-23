@@ -1,0 +1,51 @@
+# Simple configuration for an HTTP proxy listening on port 80 on all
+# interfaces and forwarding requests to a single backend "servers" with a
+# single server "server1" listening on 127.0.0.1:8000
+global
+    daemon
+    maxconn 256
+    stats socket /var/run/haproxy.sock mode 600 level admin
+    stats timeout 2m
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+frontend http-in
+    bind *:80
+    acl ws_connection path_beg /ws/
+    use_backend ws_servers if ws_connection
+    default_backend servers
+{% if haproxy_frontend_custom  is defined %}
+  {% for i in haproxy_frontend_custom %}
+  {{ i }}
+  {% endfor %}
+{% endif %}
+
+backend servers
+{% for i in config_haproxy %}
+    server {{ i.name }} {{ i.host }}:{{ i.port }} check maxconn 32;
+{% endfor %}
+
+backend ws_servers
+{% for i in config_haproxy %}
+        server potatowebsocket0 localhost:{{ i.ws }} maxconn 90
+{% endfor %}
+
+listen  stats   localhost:9000
+    mode            http
+    log             global
+
+    timeout client 5000
+    timeout connect 4000
+    timeout server 30000
+
+    stats enable
+    stats hide-version
+    stats refresh 30s
+    stats show-node
+    stats auth stats:stats
+    stats uri  /
+    stats admin if TRUE
