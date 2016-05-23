@@ -35,8 +35,8 @@ class Command(body: ByteArray, props: AMQP.BasicProperties) {
     val args: String
 
     init {
-        val data = parseSexp(String(body, CHARSET_NAME_UTF8)) as List<*>
-        cmd = data[0] as String
-        args = data[1] as String
+        val data = parseSexp(String(body, CHARSET_NAME_UTF8)) as SexpCons
+        cmd = data.nthElement(0) as String
+        args = data.nthElement(1) as String
     }
 }

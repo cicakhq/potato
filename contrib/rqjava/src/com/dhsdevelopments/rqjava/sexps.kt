@@ -36,7 +36,7 @@ class SexpParser(input: Reader) {
     }
 
     fun parseSexp(): Any {
-        val ch = readChar()
+        val ch = readCharSkipSpace()
         return when (ch.toChar()) {
             '(' -> readList()
             '"' -> readString()
@@ -46,7 +46,27 @@ class SexpParser(input: Reader) {
         }
     }
 
-    fun readList(): List<Any> {
+    fun readList(): SexpCons {
+        val first = parseSexp()
+        val ch = readCharSkipSpace()
+        if(ch == ')') {
+            return SexpCons(first, SexpSymbol.makeNull())
+        }
+        else if(ch == '.') {
+            val second = parseSexp()
+            if(readCharSkipSpace() != ')') {
+                throw SexpParseException("Only a single element after period is allowed")
+            }
+            return SexpCons(first, second)
+        }
+        else {
+            unreadChar(ch)
+            val second = readList()
+            return SexpCons(first, second)
+        }
+    }
+
+    fun readArray(): List<Any> {
         val result = ArrayList<Any>()
         while (true) {
             val ch = readCharSkipSpace()
@@ -63,7 +83,7 @@ class SexpParser(input: Reader) {
     fun readExtended(): Any {
         val ch = readChar()
         return when (ch) {
-            '(' -> readList()
+            '(' -> readArray()
             '\\' -> readSexpChar()
             else -> throw SexpParseException("Illegal extension char: $ch")
         }
@@ -109,8 +129,8 @@ class SexpParser(input: Reader) {
         }
     }
 
-    fun readSymbol(): Symbol {
-        return Symbol(readSymbolString())
+    fun readSymbol(): SexpSymbol {
+        return SexpSymbol.makeSymbol(readSymbolString())
     }
 
     fun readSymbolString(): String {
@@ -126,13 +146,13 @@ class SexpParser(input: Reader) {
         }
     }
 
-    fun readEscapedSymbol(): Symbol {
+    fun readEscapedSymbol(): SexpSymbol {
         val buf = StringBuilder()
         while (true) {
             val ch = readChar()
             when (ch) {
                 '\\' -> buf.append(readChar())
-                '|' -> return Symbol(buf.toString())
+                '|' -> return SexpSymbol.makeSymbol(buf.toString())
                 else -> buf.append(ch)
             }
         }
@@ -170,9 +190,36 @@ private fun buildCharNameMap(): Map<String, Char> {
 
 class SexpParseException(s: String) : Exception(s)
 
-class Symbol(val name: String) {
+class SexpSymbol(val name: String, val isNull: Boolean) {
+    companion object {
+        fun makeSymbol(name: String): SexpSymbol {
+            return SexpSymbol(name, name == "NIL")
+        }
+
+        fun makeNull(): SexpSymbol {
+            return makeSymbol("NIL")
+        }
+    }
+
     override fun toString(): String {
         return "Symbol(name='$name')"
+    }
+}
+
+class SexpCons(val first: Any, val second: Any) {
+    fun nthElement(index: Int): Any {
+        var curr = this
+        for (i in 0..(index - 1)) {
+            if (this.second !is SexpCons) {
+                throw IllegalStateException("Element not a cons")
+            }
+            curr = this.second
+        }
+        return curr.first
+    }
+
+    override fun toString(): String {
+        return "SexpCons(first=$first, second=$second)"
     }
 }
 
