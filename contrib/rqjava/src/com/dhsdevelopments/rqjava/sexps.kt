@@ -25,7 +25,7 @@ class SexpParser(input: Reader) {
     private fun readCharSkipSpace(): Char {
         while (true) {
             val ch = readChar()
-            if (ch != ' ' && ch != '\t' && ch != '\n') {
+            if (!ch.isWhitespace()) {
                 return ch
             }
         }
@@ -52,18 +52,24 @@ class SexpParser(input: Reader) {
         if(ch == ')') {
             return SexpCons(first, SexpSymbol.makeNull())
         }
-        else if(ch == '.') {
-            val second = parseSexp()
-            if(readCharSkipSpace() != ')') {
-                throw SexpParseException("Only a single element after period is allowed")
+
+        if(ch == '.') {
+            val chAfterPeriod = readChar()
+            if(chAfterPeriod.isWhitespace()) {
+                val second = parseSexp()
+                if (readCharSkipSpace() != ')') {
+                    throw SexpParseException("Only a single element after period is allowed")
+                }
+                return SexpCons(first, second)
             }
-            return SexpCons(first, second)
+            else {
+                unreadChar(chAfterPeriod)
+            }
         }
-        else {
-            unreadChar(ch)
-            val second = readList()
-            return SexpCons(first, second)
-        }
+
+        unreadChar(ch)
+        val second = readList()
+        return SexpCons(first, second)
     }
 
     fun readArray(): List<Any> {
@@ -237,7 +243,7 @@ class TestSexp {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            val res = parseSexp("(\"foo\" \"bar\" (palle \"he\\\"llo\") test-bar |symbol with spaces| 12 #\\a #\\Space #(1 2 3))")
+            val res = parseSexp("((a . b) \"foo\" \"bar\" (palle \"he\\\"llo\") test-bar |symbol with spaces| 12 #\\a #\\Space #(1 2 3))")
             println("res = $res\n")
         }
     }
