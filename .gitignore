@@ -26,6 +26,7 @@ deploy/ansible/roles/solr/files/jdk-8u20-linux-x64.rpm
 public/
 src/template/manifest/*.manifest
 potato.bin
+potato.cfg
 
 # NODE, BROCCOLI AND BOWER
 web-app/node_modules
