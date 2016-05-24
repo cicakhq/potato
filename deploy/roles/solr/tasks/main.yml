@@ -35,7 +35,7 @@
 
 - name: Download SolR
   become: yes
-  unarchive: src=http://archive.apache.org/dist/lucene/solr/{{ solr_version }}/{{ solr_filename }}.tgz dest="/opt/{{ solr_filename }}" copy=no
+  unarchive: src=http://archive.apache.org/dist/lucene/solr/{{ solr_version }}/{{ solr_filename }}.tgz dest="/opt/" copy=no
   
 #- name: Move Solr to place
 #  become: yes
