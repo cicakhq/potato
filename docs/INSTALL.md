@@ -61,7 +61,7 @@ The Solr server can now be started by running the `bin/solr start`
 command from the Solr application directory.
 
 Copy the Solr configuration from the Potato distribution at
-`deploy/files/solr/potato/conf` into the Solr application directory
+`deploy/roles/solr/files/` into the Solr application directory
 at `server/solr`:
 
 ```
