@@ -194,7 +194,7 @@ location) and configure all parameters.
 
 The default settings for the CouchDB, RabbitMQ and memcached should
 work out of the box without any changes, but for security reasons it
-may be advisable to preotect these services with passwords. However,
+may be advisable to protect these services with passwords. However,
 it is also assumed that these services are firewalled off from any
 external users.
 
