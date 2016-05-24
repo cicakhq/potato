@@ -1,25 +1,25 @@
 ---
 - name: Register CouchDB version
-  command: "couch-config --version|head -1"
+  shell: >
+         couch-config --version|head -1 || true
   register: couchdb_version
-  ignore_errors: true
-  
+
 - name: unarchive
   unarchive: src=http://www.us.apache.org/dist/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz dest=/tmp/ copy=no
-  when: "{{ couchdb_version.stdout_lines }} != 'couch-config - Apache CouchDB configuration helper 1.6.1'"
+  when: couchdb_version.stdout != 'couch-config - Apache CouchDB configuration helper 1.6.1'
   
 - name: Configure
   command: ./configure --disable-docs --with-erlang=/usr/lib64/erlang/usr/include/
   args:
     chdir: /tmp/apache-couchdb-1.6.1
-  when: "{{ couchdb_version.stdout_lines }} != 'couch-config - Apache CouchDB configuration helper 1.6.1'"
-
+  when: couchdb_version.stdout != 'couch-config - Apache CouchDB configuration helper 1.6.1'
+  
 - name: make
   command: make
   args:
     chdir: /tmp/apache-couchdb-1.6.1
-  when: "{{ couchdb_version.stdout_lines }} != 'couch-config - Apache CouchDB configuration helper 1.6.1'"
-
+  when: couchdb_version.stdout != 'couch-config - Apache CouchDB configuration helper 1.6.1'
+  
 - name: Create group
   become: yes
   group: name=couchdb state=present
@@ -39,7 +39,8 @@
   command: make install
   args:
     chdir: /tmp/apache-couchdb-1.6.1
-  when: "{{ couchdb_version.stdout_lines }} != 'couch-config - Apache CouchDB configuration helper 1.6.1'"
+  when: couchdb_version.stdout != 'couch-config - Apache CouchDB configuration helper 1.6.1'
+
 
 - name: Permissions
   become: yes
