@@ -4,7 +4,7 @@
   gather_facts: False
 
   roles:
-    - base
+    - base-centos
 
   tasks:
     - name: Add vagrant user to users and potato groups
