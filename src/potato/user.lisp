@@ -20,11 +20,6 @@
                           :accessor user/password
                           :persisted-p t
                           :documentation "Hash of the user's password")
-   (id-authority          :type string
-                          :initform ""
-                          :initarg :id-authority
-                          :accessor user/id-authority
-                          :persisted-p t)
    (api-token             :type (or null string)
                           :initarg :api-token
                           :initform nil
