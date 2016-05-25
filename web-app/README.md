@@ -28,7 +28,7 @@ To compile, you will need [leiningen](http://leiningen.org); on Mac OS X:
 From there, *leiningen* will manage all the dependencies. To compile
 and get a debug REPL with auto-recompilation and auto-reload, run:
 
-    lein repl
+    lein figwheel
 
 Usually, I use the REPL directly in Emacs with CIDER. To start a new
 REPL, from the source file `C-c M-j` should run a `cider-jack-in`.
