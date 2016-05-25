@@ -1,17 +1,24 @@
-# A Gulp Based Potato
+# Frontend tool chain
 
+[npm](https://www.npmjs.com) is the package manager for JavaScript.
+[Bower](http://bower.io) is package manager for the web.
 [Gulp](http://gulpjs.com) is a streaming build system.
+[Leiningen](http://leiningen.org) is for automating Clojure projects
+without setting your hair on fire.
 
-# Instructions
+## Installation on OS X
 
 0. `brew install npm`
 1. `sudo npm install -g gulp`
 2. `npm install`
-3. `gulp`
+3. `sudo npm install -g bower`
+4. `bower`
+5. `gulp`
 
-Gulp will keep a watch on the source files specified in the
-`sources.coffee` file, and publish to the `<potato>/public/assets`
-directory automatically when changes are made to those files.
+
+Bower will download font assets as describe in `bowet.json`. Gulp will
+keep a watch on the source files specified in the `sources.coffee`
+file, and publish to the `<potato>/public/assets` directory automatically when changes are made to those files.
 
 To build for production, use `gulp --type prod`
 
@@ -25,19 +32,24 @@ To compile, you will need [leiningen](http://leiningen.org); on Mac OS X:
 
     brew install leiningen
 
+### Starting REPL from command line
 From there, *leiningen* will manage all the dependencies. To compile
 and get a debug REPL with auto-recompilation and auto-reload, run:
 
     lein figwheel
 
-Usually, I use the REPL directly in Emacs with CIDER. To start a new
-REPL, from the source file `C-c M-j` should run a `cider-jack-in`.
+### Starting REPL in `emacs` via `cider`
+Start a new REPL, from the source file `web-app/project.clj`:
 
-To start the debug server, execute in the REPL: `(run)`
+    M-x cider-jack-in # or `C-c M-j`
+     (use 'figwheel-sidecar.repl-api)
+     (start-figwheel!)
+     (cljs-repl)
 
-# Tips & tricks
+# View the source in Firefox
 
-View js source in Firefox:
+At the time of writing only Firefox allow us to view the source in  `closurescript`, to do
+so:
 
     $ cd public/assets/js
     $ ln -s ../../../web-app/src
