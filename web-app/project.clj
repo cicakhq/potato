@@ -95,9 +95,8 @@
                            :pretty-print  false}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
-                 :welcome (println "Welcome to Potato
-                                  dev server Clojure REPL.")
-                 :init-ns potato.dev}
+                 :welcome (println "Welcome to Potato dev server Clojure REPL.")
+                 :init-ns potato.dev}                 
   :figwheel {:server-port      10555
              :http-server-root "public"
              :nrepl-port       7888})
