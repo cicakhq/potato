@@ -19,31 +19,10 @@
   set_fact: >-
     solr_filename=solr-{{ solr_version }}
 
-#- name: Download SolR
-#  get_url: >
-#    url=http://archive.apache.org/dist/lucene/solr/{{ solr_version }}/{{ solr_filename }}.tgz
-#    dest={{ workspace }}/{{ solr_filename }}.tgz
-#    force=no
-#    sha256sum={{ solr_sha256sum }}
-
-#- name: Expand Solr
-#  become: yes
-#  command: >
-#    /usr/bin/tar -C {{ workspace }} -xvzf {{ workspace }}/{{ solr_filename }}.tgz
-#  args:
-#    creates: "/opt/{{ solr_filename }}"
-
 - name: Download SolR
   become: yes
   unarchive: src=http://archive.apache.org/dist/lucene/solr/{{ solr_version }}/{{ solr_filename }}.tgz dest="/opt/" copy=no
   
-#- name: Move Solr to place
-#  become: yes
-#  command: >
-#    mv {{ workspace }}/{{ solr_filename }} /opt/
-#  args:
-#    creates: "/opt/{{ solr_filename }}"
-
 - name: Set permission
   become: yes
   file: path="/opt/{{ solr_filename }}" owner=solr group=solr mode=0755 recurse=yes
