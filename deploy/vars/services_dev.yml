@@ -16,7 +16,6 @@ services:
     service: 'potato'
     description: 'Potato site'
     listen_port: &listen_port_potato 8080
-    websocket_listen_port: &websocket_listen_port 8090
     swank_port: &swank 4006
   potato-index:
     service: 'index'
