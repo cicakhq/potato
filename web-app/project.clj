@@ -1,28 +1,27 @@
-(defproject
-  potato              "0.1.3-SNAPSHOT"
+(defproject potato "0.1.3-SNAPSHOT"
   :description        "A Potato front-end implemented with OM"
   :url                "http://potato.network"
   :license            {:name "Apache"}
   :min-lein-version   "2.5.3"
 
-  :dependencies [[org.clojure/clojure       "1.7.0"]
-                 [http-kit "2.1.8"]
-                 [org.clojure/clojurescript "1.7.170" :scope "provided"]
+  :dependencies [[org.clojure/clojure       "1.8.0"]
+                 [http-kit "2.1.19"]
+                 [org.clojure/clojurescript "1.8.51" :scope "provided"]
                  [org.omcljs/om             "0.9.0"]
                  [org.clojure/core.async    "0.2.374"]
                  ;; If cljs-http is upgraded to 0.1.39, the code will fail when compiled with optimisations enabled
                  [cljs-http                 "0.1.30" :exclusions [org.clojure/core.async]]
                  [cljsjs/moment             "2.9.0-0"]]
 
-  :plugins      [[lein-cljsbuild            "1.1.2"] ; Leiningen plugin to make ClojureScript development easy
+  :plugins      [[lein-cljsbuild            "1.1.3"] ; Leiningen plugin to make ClojureScript development easy
                  ]
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
-                                  [figwheel-sidecar "0.5.0-1"]]
+                                  [figwheel-sidecar "0.5.3-2"]]
                    :source-paths ["cljs_src"]
-                   :plugins [[lein-figwheel "0.5.0-1" :exclusions [org.clojure/clojure
+                   :plugins [[lein-figwheel "0.5.3-2" :exclusions [org.clojure/clojure
                                                                    org.clojure/tools.reader
                                                                    ring/ring-core
                                                                    commons-fileupload
