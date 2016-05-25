@@ -1,0 +1,12 @@
+- name: Refresh daemons
+  become: true
+  command: 'systemctl daemon-reload'
+
+- name: reload haproxy
+  become: true
+  service: name=haproxy state=reloaded
+
+- name: restart haproxy
+  become: true
+  service: name=haproxy state=restarted
+

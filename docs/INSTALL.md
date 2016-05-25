@@ -61,7 +61,7 @@ The Solr server can now be started by running the `bin/solr start`
 command from the Solr application directory.
 
 Copy the Solr configuration from the Potato distribution at
-`deploy/files/solr/potato/conf` into the Solr application directory
+`deploy/roles/solr/files/` into the Solr application directory
 at `server/solr`:
 
 ```
@@ -194,7 +194,7 @@ location) and configure all parameters.
 
 The default settings for the CouchDB, RabbitMQ and memcached should
 work out of the box without any changes, but for security reasons it
-may be advisable to preotect these services with passwords. However,
+may be advisable to protect these services with passwords. However,
 it is also assumed that these services are firewalled off from any
 external users.
 

@@ -1,0 +1,23 @@
+---
+- name: Install haproxy
+  become: yes
+  yum: name=haproxy state=present
+
+- name: Install socat to talk to haproxy
+  become: yes
+  yum: pkg=socat state=latest
+
+- name: Copy haproxy configuration
+  become: yes
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644
+  notify: restart haproxy
+
+- name: Generate self signed certificate
+  become: yes
+  command: /etc/ssl/certs/make-dummy-cert /etc/ssl/haproxy.pem
+  args:
+    creates: /etc/ssl/haproxy.pem
+
+- name: Start haproxy on boot
+  become: yes
+  service: name=haproxy state=started enabled=yes

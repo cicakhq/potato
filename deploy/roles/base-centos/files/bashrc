@@ -1,0 +1,4 @@
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+PATH=$PATH:/usr/local/bin
