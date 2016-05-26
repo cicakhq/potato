@@ -241,3 +241,21 @@
                (let ((channel (potato.workflow:create-channel-with-check (potato.core:current-user)
                                                                          group-id channel-name channel-topic)))
                  (hunchentoot:redirect (format nil "/channel/~a" (potato.core:channel/id channel)))))))))
+
+(potato.core:define-json-handler-fn-login (update-channel-detail-screen "/updatechannel" data nil ())
+  (potato.core:with-authenticated-user ()
+    (let ((channel (potato.core:load-channel-with-check (st-json:getjso "channel" data))))
+      (potato.core:check-group-access (potato.core:channel/group channel) :require-admin-p t)
+      (json-bind ((name "name" :required nil)
+                  (topic "topic" :required nil))
+          data
+        (let ((updated nil))
+          (when (and name (not (equal name (potato.core:channel/name channel))))
+            (setf (potato.core:channel/name channel) name)
+            (setq updated t))
+          (when (and topic (not (equal topic (potato.core:channel/topic channel))))
+            (setf (potato.core:channel/topic channel) topic)
+            (setq updated t))
+          (when updated
+            (potato.db:save-instance channel))
+          (st-json:jso "result" "ok"))))))
