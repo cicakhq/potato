@@ -178,7 +178,7 @@
       (start-poll (:channel @websocket-config) (:event @websocket-config)))))
 
 (defn start-websocket [cid initial-event]
-  (cljs.pprint/cl-format true "Starting websocket for channel: ~s, event: ~s" cid initial-event)
+  (cljs.pprint/cl-format true "Starting websocket for channel: ~s, event: ~s, on: ~s" cid initial-event (aget js/window "websocketUrl"))
   (let [ws (new js/WebSocket (cljs.pprint/cl-format false "~a/~a?session_id=~a~@[&event=~a~]"
                                                     (aget js/window "websocketUrl")
                                                     cid
