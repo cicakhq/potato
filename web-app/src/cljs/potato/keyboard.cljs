@@ -223,11 +223,12 @@
 
 (defn- is-platform-special? [event]
   "Return TRUE if we detect Ctrl-TAB, Meta-TAB, Ctrl-C, Meta-C"
-  (and (.-platformModifierKey event)
-       (or (= (or (and goog.userAgent.MAC (.-META goog.events/KeyCodes))
-                  (.-CTRL goog.events/KeyCodes)) (.-keyCode event))
-           (= 99 (.-keyCode event))    ;; upper-case C letter
-           (= 67 (.-keyCode event))))) ;; lower-case c letter
+  (or (= -1 (.-keyCode event))              ;; ignore keyup events?
+      (and (.-platformModifierKey event)
+           (or (= (or (and goog.userAgent.MAC (.-META goog.events/KeyCodes))
+                      (.-CTRL goog.events/KeyCodes)) (.-keyCode event))
+               (= 99 (.-keyCode event))     ;; upper-case C letter
+               (= 67 (.-keyCode event)))))) ;; lower-case c letter
 
 (defn- is-at-magic-point? [editable text-to-cursor]
   (some (fn [[magic-char magic-definition]]
