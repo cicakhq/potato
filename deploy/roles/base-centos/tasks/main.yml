@@ -43,14 +43,13 @@
 
 - name: Create named users
   user: name={{ item.name }} group=users groups="sudo,potato" shell="/bin/bash"
-  with_items: "{{ users }}"
-  when: "{{ users }} is defined"
+  with_items: "{{ users | default([]) }}"
+  when: users is defined
   
-   
 - name: Add SSH keys to named users
   authorized_key: user={{ item.name }} key="{{ item.key }}"
-  with_items: "{{ users }}"
-  when: "{{ users }} is defined"
+  with_items: "{{ users | default([]) }}"
+  when: users is defined
 
 - name: Sudoers don't need a password
   lineinfile: "dest=/etc/sudoers regexp='^%sudo' line='%sudo ALL=(ALL) NOPASSWD:ALL' validate='/usr/sbin/visudo -cf %s'"
@@ -65,8 +64,8 @@
 
 - name: Copy known_hosts file to users
   copy: src=known_hosts dest=/home/{{ item.name }}/.ssh/known_hosts force=no owner={{ item.name }} mode="u+rw,g-rwx,o-rwx"
-  with_items: "{{ users }}"
-  when: "{{ users }} is defined"
+  with_items: "{{ users | default([]) }}"
+  when: users is defined
   
 - name: Create the potato user
   user: name=potato comment="The Potato" uid=1214 group=potato groups=users

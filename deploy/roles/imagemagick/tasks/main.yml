@@ -1,7 +1,7 @@
 ---
 - name: Unarchive
   become: true
-  unarchive: src=http://www.imagemagick.org/download/ImageMagick.tar.gz dest={{ workspace }} copy=no
+  unarchive:  src=http://www.imagemagick.org/download/ImageMagick.tar.gz dest={{ workspace }} copy=no creates="{{ workspace }}/ImageMagick-7.0.1-6/"
 
 - name: Compile
   become: true
@@ -9,6 +9,8 @@
   with_items:
     - ./configure
     - make
+  args:
+    creates: "{{ workspace }}/ImageMagick-7.0.1-6/"
 
 - name: Install
   become: true
@@ -16,3 +18,5 @@
   with_items:
     - make install
     - ldconfig /usr/local/lib
+  args:
+    creates: "{{ workspace }}/ImageMagick-7.0.1-6/"
