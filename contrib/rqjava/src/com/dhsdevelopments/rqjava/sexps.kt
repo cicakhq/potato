@@ -8,11 +8,7 @@ class SexpParser(input: Reader) {
         val CHAR_NAME_MAP = buildCharNameMap()
     }
 
-    val reader: PushbackReader
-
-    init {
-        reader = PushbackReader(input)
-    }
+    val reader = PushbackReader(input)
 
     private fun readChar(): Char {
         val ch = reader.read()
