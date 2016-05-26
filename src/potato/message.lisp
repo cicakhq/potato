@@ -154,7 +154,7 @@
          (message-id (message/id message-obj))
          (now (local-time:now)))
     (unless (message-modification-is-allowed-for-user message-obj user)
-      (error "Currently message modification is only allowed by the original author"))
+      (raise-permission-error "Not allowed to modify message"))
     (with-messages-db
       (potato.db:call-clouchdb-update-function "channel" "update_message_text" message-id
                                                `(("date"                . ,(format-timestamp nil now))
