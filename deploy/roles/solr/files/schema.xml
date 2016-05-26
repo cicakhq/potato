@@ -143,7 +143,9 @@
    <field name="sender_id" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="sender_name" type="text_general" indexed="true" stored="true" multiValued="false"/>
    <field name="star_user" type="string" indexed="true" stored="true" multiValued="true"/>
-
+   <field name="attachment_name" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="attachment_size" type="long" indexed="true" stored="true" multiValued="true"/>
+   
    <!-- User index -->
    <field name="user_description" type="text_general" indexed="true" stored="true" multiValued="false"/>
    <field name="user_email" type="string" indexed="true" stored="true" multiValued="true"/>
