@@ -141,8 +141,8 @@
     (return-from message-modification-is-allowed-for-user t))
   ;; We need to check whether the user is admin in the group that the
   ;; channel is in.
-  (let* ((user (potato.core:ensure-user user))
-         (channel (potato.db:load-instance 'potato.core:channel (potato.core:message/channel message))))
+  (let ((user (potato.core:ensure-user user))
+        (channel (potato.db:load-instance 'potato.core:channel (potato.core:message/channel message))))
     (potato.core:user-is-admin-in-group-p (potato.core:channel/group channel) user)))
 
 (defun save-message-modification (message user text extra-html image deleted-p)
