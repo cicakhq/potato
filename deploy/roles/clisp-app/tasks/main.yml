@@ -35,10 +35,13 @@
   register: sbcl_version
   ignore_errors: True
 
+- name: Debug SBCL version
+  debug: msg={{ sbcl_version }}
+  
 - name: Extract pre-compiled SBCL binary
   become: yes
   unarchive: src=http://prdownloads.sourceforge.net/sbcl/sbcl-{{ sbcl_target_version }}-x86-64-linux-binary.tar.bz2 dest=/tmp copy=no
-  when: sbcl_version.stdout_lines !='{{ sbcl_target_version }}'
+  when: "'{{ sbcl_target_version }}' not in sbcl_version.stdout"
 
 # Install/Upgrade if version don't match
 - name: Install/Upgrade SBCL
@@ -46,7 +49,7 @@
   command: ./install.sh
   args:
     chdir: /tmp/sbcl-{{ sbcl_target_version }}-x86-64-linux
-  when: sbcl_version.stdout_lines !='{{ sbcl_target_version }}'
+  when: "'{{ sbcl_target_version }}' not in sbcl_version.stdout"
 
 - name: Create deployment shared directories
   become: yes
