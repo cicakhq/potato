@@ -725,7 +725,7 @@ id's. Returns the updated value."
     (render-state [_ {:keys [menu-opened editing-callback editing editable]}]
       (let [current-user (:current-user (deref potato.state/global))
             isDeleted    (:deleted message)
-            canEdit      (or (= (:from message) (:id current-user)))
+            canEdit      (or (aget js/window "isAdmin") (= (:from message) (:id current-user)))
             hasGearMenu  (and editable (not isDeleted))
             isEmpty      (== (count (:text message)) 0)
             isHidden     (message-hidden-p message)]
