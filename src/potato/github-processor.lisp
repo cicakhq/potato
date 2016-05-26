@@ -32,4 +32,4 @@
                                                                               owner-avatar-url owner-url)))))
         (when should-close (close stream))))))
 
-(potato.content-processor:register-url-processor 'process/github '("^https?://github.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)"))
+(potato.content-processor:register-url-processor 'process/github '("^https?://github.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)$"))
