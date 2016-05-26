@@ -134,6 +134,17 @@
            (integerp (second image))
            (integerp (third image)))))
 
+(defun message-modification-is-allowed-for-user (message user)
+  (when (equal (message/from message) (ensure-user-id user))
+    ;; Fast check that avoids loading the user and channel objects if
+    ;; the user is the original author.
+    (return-from message-modification-is-allowed-for-user t))
+  ;; We need to check whether the user is admin in the group that the
+  ;; channel is in.
+  (let* ((user (potato.core:ensure-user user))
+         (channel (potato.db:load-instance 'potato.core:channel (potato.core:message/channel message))))
+    (potato.core:user-is-admin-in-group-p (potato.core:channel/group channel) user)))
+
 (defun save-message-modification (message user text extra-html image deleted-p)
   (unless (valid-image-thumbnail-descriptor-p image)
     (error "Illegal image thumbnail format: ~a" image))
@@ -142,7 +153,7 @@
                         (message message)))
          (message-id (message/id message-obj))
          (now (local-time:now)))
-    (unless (equal (message/from message-obj) (ensure-user-id user))
+    (unless (message-modification-is-allowed-for-user message-obj user)
       (error "Currently message modification is only allowed by the original author"))
     (with-messages-db
       (potato.db:call-clouchdb-update-function "channel" "update_message_text" message-id
