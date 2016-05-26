@@ -860,7 +860,7 @@ id's. Returns the updated value."
         )
       om/IWillUpdate
       (will-update [_ next-props {:keys [editing]}]
-        (when editing
+        (when (and editing (not (om/get-render-state owner :editing)))
           (let [fieldset            (goog.dom/getElementByClass "chat-entry" (om/get-node owner))
                 keyboard-controller (om/get-shared owner :keyboard-control)
                 typing-chan         (om/get-shared owner :typing-chan)
