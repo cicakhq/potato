@@ -39,4 +39,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.vmx["memsize"] = "2048"
     v.vmx["numvcpus"] = "4"
   end
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 4
+  end
 end
