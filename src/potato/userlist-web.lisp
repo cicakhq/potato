@@ -5,10 +5,6 @@
 
 (declaim #.potato.common::*compile-decl*)
 
-(potato.core:define-handler-fn-login (userlist-test-screen "/userlist_test/([^/]+)" t (domain-id))
-  (potato.core:with-authenticated-user ()
-    (lofn:show-template-stream "userlist_test.tmpl" `((:domain . ,domain-id)))))
-
 (defun user-search-node->json (node)
   (st-json:jso "id" (value-by-xpath "str[@name='id']/text()" node)
                "description" (value-by-xpath "str[@name='user_description']/text()" node)))
@@ -21,7 +17,7 @@
       (let ((res (cl-solr:query-noparse query
                                         :parameters `(("defType" . "edismax")
                                                       ("df" . "user_description")
-                                                      ("f.name.qf" . "user_description")
+                                      4e8ff1e0e1c7d80e8e4e5cea510147db                ("f.name.qf" . "user_description")
                                                       ("f.email.qf" . "user_email")
                                                       ("fq" . ,(format nil "potato_type:\"user\" AND user_domain:\"~a\""
                                                                        (potato.core:domain/id domain)))
