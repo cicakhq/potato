@@ -766,7 +766,8 @@ id's. Returns the updated value."
                     (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:text message)}} nil))
                   (if (:updated message)
                     (om.dom/span #js {:className "chat-updated"}
-                      message-updated nonbreak-space (display-time (:updated_date message))))
+                                 message-updated nonbreak-space (display-time (:updated_date message)) nonbreak-space
+                                 "by" nonbreak-space (:from_name message)))
                   (if (and (not isHidden) (:extra_html message))
                     (om.dom/div #js {:className "extra-html"
                                      :dangerouslySetInnerHTML #js {:__html (:extra_html message)}})))))
