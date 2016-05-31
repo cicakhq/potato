@@ -99,7 +99,7 @@ class SexpParser(input: Reader) {
         else {
             val ch = CHAR_NAME_MAP[s.toLowerCase()]
             if (ch == null) {
-                throw SexpParseException("Illegal character name: s")
+                throw SexpParseException("Illegal character name: $s")
             }
             return ch
         }
