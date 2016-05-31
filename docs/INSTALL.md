@@ -41,7 +41,7 @@ downloaded from: http://www.sbcl.org/platform-table.html
 ### rabbitmq-c
 
 Like SBCL, rabbitmq-c is also available from the Ubuntu repositories,
-but currently is at version 0.5.4. This version is been problematic
+but currently is at version 0.5.4. This version has been problematic
 with Potato, resulting in crashes when the application attempts to
 close a RabbitMQ channel. It should not be used.
 
