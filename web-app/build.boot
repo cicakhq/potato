@@ -1,49 +1,32 @@
 (set-env!
- :source-paths   #{"src/cljs"}
- :resource-paths #{"resources"}
- :dependencies   '[[adzerk/boot-cljs   "0.0-2814-3"]
-                   [adzerk/boot-reload "0.2.6"]
-                   [pandeiro/boot-http "0.6.2"]])
+  ; Test path can be included here as source-files are not included in JAR
+  ; Just be careful to not AOT them
+  :source-paths #{"src/cljs" "src/less" "env/prod/cljs"}
+  :resource-paths #{"resources"}
+  :dependencies '[
+                  [adzerk/boot-cljs       "1.7.228-1"  :scope "test"]
+                  [deraen/boot-less       "0.5.0"      ]
+                  [cljs-http              "0.1.30"     ]
+                  [org.omcljs/om             "0.9.0"]
+                  [cljsjs/moment             "2.9.0-0"]
+
+                  ;; For boot-less
+                  [org.slf4j/slf4j-nop    "1.7.21"     :scope "test"]])
 
 (require
- '[adzerk.boot-cljs   :refer [cljs]]
- '[adzerk.boot-reload :refer [reload]]
- '[pandeiro.boot-http :refer [serve]])
+  '[adzerk.boot-cljs      :refer [cljs]]
+  '[deraen.boot-less      :refer [less]])
 
-(task-options!
- pom  {:project     'potato
-       :version     "0.2.0-SNAPSHOT"
-       :description "A Potato front-end implemented with OM"
-       :license     { "Proprietary" }}
- cljs [:output-to  "public/js/potato.js"
-       :source-map true
-       :unified    true]
- aot  {:namespace #{'potato.core}}
- jar  {:main 'potato.main})
 
-(deftask dev
-  "Start the DEV environment"
-  []
-  (comp
-   (set-env! :source-paths #(conj % "env/dev/cljs"))
-   (watch)
-   (reload :on-jsload 'app/init)
-   (repl   :server true)
-   (cljs   :optimizations :none)
-   (core/main)))
-
-(deftask dev-repl
-  "Connect to the REPL started by the DEV task"
-  []
-  (repl :client true))
-
-(deftask release []
-  (comp
-   (set-env! :source-paths #(conj % "env/prod/cljs"))
-   (cljs :optimizations :advanced)
-   (aot)
-   (pom)
-   (jar)))
-
-;;; from https://github.com/pandeiro/jamal
-;;; see https://github.com/Deraen/saapas/blob/master/build.boot
+;(deftask package
+;  "Build the package"
+;  []
+;  (comp
+;    (less :compression true)
+;    (cljs :optimizations :advanced)
+;;    (aot)
+;;    (pom)
+;;    (uber)
+;;    (jar)
+;    (target)
+;    ))
