@@ -3,7 +3,13 @@
   :license "Apache"
   :serial t
   :depends-on (:mcclim
-               :drakma)
+               :drakma
+               :log4cl
+               :st-json
+               :flexi-streams
+               :containers)
   :components ((:module "src"
                         :serial t
-                        :components ((:file "main")))))
+                        :components ((:file "package")
+                                     (:file "misc")
+                                     (:file "main")))))
