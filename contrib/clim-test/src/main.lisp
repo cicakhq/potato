@@ -21,6 +21,25 @@
              (clim:formatting-cell (stream)
                (clim:draw-text* stream (channel/name channel) 10 10)))))))
 
+(defun load-channels (conn)
+  (with-submitted-job (conn)
+    (let* ((result (potato-request conn "/channels"))
+           (channels (loop
+                       for domain in result
+                       for domain-id = (st-json:getjso "id" domain)
+                       append (loop
+                                for group in (st-json:getjso "groups" domain)
+                                for group-id = (st-json:getjso "id" group)
+                                append (loop
+                                         for channel in (st-json:getjso "channels" group)
+                                         collect (make-instance 'channel
+                                                                :id (st-json:getjso "id" channel)
+                                                                :name (st-json:getjso "name" channel)
+                                                                :domain domain-id
+                                                                :group group-id
+                                                                :private (st-json:from-json-bool (st-json:getjso "private" channel))))))))
+      (setf (connection-state/channels conn) channels))))
+
 (defparameter *frame* nil)
 
 (defun potato-client-clim (api-key)
