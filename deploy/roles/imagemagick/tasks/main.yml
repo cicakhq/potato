@@ -1,22 +1,33 @@
 ---
-- name: Unarchive
+- name: Installed
+  command:  convert -version | head -1 || true
+  register: imagemagick_version
+  ignore_errors: True
+
+- name: Checkout git
   become: true
-  unarchive:  src=http://www.imagemagick.org/download/ImageMagick.tar.gz dest={{ workspace }} copy=no creates="{{ workspace }}/ImageMagick-7.0.1-8/"
+  git:
+    dest: "{{ workspace }}/ImageMagick"
+    version: '{{ imagemagick_target_version }}'
+    accept_hostkey: yes
+    repo: 'https://github.com/ImageMagick/ImageMagick.git'
+    force: yes
+    depth: 1
 
 - name: Compile
   become: true
-  command: "{{ item }} chdir={{ workspace }}/ImageMagick-7.0.1-8/"
+  command: "{{ item }} chdir={{ workspace }}/ImageMagick/"
   with_items:
     - ./configure
     - make
-  args:
-    creates: "{{ workspace }}/ImageMagick-7.0.1-8/"
+  when: "'{{ imagemagick_target_version  }}' not in '{{ imagemagick_version.stdout | default([]) }}'"
+
 
 - name: Install
   become: true
-  command: "{{ item }} chdir={{ workspace }}/ImageMagick-7.0.1-8/"
+  command: "{{ item }} chdir={{ workspace }}/ImageMagick/"
   with_items:
     - make install
     - ldconfig /usr/local/lib
-  args:
-    creates: "{{ workspace }}/ImageMagick-7.0.1-8/"
+  when: "'{{ imagemagick_target_version  }}' not in '{{ imagemagick_version.stdout | default([]) }}'"
+
