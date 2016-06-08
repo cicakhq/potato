@@ -16,6 +16,10 @@
 (require
   '[adzerk.boot-cljs      :refer [cljs]]
   '[deraen.boot-less      :refer [less]])
+(task-options!
+ cljs {:source-map true
+       :compiler-options { :source-map-timestamp true}}
+ less {:source-map true})
 
 (deftask package
   "Build the package"
