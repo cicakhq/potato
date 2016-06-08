@@ -17,19 +17,14 @@
   '[adzerk.boot-cljs      :refer [cljs]]
   '[deraen.boot-less      :refer [less]])
 
+(deftask package
+  "Build the package"
+  []
+  (comp
+    (less :compression true)
+    (cljs :optimizations :advanced)
+    (target)))
 
-;(deftask package
-;  "Build the package"
-;  []
-;  (comp
-;    (less :compression true)
-;    (cljs :optimizations :advanced)
-;;    (aot)
-;;    (pom)
-;;    (uber)
-;;    (jar)
-;    (target)
-;    ))
 (deftask dev 
   "Start the dev environment... "
   []
