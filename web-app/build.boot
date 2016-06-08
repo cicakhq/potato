@@ -30,3 +30,11 @@
 ;;    (jar)
 ;    (target)
 ;    ))
+(deftask dev 
+  "Start the dev environment... "
+  []
+  (comp
+   (watch)
+   (less)
+   (cljs-repl) ; order is important!!
+   (cljs  :optimizations :none)))
