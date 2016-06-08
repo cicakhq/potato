@@ -70,3 +70,4 @@ quicklisp/
 cache/
 *.pid
 local-config*.lisp
+web-app/.nrepl-history
