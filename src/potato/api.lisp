@@ -111,18 +111,6 @@
             ;; ELSE: Don't process the result
             `(verify-api-token-and-run ',name (lambda () ,@body))))))
 
-#+nil(defun api-get-channels-for-group (group-id &optional show-subscriptions-p subscribed-channels)
-  (let ((result (clouchdb:invoke-view "channel" "channels_for_group" :key group-id)))
-    (mapcar #'(lambda (v)
-                (let ((id (getfield :|id| v)))
-                  (apply #'st-json:jso
-                         "id" id
-                         "name" (getfield :|name| (getfield :|value| v))
-                         (if show-subscriptions-p (list "joined" (if (member id subscribed-channels :test #'equal)
-                                                                     "true"
-                                                                     "false"))))))
-            (getfield :|rows| result))))
-
 (defun api-load-channels-for-group (group)
   (let ((is-private-p (eq (potato.core:group/type group) :private)))
     (loop
@@ -183,13 +171,13 @@
   (api-case-method
     (:get (let* ((channel (potato.core:load-channel-with-check channel-id :if-not-joined :load))
                  (result (potato.core:user-descriptions-for-channel-members channel)))
-            (st-json:jso "members" (mapcar #'(lambda (v)
-                                               (destructuring-bind (id description nickname user-image)
-                                                   v
-                                                 (st-json:jso "id" id
-                                                              "description" description
-                                                              "nickname" nickname
-                                                              "image_name" user-image)))
+            (st-json:jso "members" (mapcar (lambda (v)
+                                             (destructuring-bind (id description nickname user-image)
+                                                 v
+                                               (st-json:jso "id" id
+                                                            "description" description
+                                                            "nickname" nickname
+                                                            "image_name" user-image)))
                                            result))))))
 
 (define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
