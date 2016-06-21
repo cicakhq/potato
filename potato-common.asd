@@ -25,6 +25,7 @@
                                      (:file "application")
                                      (:file "log")
                                      (:file "common")
+                                     (:file "chars")
                                      (:file "sorted-list")
                                      (:file "fset-map")
                                      (:file "s3-util")

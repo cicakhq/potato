@@ -162,12 +162,6 @@
         (when should-close (close stream))
         t))))
 
-(defun maybe-truncate-text (text)
-  (if (> (length text) 1000)
-      ;; TODO: Need to cut at the appropriate grapheme cluster boundary
-      (subseq text 0 1000)
-      text))
-
 (defun process-gcm-user-notification (msg)
   (let ((message (cl-rabbit:envelope/message msg)))
     (destructuring-bind (&key user message-id from from-name text notification-type channel &allow-other-keys)
@@ -182,7 +176,7 @@
                                           "sender_name" from-name
                                           "channel" channel
                                           "notification_type" (symbol-name notification-type)
-                                          "text" (maybe-truncate-text text)))))))
+                                          "text" (truncate-string text 1000)))))))
 
 (defun process-unread (msg)
   (let ((message (cl-rabbit:envelope/message msg)))
