@@ -14,7 +14,6 @@
                   [com.cemerick/piggieback   "0.2.1"  :scope "test"]
                   [weasel                    "0.7.0"  :scope "test"]
                   [org.clojure/tools.nrepl   "0.2.12" :scope "test"]
-                  [degree9/boot-bower "0.3.0"]
                   [cpmcdaniel/boot-copy "1.0" :scope "test"]
                   [clj-http "3.1.0"]
                   [cljs-http "0.1.41"]
@@ -31,7 +30,6 @@
  '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
  '[deraen.boot-less      :refer [less]]
  '[cpmcdaniel.boot-copy  :refer :all]
- '[degree9.boot-bower    :refer [bower]]
  '[cljsjs.boot-cljsjs.packaging    :refer [download]])
 
 (init-ctn!)
@@ -47,29 +45,13 @@
   (comp
    (less :compression true)
    (cljs :optimizations :advanced)
-   (download :url "https://github.com/qorbani/fontface-source-sans-pro/archive/master.zip"
-             :unzip true)
-   (download :url "https://github.com/FortAwesome/Font-Awesome/archive/master.zip"
-             :unzip true)
+   (sift :move {#"(^[a-zA-Z]+\.css)" "css/$1"})
+   (sift :move {#"(^[a-zA-Z]+\.main\.css\.map)" "css/$1"})
+   (sift :move {#"(^[a-zA-Z]+\.js*)" "js/$1"})
+   (sift :move {#"images/" "img/"})
    (target)
-   (copy :output-dir "../public/assets/fonts"
-         :matching   #{#"fontface-source-sans-pro/fonts/*/*\.[ttf|woff|eot]"}) 
-;;   (copy :output-dir    "../public/assets/"
-;;          :matching      #"vendor")
-;;;   (sift :move {#"^*js" "public/assets/js/"})
-   ))
-
-(deftask cp-test
-  "Test copy"
-  []
-  (comp
    (copy :output-dir "../public/assets/"
-         :matching   #{#"^fonts.*\.[ttf|woff|eof|svg]"})
-;;;   (copy :output-dir "../public/assets/"
-;;;      :matching   #{#"fontface-source-sans-pro/fonts/*/*\.[ttf|woff|eot]"}) 
-;;;   (copy :output-dir "../public/assets/fonts"
-;;;         :matching #{#"^*\.css"})
-   ))
+         :matching #{#"^css/.*" #"^js/.*" #"^vendor/.*" #"^fonts/.*" #"^img/.*"})))
 
 (deftask dev 
   "Start the dev environment..."
