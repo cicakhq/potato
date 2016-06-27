@@ -44,7 +44,8 @@
   []
   (comp
    (less :compression true)
-   (cljs :optimizations :advanced)
+   (cljs :optimizations :advanced
+         :compiler-options {:externs ["externs-input.js"]})
    (sift :move {#"(^[a-zA-Z]+\.css)" "css/$1"})
    (sift :move {#"(^[a-zA-Z]+\.main\.css\.map)" "css/$1"})
    (sift :move {#"(^[a-zA-Z]+\.js*)" "js/$1"})
