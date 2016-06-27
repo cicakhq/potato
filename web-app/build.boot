@@ -36,7 +36,7 @@
 
 (task-options!
  cljs {:source-map true
-       :compiler-options { :source-map-timestamp true}}
+       :compiler-options { :source-map-timestamp true :externs ["externs-input.js"]}}
  less {:source-map true})
 
 (deftask package
@@ -44,8 +44,7 @@
   []
   (comp
    (less :compression true)
-   (cljs :optimizations :advanced
-         :compiler-options {:externs ["externs-input.js"]})
+   (cljs :optimizations :advanced)
    (sift :move {#"(^[a-zA-Z]+\.css)" "css/$1"})
    (sift :move {#"(^[a-zA-Z]+\.main\.css\.map)" "css/$1"})
    (sift :move {#"(^[a-zA-Z]+\.js*)" "js/$1"})
