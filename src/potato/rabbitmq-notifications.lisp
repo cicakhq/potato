@@ -19,14 +19,14 @@
 (defun cleanup-name (string)
   (with-output-to-string (s)
     (loop
-       for ch across string
-       for v = (char-code ch)
-       if (or (<= (char-code #\a) v (char-code #\z))
-              (<= (char-code #\A) v (char-code #\Z))
-              (<= (char-code #\0) v (char-code #\9))
-              (find ch "-_."))
-       do (write-char ch s)
-       else do (format s "+~2,'0x" v))))
+      for ch across string
+      for v = (char-code ch)
+      if (or (<= (char-code #\a) v (char-code #\z))
+             (<= (char-code #\A) v (char-code #\Z))
+             (<= (char-code #\0) v (char-code #\9))
+             (find ch "-_."))
+        do (write-char ch s)
+      else do (format s "+~2,'0x" v))))
 
 (defmacro define-async-sync-function (sync-name async-name (&rest functions) (&rest args) &body body)
   (let ((conn-sym (gensym "CONN-"))
@@ -39,17 +39,17 @@
            ,@(if doc-string (list doc-string))
            ,@declarations
            (macrolet ,(loop
-                         for (fn sync-fn async-fn) in functions
-                         for arg = (gensym)
-                         collect `(,fn (&rest ,arg) (append '(,sync-fn ,conn-sym ,chnum-sym) ,arg)))
+                        for (fn sync-fn async-fn) in functions
+                        for arg = (gensym)
+                        collect `(,fn (&rest ,arg) (append '(,sync-fn ,conn-sym ,chnum-sym) ,arg)))
              ,@rem-forms))
          (defun ,async-name (,rchannel-sym ,@args)
            ,@(if doc-string (list doc-string))
            ,@declarations
            (macrolet ,(loop
-                         for (fn sync-fn async-fn) in functions
-                         for arg = (gensym)
-                         collect `(,fn (&rest ,arg) (append '(,async-fn ,rchannel-sym) ,arg)))
+                        for (fn sync-fn async-fn) in functions
+                        for arg = (gensym)
+                        collect `(,fn (&rest ,arg) (append '(,async-fn ,rchannel-sym) ,arg)))
              ,@rem-forms))))))
 
 (define-async-sync-function declare-notifications-queue declare-notifications-queue-async
@@ -223,7 +223,7 @@
       ;; subscription wasn't cancelled before the connection was
       ;; returned to the pool.
       (warn "Consumer tag of message does not match subscription. tag=~s, subscription=~s"
-             consumer subscription-consumer-tag)
+            consumer subscription-consumer-tag)
       (return-from process-message nil))
     (let ((exchange (cl-rabbit:envelope/exchange msg)))
       (log:trace "Processing message on exchange: ~s" exchange)
