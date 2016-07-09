@@ -6,7 +6,13 @@
   "Dynamic variable holding a reference to the current user")
 
 (defvar *authenticator-function* nil)
-(defvar *external-user-check-function* nil)
+
+(defvar *external-user-check-function* nil
+  "If set, this variable should point to a function that is
+responsible for handling authentication for a user. This function will
+be called with two parameters: the username and the password. A true
+result from this function indicates that the username and passwords
+are correct.")
 
 (defparameter *login-reference-prefix* "loginkey")
 
