@@ -31,7 +31,10 @@
 (potato.common.application:define-component db
   (:dependencies potato.common::clouchdb)
   (:start
-   (let* ((result (clouchdb:get-db-info))
+   (let* ((result (handler-case
+                      (clouchdb:get-db-info)
+                    (drakma:drakma-error ()
+                      (error "Unable to connect to CouchDB"))))
           (message (cdr (assoc :|error| result))))
      (when (equal message "not_found")
        (clouchdb:create-db)))
