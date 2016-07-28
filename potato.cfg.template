@@ -100,8 +100,9 @@
  ;; If true, users are allowed to create new domains.
  (:allow-create-domain . nil)
 
- ;; GCM configuration. If the authorisation key is NIL, GCL support is
- ;; disabled, and the Android application will not notifications.
+ ;; GCM configuration. If the authorisation key is NIL, GCM support is
+ ;; disabled, and the Android application will not receive
+ ;; notifications.
  (:gcm-key . nil)
 
  ;; If true, users are allowed to login with just an email address.
