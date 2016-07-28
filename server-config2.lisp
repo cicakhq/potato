@@ -275,6 +275,8 @@
         (uiop:quit 0))
 
       (labels ((init-and-start (service &rest more-services)
+                 (when (getf options :init-views)
+                   (potato.views:init-views))
                  (potato.common.application:start-component service)
                  (dolist (s more-services)
                    (potato.common.application:start-component s))))
