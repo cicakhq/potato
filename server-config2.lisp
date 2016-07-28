@@ -276,6 +276,7 @@
 
       (labels ((init-and-start (service &rest more-services)
                  (when (getf options :init-views)
+                   (potato.common.application:start-component 'potato.db::db)
                    (potato.views:init-views))
                  (potato.common.application:start-component service)
                  (dolist (s more-services)
