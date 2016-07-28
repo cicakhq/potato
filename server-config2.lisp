@@ -85,7 +85,7 @@
          :long "cmd"
          :arg-parser #'identity)
   (:name :init
-         :description "Initialise the database"
+         :description "Initialise the database and exit the application"
          :long "init")
   (:name :config
          :description "Name of the configuration file (default: potato.cfg)"
@@ -107,6 +107,9 @@
          :short #\l
          :long "log-location"
          :arg-parser #'identity)
+  (:name :init-views
+         :description "Ensure that the CouchDB views are up to date before running any service"
+         :long "init-views")
   (:name :log-level
          :description "Log level (TRACE, DEBUG, INFO, WARNING, ERROR)"
          :long "log-level"
@@ -271,26 +274,30 @@
           (potato.commands:run-command cmd))
         (uiop:quit 0))
 
-      (cond ((getf options :potato)
-             (potato.common.application:start-component 'potato::main))
-            ((getf options :state-server)
-             (potato.common.application:start-component 'state-server::state-server))
-            ((getf options :index)
-             (potato.common.application:start-component 'potato-index::index-manager))
-            ((getf options :content-processor)
-             (potato.common.application:start-component 'potato::message-processor-server))
-            ((getf options :email-updates)
-             (potato.common.application:start-component 'potato::email-updates-server))
-            ((getf options :full)
-             (potato.common.application:start-component 'potato::all-services))
-            ((getf options :init)
-             (potato:setup-initial-database)
-             (format t "Database was initialised successfully~%")
-             (uiop:quit 0))
-            (t
-             (format *error-output* "Error: No service specified~%~%")
-             (display-usage)
-             (uiop:quit 1)))
+      (labels ((init-and-start (service &rest more-services)
+                 (potato.common.application:start-component service)
+                 (dolist (s more-services)
+                   (potato.common.application:start-component s))))
+        (cond ((getf options :potato)
+               (init-and-start 'potato::main))
+              ((getf options :state-server)
+               (init-and-start 'state-server::state-server))
+              ((getf options :index)
+               (init-and-start 'potato-index::index-manager))
+              ((getf options :content-processor)
+               (init-and-start 'potato::message-processor-server))
+              ((getf options :email-updates)
+               (init-and-start 'potato::email-updates-server))
+              ((getf options :full)
+               (init-and-start 'potato::all-services))
+              ((getf options :init)
+               (potato:setup-initial-database)
+               (format t "Database was initialised successfully~%")
+               (uiop:quit 0))
+              (t
+               (format *error-output* "Error: No service specified~%~%")
+               (display-usage)
+               (uiop:quit 1))))
 
       (alexandria:when-let ((value (getf options :swank-port)))
         (swank:create-server :port value :dont-close t))
