@@ -107,9 +107,6 @@
          :short #\l
          :long "log-location"
          :arg-parser #'identity)
-  (:name :init-views
-         :description "Ensure that the CouchDB views are up to date before running any service"
-         :long "init-views")
   (:name :log-level
          :description "Log level (TRACE, DEBUG, INFO, WARNING, ERROR)"
          :long "log-level"
@@ -275,9 +272,6 @@
         (uiop:quit 0))
 
       (labels ((init-and-start (service &rest more-services)
-                 (when (getf options :init-views)
-                   (potato.common.application:start-component 'potato.db::db)
-                   (potato.views:init-views))
                  (potato.common.application:start-component service)
                  (dolist (s more-services)
                    (potato.common.application:start-component s))))
