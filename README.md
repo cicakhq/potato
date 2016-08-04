@@ -35,9 +35,9 @@ Currently there are two separate clients:
 # How to install
 
 The easiest way to install the application is using Docker. An easy to
-user installation using docker-compose can be found here:
-https://github.com/lokedhs/potato-docker-compose. Further
-instructions can be found the file `README.md` in that repository.
+use installation using docker-compose can be found here:
+https://github.com/lokedhs/potato-docker-compose. Further instructions
+can be found the file `README.md` in that repository.
 
 If you would like to install everything from scratch, a manual
 installation guide can be found in `docs/INSTALL.md`.
