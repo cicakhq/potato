@@ -202,7 +202,7 @@
             (update :s3-access-key potato.common:*s3-access-key* #'string-or-nil-p)
             (update :s3-browser-secret-key potato.common:*s3-browser-secret-key* #'string-or-nil-p)
             (update :s3-browser-access-key potato.common:*s3-browser-access-key* #'string-or-nil-p)
-            (update :s3-endpoint potato.common:*s3-endpoint* #'hostname-or-nil-p)
+            (update :s3-endpoint potato.common:*s3-endpoint* #'string-or-nil-p)
             (update :logging *default-log-level* (lambda (v) (member v '(:error :warn :info :debug :trace))))
             (update :imagemagick-convert-program potato.image-convert:*imagemagick-convert-program* #'stringp)
             (update :max-message-size potato.core:*max-message-size* #'alexandria:positive-integer-p)
