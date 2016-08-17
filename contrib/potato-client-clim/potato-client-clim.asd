@@ -1,4 +1,4 @@
-(asdf:Defsystem #:potato-client-clim
+(asdf:defsystem #:potato-client-clim
   :description "Potato client in CLIM"
   :license "Apache"
   :serial t

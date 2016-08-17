@@ -1,4 +1,4 @@
-(defpackage :clim-test
+(defpackage :potato-client-clim
   (:use :cl))
 
 (defvar *job-handler* nil)
