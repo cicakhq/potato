@@ -154,8 +154,12 @@
 
 (define-api-method (api-joined-domains-screen "/domains" nil ())
   (api-case-method
-    (:get (let ((d (potato.core:load-domains-for-user (potato.core:current-user))))
-            (mapcar (lambda (v) (st-json:jso "id" (first v) "name" (second v) "type" (symbol-name (third v)))) d)))))
+    (:get (loop
+            for domain-user in (potato.core:load-domains-for-user (potato.core:current-user))
+            for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
+            collect (st-json:jso "id" (potato.core:domain/id domain)
+                                 "name" (potato.core:domain/name domain)
+                                 "type" (symbol-name (potato.core:domain-user/role domain-user)))))))
 
 (define-api-method (api-domain-screen "/domains/([^/]+)" t (domain-id))
   (api-case-method
