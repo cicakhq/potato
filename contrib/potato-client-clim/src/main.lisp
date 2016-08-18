@@ -1,5 +1,4 @@
-(defpackage :potato-client-clim
-  (:use :cl))
+(in-package :potato-client-clim)
 
 (clim:define-application-frame potato-frame ()
   ((connection :type connection-state

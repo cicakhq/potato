@@ -1,5 +1,4 @@
-(defpackage :potato-client-clim
-  (:use :cl))
+(in-package :potato-client-clim)
 
 (defvar *job-handler* nil)
 (defvar *job-handler-queue* (dhs-sequences:make-blocking-queue :name "Job handler queue"))
