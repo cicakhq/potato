@@ -12,10 +12,13 @@
              :reader potato-frame/channels))
   (:panes (channel-list :application
                         :display-function 'display-channel-list)
-          (channel-content :application))
-  (:layouts (default (clim:horizontally ()
-                       (2/10 channel-list)
-                       (8/10 channel-content)))))
+          (channel-content :application)
+          (int :interactor))
+  (:layouts (default (clim:vertically ()
+                       (clim:horizontally ()
+                         (2/10 channel-list)
+                         (8/10 channel-content)))
+                     int)))
 
 (clim:define-presentation-method clim:present (obj (type channel) stream view &key)
   (log:info "Calling present method for channel: ~s" obj)
