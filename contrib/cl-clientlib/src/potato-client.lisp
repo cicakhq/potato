@@ -35,10 +35,11 @@
             (if (eql (aref prefix (1- (length prefix))) #\/) "" "/")
             suffix)))
 
-(defun authenticated-request (conn suffix &key (method :get) content)
+(defun authenticated-request (conn suffix &key (method :get) content params)
   (multiple-value-bind (content code headers uri stream should-close reason)
       (drakma:http-request (make-potato-url conn suffix)
                            :additional-headers `(("API-Token" . ,(connection/api-key conn)))
+                           :parameters params
                            :want-stream t
                            :method method
                            :content content
@@ -116,3 +117,24 @@
                 (:description . ,(st-json:getjso "description" user))
                 (:nickname . ,(st-json:getjso "nickname" user))
                 (:image-name . ,(st-json:getjso "image_name" user))))))
+
+(defun start-channel-listener (channel-id callback &key (connection *connection*))
+  (check-type channel-id string)
+  (check-type callback function)
+  (check-type connection connection)
+  )
+
+(defun listener-loop (connection cid-list)
+  (loop
+    with event-id = nil
+    for res = (authenticated-request connection "/channel-updates"
+                                     :params `(,@(if event-id `(("event-id" . ,event-id)))
+                                               ("channels" . ,(format nil "~{~a~^,~}" cid-list))
+                                               ("format" . "html")
+                                               ("services" . "content,state,notifications")
+                                               ("session_id" . "foo")))
+    do (progn
+         (setq event-id (st-json:getjso "event" res))
+         (loop
+           for event in (st-json:getjso "data" res)
+           do (print event)))))

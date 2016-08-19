@@ -11,5 +11,4 @@
   :components ((:module "src"
                         :serial t
                         :components ((:file "package")
-                                     (:file "misc")
                                      (:file "main")))))

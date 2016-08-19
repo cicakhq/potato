@@ -11,4 +11,5 @@
            #:request-error/code
            #:request-error/reason
            #:request-error
-           #:potato-client-error))
+           #:potato-client-error
+           #:list-users))
