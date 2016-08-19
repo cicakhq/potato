@@ -61,6 +61,8 @@
                     (st-json:getjso "type" domain)))))
 
 (defun load-channel (channel-id &key (connection *connection*))
+  (check-type channel-id string)
+  (check-type connection connection)
   (let* ((res (authenticated-request connection (format nil "/channel/~a" channel-id)))
          (private-user (st-json:getjso "private_user" res)))
     `((:id . ,(st-json:getjso "id" res))
@@ -72,6 +74,7 @@
       (:private-user . ,(if (eq private-user :null) nil private-user)))))
 
 (defun load-channel-tree (&key (connection *connection*))
+  (check-type connection connection)
   (let ((res (authenticated-request connection "/channels2")))
     (loop
       for domain in (st-json:getjso "domains" res)
@@ -93,6 +96,7 @@
 (defun send-message (channel text &key (connection *connection*))
   (check-type channel string)
   (check-type text string)
+  (check-type connection connection)
   (let* ((content (st-json:jso "text" text))
          (res (authenticated-request connection (format nil "/channel/~a/create" channel)
                                      :method :post
@@ -100,4 +104,15 @@
                                                                       :encoding :utf-8))))
     (unless (equal (st-json:getjso "result" res) "ok")
       (error "Error while posting message"))
-    (st-json:getjso "id" res)))
+    (values (st-json:getjso "id" res))))
+
+(defun list-users (channel-id &key (connection *connection*))
+  (check-type channel-id string)
+  (check-type connection connection)
+  (let ((res (authenticated-request connection (format nil "/channel/~a/users" channel-id))))
+    (loop
+      for user in (st-json:getjso "members" res)
+      collect `((:id . ,(st-json:getjso "id" user))
+                (:description . ,(st-json:getjso "description" user))
+                (:nickname . ,(st-json:getjso "nickname" user))
+                (:image-name . ,(st-json:getjso "image_name" user))))))
