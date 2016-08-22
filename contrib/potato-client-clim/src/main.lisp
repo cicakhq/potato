@@ -33,7 +33,7 @@
   ;; Note that the string is hardcoded to "xx" because of problem 2
   ;; below.
   ;;
-  (clim:draw-text* stream "xx" 10 10)
+  #+nil(clim:draw-text* stream "xx" 10 10)
   ;;
   ;; PROBLEM 2:
   ;;
