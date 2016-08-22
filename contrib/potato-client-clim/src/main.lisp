@@ -22,31 +22,12 @@
 
 (clim:define-presentation-method clim:present (obj (type channel) stream view &key)
   (log:info "Calling present method for channel: ~s, stream: ~s" obj stream)
-  ;;
-  ;; PROBLEM 1:
-  ;;
-  ;; The below command fails when CLIM is trying to format the command
-  ;; for display in the command panel. This is because DRAW-TEXT*
-  ;; can't be used on the string stream that is used in
-  ;; DREI::PRESENT-ACCEPTABLY-TO-STRING
-  ;;
-  ;; Note that the string is hardcoded to "xx" because of problem 2
-  ;; below.
-  ;;
-  #+nil(clim:draw-text* stream "xx" 10 10)
-  ;;
-  ;; PROBLEM 2:
-  ;;
-  ;; To work around problem 1, I'm using PRINC instead of DRAW-TEXT*.
-  ;; When I do that, we see that the OBJ parameter is NIL here. That
-  ;; should really never happen.
-  ;;
-  (princ (if obj (channel/name obj) "<NULL>") stream))
+  (clim:draw-text* stream (channel/name obj) 10 10))
 
 (clim:define-presentation-to-command-translator select-channel
     (channel switch-to-channel-frame potato-frame)
-    (obj)
-  (list obj))
+    (object)
+  (list object))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
