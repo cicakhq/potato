@@ -3,16 +3,28 @@
 (defclass channel ()
   ((name :type string
          :initarg :name
-         :reader channel/name)))
+         :reader channel/name)
+   (messages :type array
+             :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
+             :reader channel-content/messages)))
+
+(defclass message ()
+  ((text :type string
+         :initarg :text
+         :reader message/text)))
 
 (clim:define-application-frame potato-frame ()
   ((channels :type list
              :initform (list (make-instance 'channel :name "Foo")
                              (make-instance 'channel :name "Bar"))
-             :reader potato-frame/channels))
+             :reader potato-frame/channels)
+   (active-channel :type (or null channel-content)
+                   :initform nil
+                   :accessor potato-frame/active-channel))
   (:panes (channel-list :application
                         :display-function 'display-channel-list)
-          (channel-content :application)
+          (channel-content :application
+                           :display-function 'display-channel-content)
           (interaction-pane :interactor))
   (:layouts (default (9/10 (clim:vertically ()
                              (clim:horizontally ()
@@ -31,7 +43,8 @@
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
-  (log:info "Switch to channel command called. Type: ~s" (type-of obj)))
+  (log:info "Switch to channel command called. Type: ~s" (type-of obj))
+  (setf (potato-frame/active-channel clim:*application-frame*) obj))
 
 (defun display-channel-list (frame stream)
   (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
@@ -40,6 +53,11 @@
       do (clim:formatting-row (stream)
            (clim:formatting-cell (stream)
              (clim:present channel 'channel :stream stream))))))
+
+(defun display-channel-content (frame stream)
+  (let ((channel (potato-frame/active-channel frame)))
+    (when channel
+      (clim:draw-text* stream (format nil "content for channel: ~a " (channel/name channel)) 10 10))))
 
 (defparameter *frame* nil)
 
