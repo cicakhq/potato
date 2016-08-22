@@ -30,7 +30,10 @@
   ;; can't be used on the string stream that is used in
   ;; DREI::PRESENT-ACCEPTABLY-TO-STRING
   ;;
-  #+nil(clim:draw-text* stream (channel/name obj) 10 10)
+  ;; Note that the string is hardcoded to "xx" because of problem 2
+  ;; below.
+  ;;
+  (clim:draw-text* stream "xx" 10 10)
   ;;
   ;; PROBLEM 2:
   ;;
@@ -60,6 +63,6 @@
 (defparameter *frame* nil)
 
 (defun potato-client-clim ()
-  (let* ((frame (clim:make-application-frame 'potato-frame :width 700 :height 500)))
+  (let* ((frame (clim:make-application-frame 'potato-frame :width 700 :height 500 :left 10 :top 10)))
     (setq *frame* frame)
     (clim:run-frame-top-level frame)))
