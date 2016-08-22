@@ -1,2 +1,4 @@
 (defpackage :potato-client-clim
-  (:use :cl))
+  (:use :cl)
+  (:export
+   #:potato-client-clim))

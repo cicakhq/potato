@@ -7,7 +7,8 @@
                :log4cl
                :st-json
                :flexi-streams
-               :containers)
+               :containers
+               :potato-client)
   :components ((:module "src"
                         :serial t
                         :components ((:file "package")

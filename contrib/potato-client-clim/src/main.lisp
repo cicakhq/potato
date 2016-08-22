@@ -14,10 +14,12 @@
          :reader message/text)))
 
 (clim:define-application-frame potato-frame ()
-  ((channels :type list
-             :initform (list (make-instance 'channel :name "Foo")
-                             (make-instance 'channel :name "Bar"))
-             :reader potato-frame/channels)
+  ((connection     :type potato-client:connection
+                   :reader potato-frame/connection)
+   (channels       :type list
+                   :initform (list (make-instance 'channel :name "Foo")
+                                   (make-instance 'channel :name "Bar"))
+                   :reader potato-frame/channels)
    (active-channel :type (or null channel-content)
                    :initform nil
                    :accessor potato-frame/active-channel))
@@ -32,14 +34,22 @@
                                (8/10 channel-content))))
                      (1/10 interaction-pane))))
 
+(defmethod initialize-instance :after ((obj potato-frame) &key api-key)
+  (check-type api-key string)
+  (setf (slot-value obj 'connection) (make-instance 'potato-client:connection :api-key api-key)))
+
+(defmethod clim:frame-exit ((frame potato-frame))
+  (log:info "Frame closed: ~s" frame)
+  (call-next-method))
+
 (clim:define-presentation-method clim:present (obj (type channel) stream view &key)
   (log:info "Calling present method for channel: ~s, stream: ~s" obj stream)
   (clim:draw-text* stream (channel/name obj) 10 10))
 
 (clim:define-presentation-to-command-translator select-channel
     (channel switch-to-channel-frame potato-frame)
-    (object)
-  (list object))
+    (obj)
+  (list obj))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
@@ -59,9 +69,9 @@
     (when channel
       (clim:draw-text* stream (format nil "content for channel: ~a " (channel/name channel)) 10 10))))
 
-(defparameter *frame* nil)
-
-(defun potato-client-clim ()
-  (let* ((frame (clim:make-application-frame 'potato-frame :width 700 :height 500 :left 10 :top 10)))
-    (setq *frame* frame)
+(defun potato-client-clim (api-key)
+  (let* ((frame (clim:make-application-frame 'potato-frame
+                                             :api-key api-key
+                                             :width 700 :height 500
+                                             :left 10 :top 10)))
     (clim:run-frame-top-level frame)))
