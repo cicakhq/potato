@@ -1,5 +1,11 @@
 (in-package :potato-client-clim)
 
+(defun call-in-event-handler (frame fn)
+  (clim:execute-frame-command frame `(funcall ,(lambda () (funcall fn)))))
+
+(defmacro with-call-in-event-handler (frame &body body)
+  `(call-in-event-handler ,frame (lambda () ,@body)))
+
 (defclass channel ()
   ((name :type string
          :initarg :name
@@ -97,12 +103,6 @@
            (init-connection frame)
            (clim:run-frame-top-level frame))
       (stop-notifications reader))))
-
-(defun call-in-event-handler (frame fn)
-  (clim:execute-frame-command frame `(funcall ,(lambda () (funcall fn)))))
-
-(defmacro with-call-in-event-handler (frame &body body)
-  `(call-in-event-handler ,frame (lambda () ,@body)))
 
 (defun init-connection (frame)  
   (lparallel:future
