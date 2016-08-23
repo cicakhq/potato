@@ -13,6 +13,9 @@
          :initarg :text
          :reader message/text)))
 
+(defclass potato-view (clim:view)
+  ())
+
 (clim:define-application-frame potato-frame ()
   ((connection     :type potato-client:connection
                    :reader potato-frame/connection)
@@ -24,6 +27,7 @@
                    :initform nil
                    :accessor potato-frame/active-channel))
   (:panes (channel-list :application
+                        :default-view (make-instance 'potato-view)
                         :display-function 'display-channel-list)
           (channel-content :application
                            :display-function 'display-channel-content)
@@ -42,9 +46,12 @@
   (log:info "Frame closed: ~s" frame)
   (call-next-method))
 
-(clim:define-presentation-method clim:present (obj (type channel) stream view &key)
+(clim:define-presentation-method clim:present (obj (type channel) stream (view potato-view) &key)
   (log:info "Calling present method for channel: ~s, stream: ~s" obj stream)
   (clim:draw-text* stream (channel/name obj) 10 10))
+
+(clim:define-presentation-method clim:present (obj (type channel) stream (view clim:textual-view) &key)
+  (format stream "~a" (channel/name obj)))
 
 (clim:define-presentation-to-command-translator select-channel
     (channel switch-to-channel-frame potato-frame)
