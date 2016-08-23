@@ -541,34 +541,46 @@ and the delivery tag."
                              (unless (zerop num-consumers)
                                (error "Queue is not idle: ~s" event))
                              (values event num-messages)))
+                         ;; ELSE: No queue name was given, create a new queue
                          (let ((n (create-and-bind-notifications-queue conn 1
                                                                        (potato.core:current-user)
                                                                        channels services sid)))
                            (values n 0)))
-                   (when active-p
-                     (dolist (channel channels)
-                       (potato.core:refresh-user user channel (* *ping-interval* 2))))
-                   (unwind-protect
-                        (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
-                          (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
+                   ;; If no channels were given, we need to return a
+                   ;; null result immediately after initial queue
+                   ;; creation. Otherwise the client may have to wait
+                   ;; until the timeout is triggered before it gets
+                   ;; informed of the queue name.
+                   (cond ((and (null event)
+                               (null channels))
+                          ;; Write a null result.
+                          (write-result (funcall fmt-fn name nil)))
+                         ;; Block while waiting for incoming messages
+                         (t
+                          (when active-p
+                            (dolist (channel channels)
+                              (potato.core:refresh-user user channel (* *ping-interval* 2))))
                           (unwind-protect
-                               (let ((result (loop
-                                               with timeout-time = (+ (get-universal-time) timeout)
-                                               for tm = (- timeout-time (get-universal-time))
-                                               while (plusp tm)
-                                               for msglist = (poll-notifications conn consumer-tag num-messages
-                                                                                 :msg-formatter msg-formatter :timeout tm)
-                                               until msglist
-                                               finally (return msglist))))
-                                 (write-result (funcall fmt-fn name (mapcar #'first result)))
-                                 ;; At this point, it should be reasonably safe to ack the messages
-                                 (mapc (lambda (v) (cl-rabbit:basic-ack conn 1 (second v))) result))
-                            ;; UNWIND FORM: Cancel the subscription
-                            (cl-rabbit:basic-cancel conn 1 consumer-tag)))
-                     ;; UNWIND FORM: Make sure user is logged out
-                     (when active-p
-                       (dolist (channel channels)
-                         (potato.core:signout-user user channel))))))))
+                               (let ((consumer-tag (cl-rabbit:basic-consume conn 1 name :no-ack nil)))
+                                 (log:trace "Created consumer tag: ~s, queue: ~s" consumer-tag name)
+                                 (unwind-protect
+                                      (let ((result (loop
+                                                      with timeout-time = (+ (get-universal-time) timeout)
+                                                      for tm = (- timeout-time (get-universal-time))
+                                                      while (plusp tm)
+                                                      for msglist = (poll-notifications conn consumer-tag num-messages
+                                                                                        :msg-formatter msg-formatter :timeout tm)
+                                                      until msglist
+                                                      finally (return msglist))))
+                                        (write-result (funcall fmt-fn name (mapcar #'first result)))
+                                        ;; At this point, it should be reasonably safe to ack the messages
+                                        (mapc (lambda (v) (cl-rabbit:basic-ack conn 1 (second v))) result))
+                                   ;; UNWIND FORM: Cancel the subscription
+                                   (cl-rabbit:basic-cancel conn 1 consumer-tag)))
+                            ;; UNWIND FORM: Make sure user is logged out
+                            (when active-p
+                              (dolist (channel channels)
+                                (potato.core:signout-user user channel))))))))))
         ;; UNWIND FORM: Don't leak a file descriptor
         (unwind-protect
              (unless result-written-p
