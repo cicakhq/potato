@@ -43,10 +43,9 @@
           (channel-content :application
                            :display-function 'display-channel-content)
           (interaction-pane :interactor))
-  (:layouts (default (9/10 (clim:vertically ()
-                             (clim:horizontally ()
-                               (2/10 channel-list)
-                               (8/10 channel-content))))
+  (:layouts (default (9/10 (clim:horizontally ()
+                             (2/10 channel-list)
+                             (8/10 channel-content)))
                      (1/10 interaction-pane))))
 
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
