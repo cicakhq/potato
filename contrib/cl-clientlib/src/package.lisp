@@ -12,4 +12,5 @@
            #:request-error/reason
            #:request-error
            #:potato-client-error
-           #:list-users))
+           #:list-users
+           #:listener-loop))

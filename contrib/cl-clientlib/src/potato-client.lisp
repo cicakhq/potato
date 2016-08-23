@@ -81,14 +81,14 @@
       for domain in (st-json:getjso "domains" res)
       collect `((:id . ,(st-json:getjso "id" domain))
                 (:name . ,(st-json:getjso "name" domain))
-                (:type . ,(st-json:getjso "domain-type" domain))
+                (:type . ,(intern (st-json:getjso "domain-type" domain) "KEYWORD"))
                 (:channels . ,(loop
                                 for channel in (st-json:getjso "channels" domain)
                                 collect `((:id . ,(st-json:getjso "id" channel))
                                           (:name . ,(st-json:getjso "name" channel))
                                           (:hide . ,(st-json:getjso "hide" channel))
                                           (:group . ,(st-json:getjso "group" channel))
-                                          (:group-type . ,(st-json:getjso "group_type" channel))
+                                          (:group-type . ,(intern (st-json:getjso "group_type" channel) "KEYWORD"))
                                           (:unread-count . ,(st-json:getjso "unread_count" channel))
                                           ,@(let ((private-user (st-json:getjso "private_user" channel)))
                                               (if (not (eq private-user :null))
@@ -124,7 +124,7 @@
   (check-type connection connection)
   )
 
-(defun listener-loop (connection cid-list)
+(defun listener-loop (connection cid-list callback-fn)
   (loop
     with event-id = nil
     for res = (authenticated-request connection "/channel-updates"
@@ -137,4 +137,4 @@
          (setq event-id (st-json:getjso "event" res))
          (loop
            for event in (st-json:getjso "data" res)
-           do (print event)))))
+           do (funcall callback-fn event)))))

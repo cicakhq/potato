@@ -8,6 +8,12 @@
              :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
              :reader channel-content/messages)))
 
+(defmethod print-object ((obj channel) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (format stream "~s MESSAGES ~a"
+            (slot-value obj 'name)
+            (length (slot-value obj 'messages)))))
+
 (defclass message ()
   ((text :type string
          :initarg :text
@@ -20,9 +26,8 @@
   ((connection     :type potato-client:connection
                    :reader potato-frame/connection)
    (channels       :type list
-                   :initform (list (make-instance 'channel :name "Foo")
-                                   (make-instance 'channel :name "Bar"))
-                   :reader potato-frame/channels)
+                   :initform nil
+                   :accessor potato-frame/channels)
    (active-channel :type (or null channel-content)
                    :initform nil
                    :accessor potato-frame/active-channel))
@@ -43,11 +48,11 @@
   (setf (slot-value obj 'connection) (make-instance 'potato-client:connection :api-key api-key)))
 
 (defmethod clim:frame-exit ((frame potato-frame))
-  (log:info "Frame closed: ~s" frame)
+  (log:trace "Frame closed: ~s" frame)
   (call-next-method))
 
 (clim:define-presentation-method clim:present (obj (type channel) stream (view potato-view) &key)
-  (log:info "Calling present method for channel: ~s, stream: ~s" obj stream)
+  (log:trace "Calling present method for channel: ~s, stream: ~s" obj stream)
   (clim:draw-text* stream (channel/name obj) 10 10))
 
 (clim:define-presentation-method clim:present (obj (type channel) stream (view clim:textual-view) &key)
@@ -60,7 +65,7 @@
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
-  (log:info "Switch to channel command called. Type: ~s" (type-of obj))
+  (log:trace "Switch to channel command called. Type: ~s" (type-of obj))
   (setf (potato-frame/active-channel clim:*application-frame*) obj))
 
 (defun display-channel-list (frame stream)
@@ -76,9 +81,44 @@
     (when channel
       (clim:draw-text* stream (format nil "content for channel: ~a " (channel/name channel)) 10 10))))
 
+(defvar *frame* nil)
+
 (defun potato-client-clim (api-key)
+  (unless lparallel:*kernel*
+    (setf lparallel:*kernel* (lparallel:make-kernel 10)))
   (let* ((frame (clim:make-application-frame 'potato-frame
                                              :api-key api-key
                                              :width 700 :height 500
-                                             :left 10 :top 10)))
-    (clim:run-frame-top-level frame)))
+                                             :left 10 :top 10))
+         (reader (start-notifications (potato-frame/connection frame))))
+    (unwind-protect
+         (progn
+           (setq *frame* frame)
+           (init-connection frame)
+           (clim:run-frame-top-level frame))
+      (stop-notifications reader))))
+
+(defun call-in-event-handler (frame fn)
+  (clim:execute-frame-command frame `(funcall ,(lambda () (funcall fn)))))
+
+(defmacro with-call-in-event-handler (frame &body body)
+  `(call-in-event-handler ,frame (lambda () ,@body)))
+
+(defun init-connection (frame)  
+  (lparallel:future
+    (let ((channels (loop
+                      with channel-tree = (potato-client:load-channel-tree :connection (potato-frame/connection frame))
+                      for domain in channel-tree
+                      for domain-name = (cdr (assoc :name domain))
+                      for type = (cdr (assoc :type domain))
+                      unless (eq type :private)
+                        append (loop
+                                 for channel in (cdr (assoc :channels domain))
+                                 for name = (cdr (assoc :name channel))
+                                 for group-type = (cdr (assoc :group-type channel))
+                                 unless (eq group-type :private)
+                                   collect (make-instance 'channel :name (format nil "~a - ~a" domain-name name))))))
+      (log:trace "Channels loaded: ~s" channels)
+      (with-call-in-event-handler frame
+        (setf (potato-frame/channels frame) channels)
+        (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-list))))))
