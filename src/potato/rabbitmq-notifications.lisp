@@ -71,8 +71,8 @@
 (defun print-queue-name-prefix (stream uid cid-list)
   (princ "q-" stream)
   (princ (cleanup-name uid) stream)
-  (princ "-" stream)
   (when cid-list
+    (princ "-" stream)
     (let ((d (ironclad:make-digest :sha256)))
       (dolist (cid cid-list)
         (ironclad:update-digest d (babel:string-to-octets cid :encoding :utf-8)))
@@ -86,8 +86,6 @@
         (error "Attempt to read from illegal queue")))))
 
 (defun make-queue-name (uid cid-list)
-  (when (null cid-list)
-    (error "Can't make a queue name without a channel list"))
   (with-output-to-string (s)
     (print-queue-name-prefix s uid cid-list)
     (princ "-" s)
