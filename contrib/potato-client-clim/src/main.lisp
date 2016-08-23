@@ -7,12 +7,18 @@
   `(call-in-event-handler ,frame (lambda () ,@body)))
 
 (defclass channel ()
-  ((name :type string
-         :initarg :name
-         :reader channel/name)
-   (messages :type array
-             :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
-             :reader channel-content/messages)))
+  ((id        :type string
+              :initarg :id
+              :reader channel/id)
+   (name      :type string
+              :initarg :name
+              :reader channel/name)
+   (messages  :type array
+              :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
+              :reader channel-content/messages)
+   (connected :type (or null (eql t))
+              :initform nil
+              :accessor channel/connected)))
 
 (defmethod print-object ((obj channel) stream)
   (print-unreadable-object (obj stream :type t :identity t)
@@ -70,8 +76,12 @@
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
-  (log:trace "Switch to channel command called. Type: ~s" (type-of obj))
-  (setf (potato-frame/active-channel clim:*application-frame*) obj))
+  (setf (potato-frame/active-channel clim:*application-frame*) obj)
+  (unless (channel/connected obj)
+    (setf (channel/connected obj) t)
+    (let ((conn (potato-frame/connection clim:*application-frame*)))
+      (lparallel:future
+        (potato-client:subscribe-to-channel (channel/id obj) :connection conn)))))
 
 (defun display-channel-list (frame stream)
   (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
@@ -116,7 +126,9 @@
                                  for name = (cdr (assoc :name channel))
                                  for group-type = (cdr (assoc :group-type channel))
                                  unless (eq group-type :private)
-                                   collect (make-instance 'channel :name (format nil "~a - ~a" domain-name name))))))
+                                   collect (make-instance 'channel
+                                                          :id (cdr (assoc :id channel))
+                                                          :name (format nil "~a - ~a" domain-name name))))))
       (log:trace "Channels loaded: ~s" channels)
       (with-call-in-event-handler frame
         (setf (potato-frame/channels frame) channels)

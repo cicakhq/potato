@@ -23,7 +23,10 @@
    (url-prefix :type string
                :initform "https://potato.dhsdevelopments.com/"
                :initarg :url-prefix
-               :reader connection/url-prefix)))
+               :reader connection/url-prefix)
+   (event-id   :type (or null string)
+               :initform nil
+               :accessor connection/event-id)))
 
 (defvar *connection* nil
   "The current default connection")
@@ -134,7 +137,24 @@
                                                ("services" . "content,state,notifications")
                                                ("session_id" . "foo")))
     do (progn
+         (log:info "Got events: ~s" res)
          (setq event-id (st-json:getjso "event" res))
+         (setf (connection/event-id connection) event-id)
          (loop
            for event in (st-json:getjso "data" res)
            do (funcall callback-fn event)))))
+
+(defun subscribe-to-channel (channel-id &key (connection *connection*))
+  (check-type channel-id string)
+  (check-type connection connection)
+  (let ((event-id (connection/event-id connection)))
+    (unless event-id
+      (error "event-id is not set in connection"))
+    (let ((res (authenticated-request connection "/channel-updates/update"
+                                      :method :post
+                                      :params `(("event-id" . ,event-id)
+                                                ("cmd" . "add")
+                                                ("channel" . ,channel-id)
+                                                ("services" . "content,state")))))
+      (unless (equal (st-json:getjso "result" res) "ok")
+        (error "Error while adding subscription to channel")))))

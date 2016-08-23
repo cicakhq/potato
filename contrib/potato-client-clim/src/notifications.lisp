@@ -37,10 +37,9 @@
                                      (lambda (event)
                                        (when (dhs-sequences:cas-wrapper/value stopped-p)
                                          (signal 'stop-notification))
-                                       (dolist (v event)
-                                         (process-incoming-event v))))
+                                       (process-incoming-event event)))
       (stop-notification ()
         (log:debug "Notification reader loop stopped")))))
 
 (defun process-incoming-event (event)
-  (log:debug "Incoming event: ~s" event))
+  (log:info "Incoming event: ~s" event))
