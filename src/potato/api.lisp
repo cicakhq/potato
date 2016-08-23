@@ -471,12 +471,12 @@ name and group are required, while the topic parameter is optional."
     (let* ((services (if service-names
                          (parse-service-names service-names)
                          '(:content-p t)))
-           (cids (split-sequence:split-sequence #\, channel-names))
-           (channels (if (equal cids "")
-                         nil
-                         (mapcar (lambda (cid)
-                                   (potato.core:load-channel-with-check cid :if-not-joined :join))
-                                 cids))))
+           (cids (if (equal channel-names "")
+                     nil
+                     (split-sequence:split-sequence #\, channel-names)))
+           (channels (mapcar (lambda (cid)
+                               (potato.core:load-channel-with-check cid :if-not-joined :join))
+                             cids)))
       (api-case-method
         (:get (api-get-single-update channels event-id format-name services sid))))))
 
