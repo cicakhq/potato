@@ -26,11 +26,6 @@
             (slot-value obj 'name)
             (length (slot-value obj 'messages)))))
 
-(defclass message ()
-  ((text :type string
-         :initarg :text
-         :reader message/text)))
-
 (defclass potato-view (clim:view)
   ())
 

@@ -9,6 +9,7 @@
                :flexi-streams
                :bordeaux-threads
                :lparallel
+               :string-case
                :containers
                :potato-client)
   :components ((:module "src"

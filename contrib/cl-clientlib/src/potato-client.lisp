@@ -133,11 +133,10 @@
     for res = (authenticated-request connection "/channel-updates"
                                      :params `(,@(if event-id `(("event-id" . ,event-id)))
                                                ("channels" . ,(format nil "~{~a~^,~}" cid-list))
-                                               ("format" . "html")
+                                               ("format" . "json")
                                                ("services" . "content,state,notifications")
                                                ("session_id" . "foo")))
     do (progn
-         (log:info "Got events: ~s" res)
          (setq event-id (st-json:getjso "event" res))
          (setf (connection/event-id connection) event-id)
          (loop
