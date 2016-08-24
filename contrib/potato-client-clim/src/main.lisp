@@ -97,7 +97,7 @@
 
 (defun display-channel-content (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
-    (log:info "Displaying channel content")
+    (log:trace "Displaying channel content")
     (loop
       for msg across (channel/messages channel)
       do (clim:present msg 'message :stream stream)
