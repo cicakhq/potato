@@ -10,3 +10,8 @@
                                                           local-time:+iso-8601-time-format+
                                                           '("Z"))
                                 :timezone local-time:+utc-zone+))
+
+(defun nil-if-json-null (v)
+  (if (eq v :null)
+      nil
+      v))

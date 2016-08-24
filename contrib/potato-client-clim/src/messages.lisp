@@ -1,5 +1,10 @@
 (in-package :potato-client-clim)
 
+(defparameter *code-colour* (clim:make-rgb-color 0.3 0.7 0.3))
+(defparameter *code-shadow* (clim:make-rgb-color 0.5 0.5 0.5))
+(defparameter *code-border* (clim:make-rgb-color 0.88 0.894 0.894))
+(defparameter *code-background* (clim:make-rgb-color 0.988 0.988 0.988))
+
 (defclass message ()
   ((id           :type string
                  :initarg :id
@@ -56,6 +61,14 @@
 (defclass code-element (formatted-element) ())
 (defclass newline-element (text-element) ())
 
+(defclass code-block-element (text-element)
+  ((language :type (or null string)
+             :initarg :language
+             :reader code-block-element/language)
+   (code     :type string
+             :initarg :code
+             :reader code-block-element/code)))
+
 (defun parse-text-content (content)
   (etypecase content
     (string content)
@@ -72,6 +85,9 @@
         ("i" (make-element 'italics-element))
         ("code" (make-element 'code-element))
         ("newline" (make-instance 'newline-element))
+        ("code-block" (make-instance 'code-block-element
+                                     :language (nil-if-json-null (st-json:getjso "language" content))
+                                     :code (st-json:getjso "code" content)))
         (t (format nil "[unknown type:~a]" type))))))
 
 (clim:define-presentation-method clim:present (obj (type message) stream (view channel-content-view) &key)
@@ -92,13 +108,28 @@
       (clim:present v (clim:presentation-type-of v) :stream stream))))
 
 (clim:define-presentation-method clim:present (obj (type code-element) stream (view channel-content-view) &key)
-  (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
-    (let ((v (formatted-element/text obj)))
-      (clim:present v (clim:presentation-type-of v) :stream stream))))
+  (clim:surrounding-output-with-border (stream :ink *code-border*
+                                               :background *code-background*
+                                               :move-cursor nil
+                                               :padding 2)
+    (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
+      (clim:with-drawing-options (stream :ink *code-colour*)
+        (let ((v (formatted-element/text obj)))
+          (clim:present v (clim:presentation-type-of v) :stream stream))))))
 
 (clim:define-presentation-method clim:present (obj (type paragraph-element) stream (view channel-content-view) &key)
   (clim:present (formatted-element/text obj))
   (format stream "~%"))
+
+(clim:define-presentation-method clim:present (obj (type code-block-element) stream (view channel-content-view) &key)
+  (format stream "~&")
+  (clim:surrounding-output-with-border (stream :shadow *code-shadow*
+                                               :background *code-background*
+                                               :shadow-offset 2)
+    (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
+      (let ((v (code-block-element/code obj)))
+        (clim:present v (clim:presentation-type-of v) :stream stream))))
+  (format stream "~&"))
 
 (clim:define-presentation-method clim:present (obj (type string) stream (view channel-content-view) &key)
   (format stream "~a" obj))
