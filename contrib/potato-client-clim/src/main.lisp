@@ -15,7 +15,7 @@
               :reader channel/name)
    (messages  :type array
               :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
-              :reader channel-content/messages)
+              :reader channel/messages)
    (connected :type (or null (eql t))
               :initform nil
               :accessor channel/connected)))
@@ -42,7 +42,10 @@
                         :default-view (make-instance 'potato-view)
                         :display-function 'display-channel-list)
           (channel-content :application
-                           :display-function 'display-channel-content)
+                           :default-view (make-instance 'channel-content-view)
+                           :display-function 'display-channel-content
+                           ;;:display-time nil
+                           )
           (interaction-pane :interactor))
   (:layouts (default (9/10 (clim:horizontally ()
                              (2/10 channel-list)
@@ -52,6 +55,12 @@
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
   (check-type api-key string)
   (setf (slot-value obj 'connection) (make-instance 'potato-client:connection :api-key api-key)))
+
+(defun find-frame-channel-by-id (frame cid)
+  (loop
+    for channel in (potato-frame/channels frame)
+    when (equal (channel/id channel) cid)
+      return channel))
 
 (defmethod clim:frame-exit ((frame potato-frame))
   (log:trace "Frame closed: ~s" frame)
@@ -87,9 +96,18 @@
              (clim:present channel 'channel :stream stream))))))
 
 (defun display-channel-content (frame stream)
-  (let ((channel (potato-frame/active-channel frame)))
-    (when channel
-      (clim:draw-text* stream (format nil "content for channel: ~a " (channel/name channel)) 10 10))))
+  (alexandria:when-let ((channel (potato-frame/active-channel frame)))
+    (log:info "Displaying channel content")
+    (loop
+      for msg across (channel/messages channel)
+      do (clim:present msg 'message :stream stream)
+      do (format stream "~%"))))
+
+(defun handle-message-received (frame msg)
+  (with-call-in-event-handler frame
+    (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
+      (vector-push-extend msg (channel/messages channel))
+      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
 
 (defvar *frame* nil)
 
@@ -100,7 +118,8 @@
                                              :api-key api-key
                                              :width 700 :height 500
                                              :left 10 :top 10))
-         (reader (start-notifications (potato-frame/connection frame))))
+         (reader (start-notifications (potato-frame/connection frame)
+                                      :message-callback (lambda (msg) (handle-message-received frame msg)))))
     (unwind-protect
          (progn
            (setq *frame* frame)

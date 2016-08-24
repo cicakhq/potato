@@ -4,30 +4,44 @@
   ())
 
 (defclass notification-reader-state ()
-  ((conn      :type potato-client:connection
-              :initarg :connection
-              :reader notification-reader-state/connection)
-   (stopped-p :type dhs-sequences:cas-wrapper
-              :initform (dhs-sequences:make-cas-wrapper nil)
-              :reader notification-reader-state/stopped-p)
-   (thread    :accessor notification-reader-state/thread)))
+  ((conn             :type potato-client:connection
+                     :initarg :connection
+                     :reader notification-reader-state/connection)
+   (stopped-p        :type dhs-sequences:cas-wrapper
+                     :initform (dhs-sequences:make-cas-wrapper nil)
+                     :reader notification-reader-state/stopped-p)
+   (thread           :accessor notification-reader-state/thread)
+   (message-callback :type (or null function)
+                     :initform nil
+                     :initarg :message-callback
+                     :reader notification-reader-state/message-callback)))
 
-(defclass message ()
-  ((id   :type string
-         :initarg :id
-         :reader message/id)
-   (text :type t
-         :initarg :text
-         :reader message/text)))
+(defun call-notification-callback (fn arg)
+  (when fn
+    (funcall fn arg)))
 
-(defmethod print-object ((obj message) stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "ID ~s TEXT ~s"
-            (slot-value obj 'id)
-            (slot-value obj 'text))))
+(defun process-message-event (state event)
+  (let ((msg (make-instance 'message
+                            :id (st-json:getjso "id" event)
+                            :channel (st-json:getjso "channel" event)
+                            :from (st-json:getjso "from" event)
+                            :from-name (st-json:getjso "from_name" event)
+                            :created-date (parse-timestamp (st-json:getjso "created_date" event))
+                            :text (parse-text-content (st-json:getjso "text" event)))))
+    (log:trace "Created message: ~s" msg)
+    (call-notification-callback (notification-reader-state/message-callback state) msg)))
 
-(defun start-notifications (conn)
-  (let* ((state (make-instance 'notification-reader-state :connection conn))
+(defun process-incoming-event (state event)
+  (log:trace "Incoming event: ~s" event)
+  (let ((type (st-json:getjso "type" event)))
+    (string-case:string-case (type)
+      ("m" (process-message-event state (st-json:getjso "c" event)))
+      (t (log:warn "Unknown event type: ~s" type)))))
+
+(defun start-notifications (conn &key message-callback)
+  (let* ((state (make-instance 'notification-reader-state
+                               :connection conn
+                               :message-callback message-callback))
          (thread (bordeaux-threads:make-thread (lambda ()
                                                  (notification-reader-loop state))
                                                :name "Notification reader loop")))
@@ -51,55 +65,6 @@
                                      (lambda (event)
                                        (when (dhs-sequences:cas-wrapper/value stopped-p)
                                          (signal 'stop-notification))
-                                       (process-incoming-event event)))
+                                       (process-incoming-event state event)))
       (stop-notification ()
         (log:debug "Notification reader loop stopped")))))
-
-(defun process-incoming-event (event)
-  (log:trace "Incoming event: ~s" event)
-  (let ((type (st-json:getjso "type" event)))
-    (string-case:string-case (type)
-      ("m" (process-message-event (st-json:getjso "c" event)))
-      (t (log:warn "Unknown event type: ~s" type)))))
-
-(defun process-message-event (event)
-  (let ((msg (make-instance 'message
-                            :id (st-json:getjso "id" event)
-                            :text (parse-text-content (st-json:getjso "text" event)))))
-    (log:info "Created message: ~s" msg)))
-
-(defclass text-element ()
-  ())
-
-(defclass formatted-element (text-element)
-  ((text :type t
-         :initarg :text
-         :reader text-element/text)))
-
-(defmethod print-object ((obj formatted-element) stream)
-  (print-unreadable-object (obj stream :type t :identity nil)
-    (format stream "TEXT ~s" (slot-value obj 'text))))
-
-(defclass paragraph-element (formatted-element) ())
-(defclass bold-element (formatted-element) ())
-(defclass italics-element (formatted-element) ())
-(defclass code-element (formatted-element) ())
-(defclass newline-element (text-element) ())
-
-(defun parse-text-content (content)
-  (etypecase content
-    (string content)
-    (list (mapcar #'parse-text-content content))
-    (st-json:jso (parse-text-part content))))
-
-(defun parse-text-part (content)
-  (let ((type (st-json:getjso "type" content)))
-    (labels ((make-element (name)
-               (make-instance name :text (parse-text-content (st-json:getjso "e" content)))))
-      (string-case:string-case (type)
-        ("p" (make-element 'paragraph-element))
-        ("b" (make-element 'bold-element))
-        ("i" (make-element 'italics-element))
-        ("code" (make-element 'code-element))
-        ("newline" (make-instance 'newline-element))
-        (t (format nil "[unknown type:~a]" type))))))
