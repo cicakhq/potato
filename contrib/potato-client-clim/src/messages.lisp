@@ -81,6 +81,21 @@
 (clim:define-presentation-method clim:present (obj (type formatted-element) stream (view channel-content-view) &key)
   (clim:present (formatted-element/text obj)))
 
+(clim:define-presentation-method clim:present (obj (type bold-element) stream (view channel-content-view) &key)
+  (clim:with-text-style (stream (clim:make-text-style nil :bold nil))
+    (let ((v (formatted-element/text obj)))
+      (clim:present v (clim:presentation-type-of v) :stream stream))))
+
+(clim:define-presentation-method clim:present (obj (type italics-element) stream (view channel-content-view) &key)
+  (clim:with-text-style (stream (clim:make-text-style nil :italic nil))
+    (let ((v (formatted-element/text obj)))
+      (clim:present v (clim:presentation-type-of v) :stream stream))))
+
+(clim:define-presentation-method clim:present (obj (type code-element) stream (view channel-content-view) &key)
+  (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
+    (let ((v (formatted-element/text obj)))
+      (clim:present v (clim:presentation-type-of v) :stream stream))))
+
 (clim:define-presentation-method clim:present (obj (type paragraph-element) stream (view channel-content-view) &key)
   (clim:present (formatted-element/text obj))
   (format stream "~%"))
