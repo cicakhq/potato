@@ -123,12 +123,12 @@
 
 (clim:define-presentation-method clim:present (obj (type code-block-element) stream (view channel-content-view) &key)
   (format stream "~&")
-  (clim:surrounding-output-with-border (stream :shadow *code-shadow*
-                                               :background *code-background*
-                                               :shadow-offset 2)
+  (clim:surrounding-output-with-border (stream :ink *code-border*
+                                               :background *code-background*)
     (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
-      (let ((v (code-block-element/code obj)))
-        (clim:present v (clim:presentation-type-of v) :stream stream))))
+      (clim:with-drawing-options (stream :ink *code-colour*)
+        (let ((v (code-block-element/code obj)))
+          (clim:present v (clim:presentation-type-of v) :stream stream)))))
   (format stream "~&"))
 
 (clim:define-presentation-method clim:present (obj (type string) stream (view channel-content-view) &key)
