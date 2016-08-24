@@ -4,6 +4,7 @@
 (defparameter *code-shadow* (clim:make-rgb-color 0.5 0.5 0.5))
 (defparameter *code-border* (clim:make-rgb-color 0.88 0.894 0.894))
 (defparameter *code-background* (clim:make-rgb-color 0.988 0.988 0.988))
+(defparameter *code-padding* 2)
 
 (defclass message ()
   ((id           :type string
@@ -108,14 +109,17 @@
       (clim:present v (clim:presentation-type-of v) :stream stream))))
 
 (clim:define-presentation-method clim:present (obj (type code-element) stream (view channel-content-view) &key)
-  (clim:surrounding-output-with-border (stream :ink *code-border*
-                                               :background *code-background*
-                                               :move-cursor nil
-                                               :padding 2)
-    (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
-      (clim:with-drawing-options (stream :ink *code-colour*)
-        (let ((v (formatted-element/text obj)))
-          (clim:present v (clim:presentation-type-of v) :stream stream))))))
+  (let ((delta (+ *code-padding* 1)))
+    (clim:stream-increment-cursor-position stream 0 delta)
+    (clim:surrounding-output-with-border (stream :ink *code-border*
+                                                 :background *code-background*
+                                                 :move-cursor nil
+                                                 :padding *code-padding*)
+      (clim:with-text-style (stream (clim:make-text-style :fix nil nil))
+        (clim:with-drawing-options (stream :ink *code-colour*)
+          (let ((v (formatted-element/text obj)))
+            (clim:present v (clim:presentation-type-of v) :stream stream)))))
+    (clim:stream-increment-cursor-position stream 0 (- delta))))
 
 (clim:define-presentation-method clim:present (obj (type paragraph-element) stream (view channel-content-view) &key)
   (clim:present (formatted-element/text obj))
