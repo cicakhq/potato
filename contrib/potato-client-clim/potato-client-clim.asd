@@ -16,6 +16,7 @@
                         :serial t
                         :components ((:file "package")
                                      (:file "misc")
+                                     (:file "user")
                                      (:file "messages")
                                      (:file "notifications")
                                      (:file "main")))))

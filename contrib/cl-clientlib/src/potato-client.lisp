@@ -157,3 +157,9 @@
                                                 ("services" . "content,state")))))
       (unless (equal (st-json:getjso "result" res) "ok")
         (error "Error while adding subscription to channel")))))
+
+(defun load-user (uid &key (connection *connection*))
+  (check-type uid string)
+  (check-type connection connection)
+  (let ((res (authenticated-request connection (format nil "/users/~a" uid))))
+    res))

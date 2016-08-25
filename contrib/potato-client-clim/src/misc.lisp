@@ -30,3 +30,6 @@
                                  slots)
          (print-unreadable-object (,object-copy ,stream-copy :type t :identity nil)
            ,@body)))))
+
+(defun present-to-stream (obj stream)
+  (clim:present obj (clim:presentation-type-of obj) :stream stream))
