@@ -1,39 +1,39 @@
 (in-package :potato-client-clim)
 
 (defclass user ()
-  ((id                :type string
-                      :initarg :id
-                      :reader user/id)
-   (description       :type string
-                      :initarg :description
-                      :accessor user/description)
-   (nickname          :type string
-                      :initarg :nickname
-                      :accessor user/nickname)
-   (waiting-callbacks :type list
-                      :initarg :waiting-callbacks
-                      :initform nil
-                      :accessor user/waiting-callbacks)
-   (sync-active       :type (or null (eql t))
-                      :initarg :sync-active
-                      :initform nil
-                      :accessor user/sync-active)))
+  ((id          :type string
+                :initarg :id
+                :reader user/id)
+   (description :type string
+                :initarg :description
+                :accessor user/description)
+   (nickname    :type string
+                :initarg :nickname
+                :accessor user/nickname)
+   (sync-active :type (or null (eql t))
+                :initarg :sync-active
+                :initform nil
+                :accessor user/sync-active)))
+
+(defmethod print-object ((obj user) stream)
+  (print-unreadable-safely (id description) obj stream
+    (format stream "ID ~s NAME ~s" id description)))
 
 (defclass user-db ()
-  ((users      :type hash-table
-               :initform (make-hash-table :test 'equal)
-               :reader user-db/users)
-   (connection :type potato-client:connection
-               :initarg :connection
-               :reader user-db/connection)
-   (lock       :type t
-               :initform (bordeaux-threads:make-lock "User database lock")
-               :reader user-db/lock)))
+  ((users       :type hash-table
+                :initform (make-hash-table :test 'equal)
+                :reader user-db/users)
+   (lock        :type t
+                :initform (bordeaux-threads:make-lock "User database lock")
+                :reader user-db/lock)
+   (callback-fn :type (or null function)
+                :initarg :callback-fn
+                :initform nil
+                :reader user-db/callback-fn)))
 
-(defun find-user (user-db uid &optional callback-fn)
+(defun find-user (user-db uid)
   (check-type user-db user-db)
   (check-type uid string)
-  (check-type callback-fn (or null function))
   (bordeaux-threads:with-lock-held ((user-db/lock user-db))
     (let ((user (gethash uid (user-db/users user-db))))
       (cond ((null user)
@@ -41,15 +41,10 @@
                                      :id uid
                                      :description "empty"
                                      :nickname "empty"
-                                     :waiting-callbacks (if callback-fn (list callback-fn) nil)
                                      :sync-active t)))
                (setf (gethash uid (user-db/users user-db)) u)
                (log:warn "Currently not updating the user name")
                u))
-            ((user/sync-active user)
-             (when callback-fn
-               (push callback-fn (user/waiting-callbacks user)))
-             user)
             (t
              user)))))
 
@@ -63,14 +58,23 @@
            (setf (gethash uid (user-db/users user-db))
                  (make-instance 'user :id uid :description description :nickname nickname))))))
 
-(defun update-users-from-channel (user-db cid)
+(defun update-users-from-channel (user-db conn cid)
   (check-type user-db user-db)
   (check-type cid string)
-  (let ((res (potato-client:list-users cid :connection (user-db/connection user-db))))
+  (let ((res (potato-client:list-users cid :connection conn)))
     (bordeaux-threads:with-lock-held ((user-db/lock user-db))
-      (loop
-        for user-data in res
-        collect (update-user user-db
-                        (cdr (assoc :id user-data))
-                        (cdr (assoc :description user-data))
-                        (cdr (assoc :nickname user-data)))))))
+      (let ((updated (loop
+                       for user-data in res
+                       collect (update-user user-db
+                                            (cdr (assoc :id user-data))
+                                            (cdr (assoc :description user-data))
+                                            (cdr (assoc :nickname user-data))))))
+        (alexandria:when-let ((callback (user-db/callback-fn user-db)))
+          (funcall callback updated))))))
+
+(defun users-in-db (user-db)
+  (check-type user-db user-db)
+  (sort (loop
+          for ch being each hash-value in (user-db/users user-db)
+          collect ch)
+        #'string< :key #'user/description))

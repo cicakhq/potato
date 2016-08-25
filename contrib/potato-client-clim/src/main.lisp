@@ -19,18 +19,19 @@
    (connected :type (or null (eql t))
               :initform nil
               :accessor channel/connected)
-   (users     :type list
-              :initform (make-hash-table :test 'equal)
+   (users     :type user-db
               :reader channel/users)))
+
+(defmethod initialize-instance :after ((obj channel) &key frame)
+  (unless frame
+    (error "CHANNEL created without :FRAME"))
+  (setf (slot-value obj 'users) (make-instance 'user-db
+                                               :callback-fn (lambda (users)
+                                                              (process-users-updated frame obj users )))))
 
 (defmethod print-object ((obj channel) stream)
   (print-unreadable-safely (name messages) obj stream
-    (format stream "~s MESSAGES ~a" name messages)))
-
-(defclass user-wrapper ()
-  ((user :type user
-         :initarg :user
-         :reader user-wrapper/user)))
+    (format stream "~s" name)))
 
 (defclass potato-view (clim:view)
   ())
@@ -46,9 +47,7 @@
                    :accessor potato-frame/channels)
    (active-channel :type (or null channel-content)
                    :initform nil
-                   :accessor potato-frame/active-channel)
-   (users          :type user-db
-                   :reader potato-frame/users))
+                   :accessor potato-frame/active-channel))
   (:panes (channel-list    :application
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list)
@@ -73,8 +72,7 @@
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
   (check-type api-key string)
   (let ((conn (make-instance 'potato-client:connection :api-key api-key)))
-    (setf (slot-value obj 'connection) conn)
-    (setf (slot-value obj 'users) (make-instance 'user-db :connection conn))))
+    (setf (slot-value obj 'connection) conn)))
 
 (defun find-frame-channel-by-id (frame cid)
   (loop
@@ -86,8 +84,8 @@
   (log:trace "Frame closed: ~s" frame)
   (call-next-method))
 
-(clim:define-presentation-method clim:present (obj (type user-wrapper) stream (view user-list-view) &key)
-  (format stream "~a" (user/description (user-wrapper/user obj))))
+(clim:define-presentation-method clim:present (obj (type user) stream (view user-list-view) &key)
+  (format stream "~a" (user/description obj)))
 
 (clim:define-presentation-method clim:present (obj (type channel) stream (view potato-view) &key)
   (clim:draw-text* stream (channel/name obj) 10 10))
@@ -110,22 +108,18 @@
             (cid (channel/id obj)))
         (lparallel:future
           (potato-client:subscribe-to-channel cid :connection conn)
-          (let ((users (update-users-from-channel (potato-frame/users frame) cid)))
-            (with-call-in-event-handler frame
-              (loop
-                for user in users
-                do (setf (gethash (user/id user) (channel/users obj))
-                         (make-instance 'user-wrapper :user user))))))))))
+          (update-users-from-channel (channel/users obj) conn cid))))))
 
 (defun display-user-list (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
+    (log:info "displaying user list for channel ~s: ~a" channel (user-db/users (channel/users channel)))
     (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
       (loop
-        for user in (sort (loop for ch being each hash-value in (channel/users channel)) #'string<
-                          :key (lambda (v) (user/description (user-wrapper/user v))))
+        for user in (users-in-db (channel/users channel))
+        do (log:info "user: ~s" user)
         do (clim:formatting-row (stream)
              (clim:formatting-cell (stream)
-               (present-to-stream (user-wrapper/user user) stream)))))))
+               (present-to-stream user stream)))))))
 
 (defun display-channel-list (frame stream)
   (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
@@ -152,6 +146,12 @@
 (defun handle-channel-state-update (frame event)
   (with-call-in-event-handler frame
     (log:info "Channel state update: ~s" event)))
+
+(defun process-users-updated (frame channel users)
+  (declare (ignore users))
+  (with-call-in-event-handler frame
+    (when (eq (potato-frame/active-channel frame) channel)
+      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'user-list)))))
 
 (defvar *frame* nil)
 
@@ -187,7 +187,8 @@
                                  unless (eq group-type :private)
                                    collect (make-instance 'channel
                                                           :id (cdr (assoc :id channel))
-                                                          :name (format nil "~a - ~a" domain-name name))))))
+                                                          :name (format nil "~a - ~a" domain-name name)
+                                                          :frame frame)))))
       (log:trace "Channels loaded: ~s" channels)
       (with-call-in-event-handler frame
         (setf (potato-frame/channels frame) channels)
