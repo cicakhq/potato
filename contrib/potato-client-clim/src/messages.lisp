@@ -27,10 +27,8 @@
                  :reader message/text)))
 
 (defmethod print-object ((obj message) stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "ID ~s TEXT ~s"
-            (slot-value obj 'id)
-            (slot-value obj 'text))))
+  (print-unreadable-safely (id text) obj stream
+    (format stream "ID ~s TEXT ~s" id text)))
 
 (defclass channel-content-view (clim:view)
   ())
@@ -41,8 +39,8 @@
              :reader set-element/elements)))
 
 (defmethod print-object ((obj set-element) stream)
-  (print-unreadable-object (obj stream :type t :identity nil)
-    (format stream "~s" (slot-value obj 'elements))))
+  (print-unreadable-safely (elements) obj stream
+    (format stream "~s" elements)))
 
 (defclass text-element ()
   ())
@@ -53,8 +51,8 @@
          :reader formatted-element/text)))
 
 (defmethod print-object ((obj formatted-element) stream)
-  (print-unreadable-object (obj stream :type t :identity nil)
-    (format stream "TEXT ~s" (slot-value obj 'text))))
+  (print-unreadable-safely (text) obj stream
+    (format stream "TEXT ~s" text)))
 
 (defclass paragraph-element (formatted-element) ())
 (defclass bold-element (formatted-element) ())

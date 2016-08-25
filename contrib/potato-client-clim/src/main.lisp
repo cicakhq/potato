@@ -18,16 +18,37 @@
               :reader channel/messages)
    (connected :type (or null (eql t))
               :initform nil
-              :accessor channel/connected)))
+              :accessor channel/connected)
+   (users     :type hash-table
+              :initform (make-hash-table :test 'equal)
+              :reader channel/users)))
 
 (defmethod print-object ((obj channel) stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~s MESSAGES ~a"
-            (slot-value obj 'name)
-            (length (slot-value obj 'messages)))))
+  (print-unreadable-safely (name messages) obj stream
+    (format stream "~s MESSAGES ~a" name messages)))
+
+(defclass user ()
+  ((id          :type string
+                :initarg :id
+                :reader user/id)
+   (description :type string
+                :initarg :description
+                :reader user/description)
+   (active      :type (or null (eql t))
+                :initarg :active
+                :initform nil
+                :accessor user/active)))
 
 (defclass potato-view (clim:view)
   ())
+
+(defclass user-list-view (clim:view)
+  ())
+
+(defun DUMMY-display-user-list (frame stream)
+  (declare (ignore frame stream))
+  ;; Do absolutely nothing here in order to illustrate the problem
+  )
 
 (clim:define-application-frame potato-frame ()
   ((connection     :type potato-client:connection
@@ -38,19 +59,42 @@
    (active-channel :type (or null channel-content)
                    :initform nil
                    :accessor potato-frame/active-channel))
-  (:panes (channel-list :application
-                        :default-view (make-instance 'potato-view)
-                        :display-function 'display-channel-list)
+  (:panes (channel-list    :application
+                           :default-view (make-instance 'potato-view)
+                           :display-function 'display-channel-list)
           (channel-content :application
                            :default-view (make-instance 'channel-content-view)
                            :display-function 'display-channel-content
                            ;;:display-time nil
                            )
+          (user-list       :application
+                           :default-view (make-instance 'user-list-view)
+                           :display-function 'DUMMY-display-user-list)
           (interaction-pane :interactor))
   (:layouts (default (9/10 (clim:horizontally ()
                              (2/10 channel-list)
-                             (8/10 channel-content)))
+                             (6/10 channel-content)
+                             #+nil(2/10 user-list)))
                      (1/10 interaction-pane))))
+
+#|
+
+  If the #+nil in the declaration above is removed (4 lines above this one),
+  the following error happens as soon as I try to update the CHANNEL-CONTENT pane:
+
+There is no applicable method for the generic function
+  #<CLIM-INTERNALS::PRESENTATION-GENERIC-FUNCTION CLIM-INTERNALS::%PRESENT (46)>
+when called with arguments
+  (#<POTATO-CLIENT-CLIM::SET-ELEMENT :NOT-BOUND>
+   #<POTATO-CLIENT-CLIM::SET-ELEMENT (#<POTATO-CLIENT-CLIM::PARAGRAPH-ELEMENT TEXT #<POTATO-CLIENT-CLIM::SET-ELEMENT ("wef")>>)>
+   POTATO-CLIENT-CLIM::SET-ELEMENT
+   #<CLIM-CLX::CLX-APPLICATION-PANE-DUMMY POTATO-CLIENT-CLIM::USER-LIST {10065DEBE3}>
+   #<POTATO-CLIENT-CLIM::USER-LIST-VIEW {10065DDB83}>
+   :ACCEPTABLY NIL :FOR-CONTEXT-TYPE
+   POTATO-CLIENT-CLIM::SET-ELEMENT).
+   [Condition of type SIMPLE-ERROR]
+
+|#
 
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
   (check-type api-key string)
@@ -66,8 +110,10 @@
   (log:trace "Frame closed: ~s" frame)
   (call-next-method))
 
+(clim:define-presentation-method clim:present (obj (type user) stream (view user-list-view) &key)
+  (format stream "~a" (user/description obj)))
+
 (clim:define-presentation-method clim:present (obj (type channel) stream (view potato-view) &key)
-  (log:trace "Calling present method for channel: ~s, stream: ~s" obj stream)
   (clim:draw-text* stream (channel/name obj) 10 10))
 
 (clim:define-presentation-method clim:present (obj (type channel) stream (view clim:textual-view) &key)
@@ -87,13 +133,22 @@
       (lparallel:future
         (potato-client:subscribe-to-channel (channel/id obj) :connection conn)))))
 
+(defun display-user-list (frame stream)
+  (alexandria:when-let ((channel (potato-frame/active-channel frame)))
+    (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
+      (loop
+        for user in (sort (loop for ch being each hash-value in (channel/users channel)) #'string< :key #'user/description)
+        do (clim:formatting-row (stream)
+             (clim:formatting-cell (stream)
+               (clim:present user (clim:presentation-type-of user) :stream stream)))))))
+
 (defun display-channel-list (frame stream)
   (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
     (loop
       for channel in (potato-frame/channels frame)
       do (clim:formatting-row (stream)
            (clim:formatting-cell (stream)
-             (clim:present channel 'channel :stream stream))))))
+             (clim:present channel (clim:presentation-type-of channel) :stream stream))))))
 
 (defun display-channel-content (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
@@ -109,6 +164,10 @@
       (vector-push-extend msg (channel/messages channel))
       (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
 
+(defun handle-channel-state-update (frame event)
+  (with-call-in-event-handler frame
+    (log:info "Channel state update: ~s" event)))
+
 (defvar *frame* nil)
 
 (defun potato-client-clim (api-key)
@@ -119,7 +178,8 @@
                                              :width 700 :height 500
                                              :left 10 :top 10))
          (reader (start-notifications (potato-frame/connection frame)
-                                      :message-callback (lambda (msg) (handle-message-received frame msg)))))
+                                      :message-callback (lambda (msg) (handle-message-received frame msg))
+                                      :state-callback (lambda (event) (handle-channel-state-update frame event)))))
     (unwind-protect
          (progn
            (setq *frame* frame)
