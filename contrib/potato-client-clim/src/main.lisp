@@ -45,11 +45,6 @@
 (defclass user-list-view (clim:view)
   ())
 
-(defun DUMMY-display-user-list (frame stream)
-  (declare (ignore frame stream))
-  ;; Do absolutely nothing here in order to illustrate the problem
-  )
-
 (clim:define-application-frame potato-frame ()
   ((connection     :type potato-client:connection
                    :reader potato-frame/connection)
@@ -69,32 +64,16 @@
                            )
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
-                           :display-function 'DUMMY-display-user-list)
+                           :display-function 'display-user-list)
           (interaction-pane :interactor))
   (:layouts (default (9/10 (clim:horizontally ()
                              (2/10 channel-list)
                              (6/10 channel-content)
-                             #+nil(2/10 user-list)))
+                             (2/10 user-list)))
                      (1/10 interaction-pane))))
 
-#|
-
-  If the #+nil in the declaration above is removed (4 lines above this one),
-  the following error happens as soon as I try to update the CHANNEL-CONTENT pane:
-
-There is no applicable method for the generic function
-  #<CLIM-INTERNALS::PRESENTATION-GENERIC-FUNCTION CLIM-INTERNALS::%PRESENT (46)>
-when called with arguments
-  (#<POTATO-CLIENT-CLIM::SET-ELEMENT :NOT-BOUND>
-   #<POTATO-CLIENT-CLIM::SET-ELEMENT (#<POTATO-CLIENT-CLIM::PARAGRAPH-ELEMENT TEXT #<POTATO-CLIENT-CLIM::SET-ELEMENT ("wef")>>)>
-   POTATO-CLIENT-CLIM::SET-ELEMENT
-   #<CLIM-CLX::CLX-APPLICATION-PANE-DUMMY POTATO-CLIENT-CLIM::USER-LIST {10065DEBE3}>
-   #<POTATO-CLIENT-CLIM::USER-LIST-VIEW {10065DDB83}>
-   :ACCEPTABLY NIL :FOR-CONTEXT-TYPE
-   POTATO-CLIENT-CLIM::SET-ELEMENT).
-   [Condition of type SIMPLE-ERROR]
-
-|#
+(defmethod clim:frame-standard-output ((frame potato-frame))
+  (clim:find-pane-named frame 'channel-content))
 
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
   (check-type api-key string)
