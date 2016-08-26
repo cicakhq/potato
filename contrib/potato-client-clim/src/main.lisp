@@ -1,5 +1,7 @@
 (in-package :potato-client-clim)
 
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+
 (defclass channel ()
   ((id        :type string
               :initarg :id
@@ -50,7 +52,7 @@
    (channels       :type list
                    :initform nil
                    :accessor potato-frame/channels)
-   (active-channel :type (or null channel-content)
+   (active-channel :type (or null channel)
                    :initform nil
                    :accessor potato-frame/active-channel))
   (:panes (channel-list    :application
