@@ -1,11 +1,5 @@
 (in-package :potato-client-clim)
 
-(defun call-in-event-handler (frame fn)
-  (clim:execute-frame-command frame `(funcall ,(lambda () (funcall fn)))))
-
-(defmacro with-call-in-event-handler (frame &body body)
-  `(call-in-event-handler ,frame (lambda () ,@body)))
-
 (defclass channel ()
   ((id        :type string
               :initarg :id
@@ -39,6 +33,9 @@
 (defclass user-list-view (clim:view)
   ())
 
+(defclass input-view (clim:view)
+  ())
+
 (clim:define-application-frame potato-frame ()
   ((connection     :type potato-client:connection
                    :reader potato-frame/connection)
@@ -59,10 +56,14 @@
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
                            :display-function 'display-user-list)
+          (input           (clim:make-pane 'clim:text-field
+                                           :activate-callback #'send-message-selected))
           (interaction-pane :interactor))
   (:layouts (default (9/10 (clim:horizontally ()
                              (2/10 channel-list)
-                             (6/10 channel-content)
+                             (6/10 (clim:vertically ()
+                                     channel-content
+                                     input))
                              (2/10 user-list)))
                      (1/10 interaction-pane))))
 
@@ -98,6 +99,16 @@
     (obj)
   (list obj))
 
+(defun send-message-selected (gadget)
+  (log:info "Will send message: ~s" (clim:gadget-value gadget))
+  (let* ((frame clim:*application-frame*)
+         (channel (potato-frame/active-channel frame)))
+    (when channel
+      (let* ((pane (clim:find-pane-named frame 'input))
+             (text (clim:gadget-value pane)))
+        (clim:execute-frame-command frame `(send-message ,channel ,text))
+        (setf (clim:gadget-value pane) "")))))
+
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
   (let ((frame clim:*application-frame*))
@@ -109,6 +120,13 @@
         (lparallel:future
           (potato-client:subscribe-to-channel cid :connection conn)
           (update-users-from-channel (channel/users obj) conn cid))))))
+
+(define-potato-frame-command (send-message :name "Send message")
+  ((channel 'channel)
+   (text 'string))
+  (let ((frame clim:*application-frame*))
+    (lparallel:future
+      (potato-client:send-message (channel/id channel) text :connection (potato-frame/connection frame)))))
 
 (defun display-user-list (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
