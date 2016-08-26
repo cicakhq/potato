@@ -14,4 +14,5 @@
            #:potato-client-error
            #:list-users
            #:listener-loop
-           #:subscribe-to-channel))
+           #:subscribe-to-channel
+           #:message-history))
