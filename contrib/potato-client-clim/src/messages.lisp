@@ -30,6 +30,15 @@
   (print-unreadable-safely (id text) obj stream
     (format stream "ID ~s TEXT ~s" id text)))
 
+(defun make-message-from-json (msg)
+  (make-instance 'message
+                 :id (st-json:getjso "id" msg)
+                 :channel (st-json:getjso "channel" msg)
+                 :from (st-json:getjso "from" msg)
+                 :from-name (st-json:getjso "from_name" msg)
+                 :created-date (parse-timestamp (st-json:getjso "created_date" msg))
+                 :text (parse-text-content (st-json:getjso "text" msg))))
+
 (defclass channel-content-view (clim:view)
   ())
 

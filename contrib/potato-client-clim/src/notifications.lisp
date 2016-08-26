@@ -25,13 +25,7 @@
     (funcall fn arg)))
 
 (defun process-message-event (state event)
-  (let ((msg (make-instance 'message
-                            :id (st-json:getjso "id" event)
-                            :channel (st-json:getjso "channel" event)
-                            :from (st-json:getjso "from" event)
-                            :from-name (st-json:getjso "from_name" event)
-                            :created-date (parse-timestamp (st-json:getjso "created_date" event))
-                            :text (parse-text-content (st-json:getjso "text" event)))))
+  (let ((msg (make-message-from-json event)))
     (log:trace "Created message: ~s" msg)
     (call-notification-callback (notification-reader-state/message-callback state) msg)))
 

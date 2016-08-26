@@ -7,8 +7,16 @@
    (name      :type string
               :initarg :name
               :reader channel/name)
-   (messages  :type array
-              :initform (make-array 0 :element-type 'message :adjustable t :fill-pointer 0)
+   (messages  :type dhs-sequences.red-black-tree:red-black-tree
+              :initform (make-instance 'dhs-sequences.red-black-tree:red-black-tree
+                                       :test (lambda (o1 o2)
+                                               (let ((date1 (message/created-date o1))
+                                                     (date2 (message/created-date o2)))
+                                                 (if (local-time:timestamp= date1 date2)
+                                                     (string< (message/id o1) (message/id o2))
+                                                     (local-time:timestamp< date1 date2))))
+                                       :test-equal (lambda (o1 o2)
+                                                     (equal (message/id o1) (message/id o2))))
               :reader channel/messages)
    (connected :type (or null (eql t))
               :initform nil
@@ -102,7 +110,6 @@
   (list obj))
 
 (defun send-message-selected (gadget)
-  (log:info "Will send message: ~s" (clim:gadget-value gadget))
   (let* ((frame clim:*application-frame*)
          (channel (potato-frame/active-channel frame)))
     (when channel
@@ -110,6 +117,16 @@
              (text (clim:gadget-value pane)))
         (clim:execute-frame-command frame `(send-message ,channel ,text))
         (setf (clim:gadget-value pane) "")))))
+
+(defun load-history-and-update (channel conn frame)
+  (loop
+    with messages = (potato-client:message-history (channel/id channel) :connection conn :format "json")
+    for msg-json in (st-json:getjso "messages" messages)
+    for msg = (make-message-from-json msg-json)
+    do (dhs-sequences:tree-insert (channel/messages channel) msg))
+  (with-call-in-event-handler frame
+    (when (eq (potato-frame/active-channel frame) channel)
+      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
@@ -121,6 +138,7 @@
             (cid (channel/id obj)))
         (lparallel:future
           (potato-client:subscribe-to-channel cid :connection conn)
+          (load-history-and-update obj conn frame)
           (update-users-from-channel (channel/users obj) conn cid))))))
 
 (define-potato-frame-command (send-message :name "Send message")
@@ -136,7 +154,6 @@
     (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
       (loop
         for user in (users-in-db (channel/users channel))
-        do (log:info "user: ~s" user)
         do (clim:formatting-row (stream)
              (clim:formatting-cell (stream)
                (present-to-stream user stream)))))))
@@ -153,14 +170,17 @@
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
     (log:trace "Displaying channel content")
     (loop
-      for msg across (channel/messages channel)
-      do (clim:present msg 'message :stream stream)
-      do (format stream "~%"))))
+      with messages = (channel/messages channel)
+      for e = (dhs-sequences:tree-first-node messages) then (dhs-sequences:tree-next messages e)
+      while e
+      do (let ((msg (dhs-sequences:node-element e)))
+           (clim:present msg 'message :stream stream)
+           (format stream "~%")))))
 
 (defun handle-message-received (frame msg)
   (with-call-in-event-handler frame
     (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
-      (vector-push-extend msg (channel/messages channel))
+      (dhs-sequences:tree-insert (channel/messages channel) msg)
       (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
 
 (defun handle-channel-state-update (frame event)
