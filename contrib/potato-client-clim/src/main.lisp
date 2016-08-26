@@ -58,14 +58,16 @@
                            :display-function 'display-user-list)
           (input           (clim:make-pane 'clim:text-field
                                            :activate-callback #'send-message-selected))
+          (bottom-adjuster (clim:make-pane 'clim-extensions:box-adjuster-gadget))
           (interaction-pane :interactor))
-  (:layouts (default (9/10 (clim:horizontally ()
-                             (2/10 channel-list)
-                             (6/10 (clim:vertically ()
-                                     channel-content
-                                     input))
-                             (2/10 user-list)))
-                     (1/10 interaction-pane))))
+  (:layouts (default (clim:horizontally ()
+                       (2/10 channel-list)
+                       (6/10 (clim:vertically ()
+                               channel-content
+                               input))
+                       (2/10 user-list))
+                     bottom-adjuster
+                     interaction-pane)))
 
 (defmethod clim:frame-standard-output ((frame potato-frame))
   (clim:find-pane-named frame 'channel-content))
