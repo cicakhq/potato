@@ -110,6 +110,7 @@
   (list obj))
 
 (defun send-message-selected (gadget)
+  (declare (ignore gadget))
   (let* ((frame clim:*application-frame*)
          (channel (potato-frame/active-channel frame)))
     (when channel
