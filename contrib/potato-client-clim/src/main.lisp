@@ -1,5 +1,10 @@
 (in-package :potato-client-clim)
 
+(defparameter *channel-list-background* (clim:make-rgb-color 0 0 0))
+(defparameter *channel-list-foreground* (clim:make-rgb-color 1 1 1))
+(defparameter *channel-list-selected-background* (clim:make-rgb-color 0.3 0.43 0.22))
+(defparameter *channel-list-selected-foreground* (clim:make-rgb-color 0.9 0.9 0.9))
+
 (defclass channel ()
   ((id        :type string
               :initarg :id
@@ -55,7 +60,8 @@
                    :accessor potato-frame/active-channel))
   (:panes (channel-list    :application
                            :default-view (make-instance 'potato-view)
-                           :display-function 'display-channel-list)
+                           :display-function 'display-channel-list
+                           :background *channel-list-background*)
           (channel-content :application
                            :default-view (make-instance 'channel-content-view)
                            :display-function 'display-channel-content
@@ -160,12 +166,13 @@
                (present-to-stream user stream)))))))
 
 (defun display-channel-list (frame stream)
-  (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
-    (loop
-      for channel in (potato-frame/channels frame)
-      do (clim:formatting-row (stream)
-           (clim:formatting-cell (stream)
-             (present-to-stream channel stream))))))
+  (clim:with-drawing-options (stream :ink *channel-list-foreground*)
+   (clim:formatting-table (stream :x-spacing 5 :y-spacing 5)
+     (loop
+       for channel in (potato-frame/channels frame)
+       do (clim:formatting-row (stream)
+            (clim:formatting-cell (stream)
+              (present-to-stream channel stream)))))))
 
 (defun display-channel-content (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
