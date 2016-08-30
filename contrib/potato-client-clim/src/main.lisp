@@ -1,5 +1,7 @@
 (in-package :potato-client-clim)
 
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+
 (defparameter *channel-list-background* (clim:make-rgb-color 0 0 0))
 (defparameter *channel-list-foreground* (clim:make-rgb-color 1 1 1))
 (defparameter *channel-list-selected-background* (clim:make-rgb-color 0.3 0.43 0.22))
@@ -55,7 +57,7 @@
    (channels       :type list
                    :initform nil
                    :accessor potato-frame/channels)
-   (active-channel :type (or null channel-content)
+   (active-channel :type (or null channel)
                    :initform nil
                    :accessor potato-frame/active-channel))
   (:panes (channel-list    :application

@@ -1,5 +1,7 @@
 (in-package :potato-client-clim)
 
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+
 (defun parse-timestamp (s)
   (local-time:parse-timestring s))
 
