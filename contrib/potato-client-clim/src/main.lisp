@@ -64,10 +64,17 @@
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list
                            :background *channel-list-background*)
-          #+nil(channel-content (clim:make-pane 'dynlist-pane
-                                           :content #("foo" "bar" "test")
-                                           :default-view (make-instance 'channel-content-view)))
-          (channel-content (clim:make-pane 'climacs-flexichain-output-history:flexichain-pane))
+          (message-content (clim:make-clim-stream-pane :type 'dynlist-pane
+                                                       :content #("foo" "bar" "test")
+                                                       :default-view (make-instance 'channel-content-view)
+                                                       :display-time nil
+                                                       :scroll-bars :vertical))
+          #+nil(content (clim:make-clim-stream-pane :type 'climacs-flexichain-output-history:flexichain-pane
+                                                       :name 'channel-content
+                                                       :width 200
+                                                       :height 300
+                                                       :display-time nil
+                                                       :scroll-bars t))
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
                            :display-function 'display-user-list)
@@ -78,7 +85,7 @@
   (:layouts (default (clim:horizontally ()
                        (2/10 channel-list)
                        (6/10 (clim:vertically ()
-                               channel-content
+                               message-content
                                input))
                        (2/10 user-list))
                      bottom-adjuster
@@ -93,10 +100,7 @@
     (setf (slot-value obj 'connection) conn)))
 
 (defun find-frame-channel-by-id (frame cid)
-  (loop
-    for channel in (potato-frame/channels frame)
-    when (equal (channel/id channel) cid)
-      return channel))
+  (find cid (potato-frame/channels frame) :key #'channel/id :test #'equal))
 
 (defmethod clim:frame-exit ((frame potato-frame))
   (log:trace "Frame closed: ~s" frame)

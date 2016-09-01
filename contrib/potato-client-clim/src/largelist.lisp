@@ -4,9 +4,7 @@
   ((content :type t
             :initarg :content
             :accessor dynlist-pane/content))
-  (:default-initargs :output-record (make-instance 'dynlist-output-history)
-                     :display-time nil
-                     :scroll-bars t))
+  (:default-initargs :output-record (make-instance 'dynlist-output-history)))
 
 (defclass dynlist-output-history (clim:output-record clim:stream-output-history-mixin)
   ((parent        :initarg :parent
@@ -62,7 +60,8 @@
   ;; viewport, then move them to the prefix.
   (loop
     with lines = (content history)
-    until (= (prefix-end history) (flexichain:nb-elements lines))
+    with length = (dynlist-size lines)
+    until (= (prefix-end history) length)
     while (<= (+ (prefix-height history)
                  (clim:bounding-rectangle-height
                   (dynlist-get-output-record-for-object (clim:output-record-parent history) (prefix-end history))))
@@ -79,10 +78,6 @@
                                       &optional
                                         region x-offset y-offset)
   (declare (ignore x-offset y-offset))
-  (format *out* "Replaying output record in viewport: ~s, reg: ~s, parent: ~s, Stream: ~s~%"
-          (clim:pane-viewport stream) (clim:pane-viewport-region stream)
-          (clim:sheet-parent stream)
-          stream)
   (alexandria:when-let ((viewport (clim:pane-viewport-region stream)))
     (multiple-value-bind (left top right bottom)
         (clim:bounding-rectangle* viewport)
