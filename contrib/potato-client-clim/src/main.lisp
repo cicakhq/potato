@@ -64,11 +64,10 @@
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list
                            :background *channel-list-background*)
-          (channel-content :application
-                           :default-view (make-instance 'channel-content-view)
-                           :display-function 'display-channel-content
-                           ;;:display-time nil
-                           )
+          #+nil(channel-content (clim:make-pane 'dynlist-pane
+                                           :content #("foo" "bar" "test")
+                                           :default-view (make-instance 'channel-content-view)))
+          (channel-content (clim:make-pane 'climacs-flexichain-output-history:flexichain-pane))
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
                            :display-function 'display-user-list)

@@ -10,12 +10,14 @@
                :bordeaux-threads
                :lparallel
                :string-case
+               :flexichain
                :containers
                :potato-client)
   :components ((:module "src"
                         :serial t
                         :components ((:file "package")
                                      (:file "misc")
+                                     (:file "flexichain-output-history")
                                      (:file "largelist")
                                      (:file "user")
                                      (:file "messages")
