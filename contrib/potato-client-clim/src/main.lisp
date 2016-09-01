@@ -66,6 +66,7 @@
                            :background *channel-list-background*)
           (message-content (clim:make-clim-stream-pane :type 'dynlist-pane
                                                        :content #("foo" "bar" "test")
+                                                       :name 'channel-content
                                                        :default-view (make-instance 'channel-content-view)
                                                        :display-time nil
                                                        :scroll-bars :vertical))
