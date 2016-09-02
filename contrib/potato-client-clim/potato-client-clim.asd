@@ -11,7 +11,7 @@
                :lparallel
                :string-case
                :flexichain
-               :containers
+               :receptacle
                :potato-client)
   :components ((:module "src"
                         :serial t

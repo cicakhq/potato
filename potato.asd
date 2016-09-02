@@ -16,7 +16,7 @@
                  :cl-memcached
                  :iolib
                  :trivial-gray-streams
-                 :containers
+                 :receptacle
                  :secure-random
                  :cl-who
                  :log4cl
