@@ -7,8 +7,8 @@
   ((conn             :type potato-client:connection
                      :initarg :connection
                      :reader notification-reader-state/connection)
-   (stopped-p        :type dhs-sequences:cas-wrapper
-                     :initform (dhs-sequences:make-cas-wrapper nil)
+   (stopped-p        :type receptacle:cas-wrapper
+                     :initform (receptacle:make-cas-wrapper nil)
                      :reader notification-reader-state/stopped-p)
    (thread           :accessor notification-reader-state/thread)
    (message-callback :type (or null function)
@@ -62,11 +62,11 @@
 
 (defun stop-notifications (state)
   (let ((stopped-p (notification-reader-state/stopped-p state)))
-    (unless (dhs-sequences:cas-wrapper/value stopped-p)
+    (unless (receptacle:cas-wrapper/value stopped-p)
       (bordeaux-threads:interrupt-thread (notification-reader-state/thread state)
                                          (lambda ()
                                            (signal 'stop-notification)))
-      (dhs-sequences:cas stopped-p nil t))))
+      (receptacle:cas stopped-p nil t))))
 
 (defun notification-reader-loop (state)
   (let ((conn (notification-reader-state/connection state))
@@ -75,7 +75,7 @@
         (potato-client:listener-loop conn
                                      nil
                                      (lambda (event)
-                                       (when (dhs-sequences:cas-wrapper/value stopped-p)
+                                       (when (receptacle:cas-wrapper/value stopped-p)
                                          (signal 'stop-notification))
                                        (process-incoming-event state event)))
       (stop-notification ()

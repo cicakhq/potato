@@ -4,15 +4,15 @@
 
 (deftype timer-trigger () '(and real (satisfies plusp)))
 
-(defclass checked-dhs-sequences-sorted-list (potato.common:dhs-sequences-sorted-list)
+(defclass checked-receptacle-sorted-list (potato.common:receptacle-sorted-list)
   ()
-  (:documentation "Special version of dhs-sequences-sorted-list which
+  (:documentation "Special version of receptacle-sorted-list which
 verifies that removed objects actually exists in the list, and throws
 an error if not. This is purely to be used for testing, since its use
 in the timer queue has a race condition when a timer expires at the
 same time an object is being removed from the list."))
 
-(defmethod potato.common:sorted-list-remove :around ((list checked-dhs-sequences-sorted-list) element)
+(defmethod potato.common:sorted-list-remove :around ((list checked-receptacle-sorted-list) element)
   (let ((element (call-next-method)))
     (unless element
       (error "Illegal state in timer queue detected. Unable to find object in list: ~s" element))))
@@ -28,26 +28,26 @@ same time an object is being removed from the list."))
                  :initarg :callback
                  :initform (error "required value ~s missing" :callback)
                  :reader timer/callback)
-   (cancelled    :type dhs-sequences:cas-wrapper
-                 :initform (dhs-sequences:make-cas-wrapper nil)
+   (cancelled    :type receptacle:cas-wrapper
+                 :initform (receptacle:make-cas-wrapper nil)
                  :accessor timer/cancelled)))
 
 (defmethod print-object ((obj timer) stream)
   (print-unreadable-safely (index trigger-time cancelled) obj stream
-    (format stream "INDEX ~s TRIGGER-TIME ~s CANCELLED ~s" index trigger-time (dhs-sequences:cas-wrapper/value cancelled))))
+    (format stream "INDEX ~s TRIGGER-TIME ~s CANCELLED ~s" index trigger-time (receptacle:cas-wrapper/value cancelled))))
 
 (defclass timer-queue ()
   ((name          :type string
                   :initarg :name
                   :initform (error "required value missing")
                   :reader timer-queue/name)
-   (request-queue :type dhs-sequences:blocking-queue
-                  :initform (dhs-sequences:make-blocking-queue)
+   (request-queue :type receptacle:blocking-queue
+                  :initform (receptacle:make-blocking-queue)
                   :reader timer-queue/request-queue)
    (timers        :type t
                   :reader timer-queue/timers)
-   (index         :type dhs-sequences:cas-wrapper
-                  :initform (dhs-sequences:make-cas-wrapper 0)
+   (index         :type receptacle:cas-wrapper
+                  :initform (receptacle:make-cas-wrapper 0)
                   :accessor timer-queue/index)
    (thread        :type t
                   :initform nil
@@ -68,11 +68,11 @@ same time an object is being removed from the list."))
         ;; Fallback that can be used if a bug is found in the red-black implementation
         #+nil(make-instance 'potato.common:plain-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
         ;; Standard sorted list to use in production deployments
-        (make-instance 'potato.common:dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
+        (make-instance 'potato.common:receptacle-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
         ;; Don't use the checked sorted list in production. See the note about the race condition in the class documentation
-        #+nil(make-instance 'checked-dhs-sequences-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
+        #+nil(make-instance 'checked-receptacle-sorted-list :test #'timer< :test-equal #'eq :key #'identity)
         ;; Used to debug possible errors in the red-black implementation
-        #+nil(make-instance 'potato.common::logged-dhs-sequences-sorted-list
+        #+nil(make-instance 'potato.common::logged-receptacle-sorted-list
                        :test #'timer< :test-equal #'eq :key #'identity
                        :name (timer-queue/name obj)
                        :value-formatter (lambda (v)
@@ -96,10 +96,10 @@ same time an object is being removed from the list."))
      if (and next-expired (<= (timer/trigger-time next-expired) now))
      do (progn
           (sorted-list-remove timers next-expired)
-          (when (null (dhs-sequences:cas (timer/cancelled next-expired) nil t))
+          (when (null (receptacle:cas (timer/cancelled next-expired) nil t))
             (funcall (timer/callback next-expired))))
      else
-     do (let ((task (dhs-sequences:queue-pop-wait request-queue
+     do (let ((task (receptacle:queue-pop-wait request-queue
                                                   :timeout (if next-expired
                                                                (- (timer/trigger-time next-expired) now)
                                                                ;; ELSE: No timers, wait indefinitely
@@ -111,11 +111,11 @@ same time an object is being removed from the list."))
                       (:stop (return-from timer-thread-loop nil))))))))
 
 (defun increment-index (mgr)
-  (dhs-sequences:with-cas-update (v (timer-queue/index mgr))
+  (receptacle:with-cas-update (v (timer-queue/index mgr))
     (1+ v)))
 
 (defun push-request-to-request-queue (mgr fn)
-  (dhs-sequences:queue-push (timer-queue/request-queue mgr) fn))
+  (receptacle:queue-push (timer-queue/request-queue mgr) fn))
 
 (defun schedule-timer (mgr time callback)
   (check-type mgr timer-queue)
@@ -150,7 +150,7 @@ same time an object is being removed from the list."))
 (defun unschedule-timer (mgr timer)
   (check-type mgr timer-queue)
   (check-type timer timer)
-  (when (null (dhs-sequences:cas (timer/cancelled timer) nil t))
+  (when (null (receptacle:cas (timer/cancelled timer) nil t))
     (push-request-to-request-queue mgr
                                    (lambda ()
                                      (let ((timers (timer-queue/timers mgr)))

@@ -3,9 +3,9 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defclass id-generator ()
-  ((last-value :type dhs-sequences:cas-wrapper
+  ((last-value :type receptacle:cas-wrapper
                :reader id-generator/last-value
-               :initform (dhs-sequences:make-cas-wrapper 0))))
+               :initform (receptacle:make-cas-wrapper 0))))
 
 (defun make-id-generator ()
   (make-instance 'id-generator))
@@ -23,8 +23,8 @@
     (loop
        with v = (id-generator/last-value gen)
        for i from 0
-       for old = (dhs-sequences:cas-wrapper/value v)
+       for old = (receptacle:cas-wrapper/value v)
        for n = (+ now i)
        for new = (if (>= old n) (1+ old) n)
-       if (eql (dhs-sequences:cas v old new) old)
+       if (eql (receptacle:cas v old new) old)
        return new)))

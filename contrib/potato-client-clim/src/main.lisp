@@ -14,8 +14,8 @@
    (name      :type string
               :initarg :name
               :reader channel/name)
-   (messages  :type dhs-sequences.red-black-tree:red-black-tree
-              :initform (make-instance 'dhs-sequences.red-black-tree:red-black-tree
+   (messages  :type receptacle.red-black-tree:red-black-tree
+              :initform (make-instance 'receptacle.red-black-tree:red-black-tree
                                        :test (lambda (o1 o2)
                                                (let ((date1 (message/created-date o1))
                                                      (date2 (message/created-date o2)))
@@ -65,7 +65,7 @@
                            :display-function 'display-channel-list
                            :background *channel-list-background*)
           (message-content (clim:make-clim-stream-pane :type 'dynlist-pane
-                                                       :content #("foo" "bar" "test")
+                                                       :content #()
                                                        :name 'channel-content
                                                        :default-view (make-instance 'channel-content-view)
                                                        :display-time nil
@@ -136,10 +136,11 @@
     with messages = (potato-client:message-history (channel/id channel) :connection conn :format "json")
     for msg-json in (st-json:getjso "messages" messages)
     for msg = (make-message-from-json msg-json)
-    do (dhs-sequences:tree-insert (channel/messages channel) msg))
+    do (receptacle:tree-insert (channel/messages channel) msg))
   (with-call-in-event-handler frame
     (when (eq (potato-frame/active-channel frame) channel)
-      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
+      #+nil(clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content))
+      (dynlist-updated (clim:find-pane-named frame 'channel-content)))))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
@@ -185,16 +186,16 @@
     (log:trace "Displaying channel content")
     (loop
       with messages = (channel/messages channel)
-      for e = (dhs-sequences:tree-first-node messages) then (dhs-sequences:tree-next messages e)
+      for e = (receptacle:tree-first-node messages) then (receptacle:tree-next messages e)
       while e
-      do (let ((msg (dhs-sequences:node-element e)))
+      do (let ((msg (receptacle:node-element e)))
            (clim:present msg 'message :stream stream)
            (format stream "~%")))))
 
 (defun handle-message-received (frame msg)
   (with-call-in-event-handler frame
     (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
-      (dhs-sequences:tree-insert (channel/messages channel) msg)
+      (receptacle:tree-insert (channel/messages channel) msg)
       (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
 
 (defun handle-channel-state-update (frame event)

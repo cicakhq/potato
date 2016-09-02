@@ -36,7 +36,7 @@ a refresh message was sent.")
                :initarg :id
                :reader channel-state/id
                :documentation "ID of this channel")
-   (users      :type dhs-sequences:blocking-hash-map
+   (users      :type receptacle:blocking-hash-map
                :accessor channel-state/users
                :documentation "List of user in the channel. Keyed on user-id, contains an instance of CHANNEL-USER"))
   (:documentation "State for a single channel"))
@@ -44,7 +44,7 @@ a refresh message was sent.")
 (defmethod initialize-instance :after ((obj channel-state) &key)
   (unless (slot-boundp obj 'users)
     (setf (channel-state/users obj)
-          (dhs-sequences:make-blocking-hash-map :test 'equal
+          (receptacle:make-blocking-hash-map :test 'equal
                                                 :name (format nil "User list for channel ~s"
                                                               (channel-state/id obj))))))
 
@@ -76,10 +76,10 @@ a refresh message was sent.")
 (defun remove-user (ch uid)
   (log:trace "Removing user ~s from channel ~s" uid (channel-state/id ch))
   (let ((users (channel-state/users ch)))
-    (dhs-sequences:with-locked-instance users
-      (let ((user (dhs-sequences:hash-get users uid)))
+    (receptacle:with-locked-instance users
+      (let ((user (receptacle:hash-get users uid)))
         (when user
-          (dhs-sequences:hash-remove users uid)
+          (receptacle:hash-remove users uid)
           (with-msgl *msgl-queue*
             (let ((routing-key (format nil "change.~a.~a.~a.all"
                                        *state-server-reply-user-remove-from-channel*
@@ -111,7 +111,7 @@ a refresh message was sent.")
   (log:trace "adding user, channel: ~s, user: ~s, timeout: ~s" channel-id user-id timeout)
   (let ((channel-state (get-channel-state channel-id)))
     (let ((will-send nil))
-      (let ((user-state (dhs-sequences:with-hash-get-or-update (channel-state/users channel-state) user-id
+      (let ((user-state (receptacle:with-hash-get-or-update (channel-state/users channel-state) user-id
                           (let ((u (make-instance 'channel-user :id user-id :channel channel-state)))
                             (setq will-send t)
                             u))))
@@ -161,7 +161,7 @@ a refresh message was sent.")
 (defun handle-typing-begin (channel-id user-id)
   (log:trace "State server received typing-begin message. channel=~s, user=~s" channel-id user-id)
   (alexandria:when-let ((channel-state (get-channel-state channel-id :create-if-missing nil)))
-    (alexandria:when-let ((user-state (dhs-sequences:hash-get (channel-state/users channel-state) user-id)))
+    (alexandria:when-let ((user-state (receptacle:hash-get (channel-state/users channel-state) user-id)))
       (let ((will-send nil))
         (bordeaux-threads:with-lock-held ((channel-user/lock user-state))
           (unless (channel-user/text-p user-state)
@@ -181,7 +181,7 @@ a refresh message was sent.")
 (defun handle-typing-end (channel-id user-id)
   (log:trace "State server received typing-begin message. channel=~s, user=~s" channel-id user-id)
   (alexandria:when-let ((channel-state (get-channel-state channel-id :create-if-missing nil)))
-    (alexandria:when-let ((user-state (dhs-sequences:hash-get (channel-state/users channel-state) user-id)))
+    (alexandria:when-let ((user-state (receptacle:hash-get (channel-state/users channel-state) user-id)))
       (let ((will-send nil))
         (bordeaux-threads:with-lock-held ((channel-user/lock user-state))
           (when (channel-user/text-p user-state)
@@ -209,9 +209,9 @@ a refresh message was sent.")
   (let ((channel-state (get-channel-state channel-id :create-if-missing t)))
     (when channel-state
       (let* ((users (channel-state/users channel-state))
-             (users-copy (dhs-sequences:with-locked-instance users
+             (users-copy (receptacle:with-locked-instance users
                            (loop
-                              with iterator = (dhs-sequences:hash-iterator users :content :value)
+                              with iterator = (receptacle:hash-iterator users :content :value)
                               for value = (funcall iterator)
                               while value
                               collect value))))

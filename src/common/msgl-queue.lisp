@@ -6,8 +6,8 @@
   ())
 
 (defclass msgl ()
-  ((messages     :type dhs-sequences:queue
-                 :initform (dhs-sequences:make-queue)
+  ((messages     :type receptacle:queue
+                 :initform (receptacle:make-queue)
                  :reader msgl/messages)
    (processing-p :type t
                  :initform nil
@@ -26,7 +26,7 @@
   (when (bordeaux-threads:with-lock-held ((msgl/lock queue))
           (when (msgl/stopped queue)
             (error "Queue is stopped: ~s" queue))
-          (dhs-sequences:queue-push (msgl/messages queue) fn)
+          (receptacle:queue-push (msgl/messages queue) fn)
           (if (msgl/processing-p queue)
               nil
               (progn
@@ -36,12 +36,12 @@
       (block msgl-finish
         (let ((will-exit nil))
           (labels ((stop ()
-                     (dhs-sequences:delete-all (msgl/messages queue))
+                     (receptacle:delete-all (msgl/messages queue))
                      (setf (msgl/stopped queue) nil)))
             (unwind-protect
                  (loop
                     for obj = (bordeaux-threads:with-lock-held ((msgl/lock queue))
-                                (let ((result (dhs-sequences:queue-pop (msgl/messages queue)
+                                (let ((result (receptacle:queue-pop (msgl/messages queue)
                                                                        :if-empty nil)))
                                   (unless result
                                     (setf (msgl/processing-p queue) nil)

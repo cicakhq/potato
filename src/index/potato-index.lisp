@@ -2,7 +2,7 @@
 
 (declaim #.potato.common::*compile-decl*)
 
-(defvar *channel-group-cache* (dhs-sequences:make-blocking-hash-map :name "Map from channel to group" :test #'equal))
+(defvar *channel-group-cache* (receptacle:make-blocking-hash-map :name "Map from channel to group" :test #'equal))
 (defvar *main-seq-field-name* "couchdb_seq")
 (defvar *main-seq* nil)
 
@@ -33,7 +33,7 @@
         db-seq)))
 
 (defun find-cached-channel (channel-id)
-  (dhs-sequences:hash-get-or-update *channel-group-cache* channel-id
+  (receptacle:hash-get-or-update *channel-group-cache* channel-id
                                     #'(lambda ()
                                         (let* ((channel-result (clouchdb:get-document channel-id))
                                                (group-id (getfield :|group| channel-result)))

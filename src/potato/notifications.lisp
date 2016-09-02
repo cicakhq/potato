@@ -9,7 +9,7 @@
 ;;; unread state handling needs to gain access to this information.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *state-sources* (dhs-sequences:make-blocking-hash-map :test 'equal))
+(defvar *state-sources* (receptacle:make-blocking-hash-map :test 'equal))
 
 (defvar *state-server-connection* nil)
 (defvar *state-server-queue-name* nil)
@@ -18,8 +18,8 @@
   ((channel-id    :type string
                   :initarg :channel-id
                   :reader state-source/channel-id)
-   (members       :type dhs-sequences.red-black-tree:red-black-tree
-                  :initform (make-instance 'dhs-sequences.red-black-tree:red-black-tree
+   (members       :type receptacle.red-black-tree:red-black-tree
+                  :initform (make-instance 'receptacle.red-black-tree:red-black-tree
                                            :test #'string< :test-equal #'string= :key #'identity)
                   :reader state-source/members)
    (sync-callback :type (or null function)
@@ -42,8 +42,8 @@
     (bordeaux-threads:with-lock-held ((state-source/lock state-source))
       (let ((members (state-source/members state-source)))
         (ecase mode
-          (:add (dhs-sequences:tree-insert members user-id))
-          (:remove (dhs-sequences::tree-delete-element members user-id)))))))
+          (:add (receptacle:tree-insert members user-id))
+          (:remove (receptacle::tree-delete-element members user-id)))))))
 
 (defun process-sync-users (channel-id users)
   (log:trace "Performing full sync of channel members. channel=~s, users=~s" channel-id users)
@@ -51,9 +51,9 @@
     (let ((callback nil))
       (bordeaux-threads:with-lock-held ((state-source/lock state-source))
         (let ((members (state-source/members state-source)))
-          (dhs-sequences:delete-all members)
+          (receptacle:delete-all members)
           (dolist (user users)
-            (dhs-sequences:tree-insert members (first user)))
+            (receptacle:tree-insert members (first user)))
           ;; Check if SYNC-CALLBACK is set. If it is, we copy the
           ;; value before clearing the slot. The function will be
           ;; called later, outside the locked section.
@@ -114,11 +114,11 @@ SYNC-CALLBACK can be used to specify the callback function to pass to
 the creation of the state source when creating a new instance."
   (check-type channel-id string)
   (if create
-      (dhs-sequences:with-hash-get-or-update *state-sources* channel-id
+      (receptacle:with-hash-get-or-update *state-sources* channel-id
         (let ((source (make-instance 'state-source :channel-id channel-id :sync-callback sync-callback)))
           (register-source-with-state-server channel-id)
           source))
-      (values (dhs-sequences:hash-get *state-sources* channel-id) nil)))
+      (values (receptacle:hash-get *state-sources* channel-id) nil)))
 
 (defun start-state-listener-thread ()
   (start-monitored-thread #'state-listener "State listener loop"))

@@ -107,37 +107,37 @@ removed, or NIL if the element could not be found."
   (cl-containers:first-item (cl-containers-sorted-list/content list)))
 
 ;;;
-;;;  dhs-sequences.red-black-tree version
+;;;  receptacle.red-black-tree version
 ;;;
 
-(defclass dhs-sequences-sorted-list (sorted-list-mixin)
-  ((content :type dhs-sequences.red-black-tree:red-black-tree
-            :reader dhs-sequences-sorted-list/content)))
+(defclass receptacle-sorted-list (sorted-list-mixin)
+  ((content :type receptacle.red-black-tree:red-black-tree
+            :reader receptacle-sorted-list/content)))
 
-(defmethod initialize-instance :after ((obj dhs-sequences-sorted-list) &key)
+(defmethod initialize-instance :after ((obj receptacle-sorted-list) &key)
   (setf (slot-value obj 'content)
-        (make-instance 'dhs-sequences.red-black-tree:red-black-tree
+        (make-instance 'receptacle.red-black-tree:red-black-tree
                        :test (sorted-list/test-fn obj)
                        :test-equal (sorted-list/test-equal-fn obj)
                        :key (sorted-list/key-fn obj))))
 
-(defmethod sorted-list-insert ((list dhs-sequences-sorted-list) element)
-  (dhs-sequences:tree-insert (dhs-sequences-sorted-list/content list) element))
+(defmethod sorted-list-insert ((list receptacle-sorted-list) element)
+  (receptacle:tree-insert (receptacle-sorted-list/content list) element))
 
-(defmethod sorted-list-remove ((list dhs-sequences-sorted-list) element)
-  (let* ((tree (dhs-sequences-sorted-list/content list))
-         (node (dhs-sequences:tree-find-node tree element)))
+(defmethod sorted-list-remove ((list receptacle-sorted-list) element)
+  (let* ((tree (receptacle-sorted-list/content list))
+         (node (receptacle:tree-find-node tree element)))
     (if node
         (progn
-          (dhs-sequences:tree-delete-node tree node)
-          (dhs-sequences:node-element node))
+          (receptacle:tree-delete-node tree node)
+          (receptacle:node-element node))
         (progn
           (log:warn "Attempt to remove node ~s which was not in the tree" element)
           nil))))
 
-(defmethod sorted-list-first-item ((list dhs-sequences-sorted-list))
-  (let ((tree (dhs-sequences-sorted-list/content list)))
-    (dhs-sequences:tree-first-element tree)))
+(defmethod sorted-list-first-item ((list receptacle-sorted-list))
+  (let ((tree (receptacle-sorted-list/content list)))
+    (receptacle:tree-first-element tree)))
 
 ;;;
 ;;;  logged-sorted-list
@@ -186,5 +186,5 @@ removed, or NIL if the element could not be found."
 
 (defclass logged-cl-containers-sorted-list (locked-sorted-list-mixin logged-sorted-list-mixin cl-containers-sorted-list)
   ())
-(defclass logged-dhs-sequences-sorted-list (logged-sorted-list-mixin dhs-sequences-sorted-list)
+(defclass logged-receptacle-sorted-list (logged-sorted-list-mixin receptacle-sorted-list)
   ())

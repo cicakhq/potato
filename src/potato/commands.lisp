@@ -69,7 +69,7 @@
                         (error "Unable to parse args: ~a" s)))
                  (return (reverse result))))))
 
-(defvar *command-map* (dhs-sequences:make-hash-map :test 'equal))
+(defvar *command-map* (receptacle:make-hash-map :test 'equal))
 
 (defmacro define-command (name command required-params optional-params description long-description &body body)
   (let ((args-sym (gensym "ARGS"))
@@ -90,7 +90,7 @@
                       for index from (length required-params)
                       collect `(,(car sym) (nth ,index ,args-sym))))
              ,@body)))
-       (setf (dhs-sequences:hash-get *command-map* ,command)
+       (setf (receptacle:hash-get *command-map* ,command)
              (list ',name ,command ',required-params ',optional-params ,description ,long-description)))))
 
 (defun arg-is-active (arg &optional default-active-p)
@@ -104,15 +104,15 @@
          (error "Illegal boolean parameter: ~s" arg))))
 
 (defun show-commands-list ()
-  (let ((commands (sort (dhs-sequences:hash-keys *command-map*) #'string<)))
+  (let ((commands (sort (receptacle:hash-keys *command-map*) #'string<)))
     (dolist (command commands)
       (destructuring-bind (name command-string requred-params optional-params description long-description)
-          (dhs-sequences:hash-get *command-map* command)
+          (receptacle:hash-get *command-map* command)
         (declare (ignore name requred-params optional-params long-description))
         (format t "~a - ~a~%" command-string description)))))
 
 (defun show-command-help (cmd)
-  (let ((command (dhs-sequences:hash-get *command-map* cmd)))
+  (let ((command (receptacle:hash-get *command-map* cmd)))
     (unless command
       (error "No such command: ~s" cmd))
     (destructuring-bind (name command-string requred-params optional-params description long-description)
@@ -417,7 +417,7 @@ Valid values for role is: user, admin"
                  (show-command-help (car args)))
                 (t
                  (error "Usage: help [command]")))
-          (let ((command (dhs-sequences:hash-get *command-map* name)))
+          (let ((command (receptacle:hash-get *command-map* name)))
             (unless command
               (error "No such command: ~s" name))
             (funcall (car command) args))))))
