@@ -28,7 +28,7 @@
   (let ((history (clim:stream-output-history obj)))
     (setf (slot-value history 'parent) obj)))
 
-(defgeneric dynlist-updated (dylist)
+(defgeneric dynlist-updated (dynlist)
   (:documentation "Notifies a dynlist that its content has been updated"))
 
 (defmethod dynlist-updated ((pane dynlist-pane))
@@ -176,7 +176,6 @@
                                                                x-offset y-offset
                                                              &rest function-args)
   (declare (ignore x-offset y-offset))
-  (log:info "Mapping over records")
   (loop
     with lines = (content history)
     with length = (dynlist-size lines)

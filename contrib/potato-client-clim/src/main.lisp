@@ -7,6 +7,22 @@
 (defparameter *channel-list-selected-background* (clim:make-rgb-color 0.3 0.43 0.22))
 (defparameter *channel-list-selected-foreground* (clim:make-rgb-color 0.9 0.9 0.9))
 
+(defclass message-list (receptacle:sorted-list)
+  ()
+  (:default-initargs :content (make-instance 'flexichain:standard-flexichain)
+                     :test-equal #'equal
+                     :test #'string<
+                     :key #'message/id))
+
+(defun insert-message-to-channel (channel msg)
+  (receptacle:tree-insert (channel/messages channel) msg))
+
+(defmethod dynlist-size ((list message-list))
+  (receptacle:content-length list))
+
+(defmethod dynlist-get ((list message-list) index)
+  (receptacle:container-nth list index))
+
 (defclass channel ()
   ((id        :type string
               :initarg :id
@@ -14,16 +30,8 @@
    (name      :type string
               :initarg :name
               :reader channel/name)
-   (messages  :type receptacle.red-black-tree:red-black-tree
-              :initform (make-instance 'receptacle.red-black-tree:red-black-tree
-                                       :test (lambda (o1 o2)
-                                               (let ((date1 (message/created-date o1))
-                                                     (date2 (message/created-date o2)))
-                                                 (if (local-time:timestamp= date1 date2)
-                                                     (string< (message/id o1) (message/id o2))
-                                                     (local-time:timestamp< date1 date2))))
-                                       :test-equal (lambda (o1 o2)
-                                                     (equal (message/id o1) (message/id o2))))
+   (messages  :type t
+              :initform (make-instance 'message-list)
               :reader channel/messages)
    (connected :type (or null (eql t))
               :initform nil
@@ -136,7 +144,7 @@
     with messages = (potato-client:message-history (channel/id channel) :connection conn :format "json")
     for msg-json in (st-json:getjso "messages" messages)
     for msg = (make-message-from-json msg-json)
-    do (receptacle:tree-insert (channel/messages channel) msg))
+    do (insert-message-to-channel channel msg))
   (with-call-in-event-handler frame
     (when (eq (potato-frame/active-channel frame) channel)
       #+nil(clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content))
@@ -144,8 +152,10 @@
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
-  (let ((frame clim:*application-frame*))
+  (let* ((frame clim:*application-frame*)
+         (pane (clim:find-pane-named frame 'channel-content)))
     (setf (potato-frame/active-channel frame) obj)
+    (setf (dynlist-pane/content pane) (channel/messages obj))
     (unless (channel/connected obj)
       (setf (channel/connected obj) t)
       (let ((conn (potato-frame/connection clim:*application-frame*))
@@ -195,8 +205,8 @@
 (defun handle-message-received (frame msg)
   (with-call-in-event-handler frame
     (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
-      (receptacle:tree-insert (channel/messages channel) msg)
-      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content)))))
+      (insert-message-to-channel channel msg)
+      (dynlist-updated (clim:find-pane-named frame 'channel-content)))))
 
 (defun handle-channel-state-update (frame event)
   (with-call-in-event-handler frame
