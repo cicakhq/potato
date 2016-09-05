@@ -217,10 +217,10 @@
       (:get (let* ((accept (hunchentoot:header-in* "accept"))
                    (mode (if accept
                              (string-case:string-case (accept)
-                                                      ("text/plain" :text)
-                                                      ("text/html" :html)
-                                                      ("application/json" :alist)
-                                                      (t :text))
+                               ("text/plain" :text)
+                               ("text/html" :html)
+                               ("application/json" :alist)
+                               (t :text))
                              :text)))
               (potato.core:message-detailed->json message mode (potato.core:current-user)))))))
 
