@@ -10,5 +10,8 @@
 	   #:replace
 	   #:change-space-requirements
            #:application-pane
-           #:flexichain-pane))
+           #:flexichain-pane
+           #:history-insert
+           #:history-delete
+           #:history-replace))
 

@@ -24,7 +24,10 @@
                  :reader message/created-date)
    (text         :type t
                  :initarg :text
-                 :reader message/text)))
+                 :reader message/text)
+   (deleted      :type t
+                 :initarg :deleted
+                 :reader message/deleted)))
 
 (defmethod print-object ((obj message) stream)
   (print-unreadable-safely (id text) obj stream
@@ -37,7 +40,8 @@
                  :from (st-json:getjso "from" msg)
                  :from-name (st-json:getjso "from_name" msg)
                  :created-date (parse-timestamp (st-json:getjso "created_date" msg))
-                 :text (parse-text-content (st-json:getjso "text" msg))))
+                 :text (parse-text-content (st-json:getjso "text" msg))
+                 :deleted (eq (st-json:getjso "deleted" msg) :true)))
 
 (defclass channel-content-view (clim:view)
   ())

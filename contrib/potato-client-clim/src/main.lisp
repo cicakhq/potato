@@ -14,9 +14,6 @@
                      :test #'string<
                      :key #'message/id))
 
-(defun insert-message-to-channel (channel msg)
-  (receptacle:tree-insert (channel/messages channel) msg))
-
 (defmethod dynlist-size ((list message-list))
   (receptacle:content-length list))
 
@@ -37,14 +34,17 @@
               :initform nil
               :accessor channel/connected)
    (users     :type user-db
-              :reader channel/users)))
+              :reader channel/users)
+   (frame     :type t
+              :initarg :frame
+              :reader channel/frame)))
 
 (defmethod initialize-instance :after ((obj channel) &key frame)
   (unless frame
     (error "CHANNEL created without :FRAME"))
   (setf (slot-value obj 'users) (make-instance 'user-db
                                                :callback-fn (lambda (users)
-                                                              (process-users-updated frame obj users )))))
+                                                              (process-users-updated obj users)))))
 
 (defmethod print-object ((obj channel) stream)
   (print-unreadable-safely (name messages) obj stream
@@ -72,18 +72,10 @@
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list
                            :background *channel-list-background*)
-          (message-content (clim:make-clim-stream-pane :type 'dynlist-pane
-                                                       :content #()
-                                                       :name 'channel-content
-                                                       :default-view (make-instance 'channel-content-view)
-                                                       :display-time nil
-                                                       :scroll-bars :vertical))
-          #+nil(content (clim:make-clim-stream-pane :type 'climacs-flexichain-output-history:flexichain-pane
-                                                       :name 'channel-content
-                                                       :width 200
-                                                       :height 300
-                                                       :display-time nil
-                                                       :scroll-bars t))
+          (channel-content :application
+                           :default-view (make-instance 'channel-content-view)
+                           :display-function 'display-channel-content
+                           :scroll-bars :vertical)
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
                            :display-function 'display-user-list)
@@ -94,7 +86,7 @@
   (:layouts (default (clim:horizontally ()
                        (2/10 channel-list)
                        (6/10 (clim:vertically ()
-                               message-content
+                               channel-content
                                input))
                        (2/10 user-list))
                      bottom-adjuster
@@ -129,6 +121,13 @@
     (obj)
   (list obj))
 
+(defun insert-message-to-channel (channel msg)
+  (receptacle:sorted-list-insert (channel/messages channel) msg)
+  (let* ((frame (channel/frame channel))
+         (pane (clim:find-pane-named frame 'channel-content)))
+    (when (eq (potato-frame/active-channel frame) channel)
+      (clim:redisplay-frame-pane frame pane))))
+
 (defun send-message-selected (gadget)
   (declare (ignore gadget))
   (let* ((frame clim:*application-frame*)
@@ -140,22 +139,21 @@
         (setf (clim:gadget-value pane) "")))))
 
 (defun load-history-and-update (channel conn frame)
-  (loop
-    with messages = (potato-client:message-history (channel/id channel) :connection conn :format "json")
-    for msg-json in (st-json:getjso "messages" messages)
-    for msg = (make-message-from-json msg-json)
-    do (insert-message-to-channel channel msg))
-  (with-call-in-event-handler frame
-    (when (eq (potato-frame/active-channel frame) channel)
-      #+nil(clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content))
-      (dynlist-updated (clim:find-pane-named frame 'channel-content)))))
+  (let ((messages (loop
+                    with result = (potato-client:message-history (channel/id channel) :connection conn :format "json")
+                    for msg-json in (st-json:getjso "messages" result)
+                    collect (make-message-from-json msg-json))))
+    (with-call-in-event-handler frame
+      (dolist (msg messages)
+        (insert-message-to-channel channel msg))
+      (when (eq (potato-frame/active-channel frame) channel)
+        (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content))))))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
-  (let* ((frame clim:*application-frame*)
-         (pane (clim:find-pane-named frame 'channel-content)))
+  (let ((frame clim:*application-frame*))
     (setf (potato-frame/active-channel frame) obj)
-    (setf (dynlist-pane/content pane) (channel/messages obj))
+    ;; TODO: Should clear and refresh the output record here
     (unless (channel/connected obj)
       (setf (channel/connected obj) t)
       (let ((conn (potato-frame/connection clim:*application-frame*))
@@ -194,29 +192,26 @@
 (defun display-channel-content (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))
     (log:trace "Displaying channel content")
-    (loop
-      with messages = (channel/messages channel)
-      for e = (receptacle:tree-first-node messages) then (receptacle:tree-next messages e)
-      while e
-      do (let ((msg (receptacle:node-element e)))
-           (clim:present msg 'message :stream stream)
-           (format stream "~%")))))
+    (receptacle:do-container (msg (channel/messages channel))
+      (unless (message/deleted msg)
+        (clim:present msg 'message :stream stream)
+        (format stream "~%")))))
 
 (defun handle-message-received (frame msg)
   (with-call-in-event-handler frame
     (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
-      (insert-message-to-channel channel msg)
-      (dynlist-updated (clim:find-pane-named frame 'channel-content)))))
+      (insert-message-to-channel channel msg))))
 
 (defun handle-channel-state-update (frame event)
   (with-call-in-event-handler frame
     (log:info "Channel state update: ~s" event)))
 
-(defun process-users-updated (frame channel users)
+(defun process-users-updated (channel users)
   (declare (ignore users))
-  (with-call-in-event-handler frame
-    (when (eq (potato-frame/active-channel frame) channel)
-      (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'user-list)))))
+  (let ((frame (channel/frame channel)))
+    (with-call-in-event-handler frame
+      (when (eq (potato-frame/active-channel frame) channel)
+        (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'user-list))))))
 
 (defvar *frame* nil)
 
