@@ -121,6 +121,11 @@
     (obj)
   (list obj))
 
+(clim:define-presentation-to-command-translator select-url
+    (url-element open-url-in-browser potato-frame)
+    (obj)
+  (list (url-element/addr obj)))
+
 (defun insert-message-to-channel (channel msg)
   (receptacle:sorted-list-insert (channel/messages channel) msg)
   (let* ((frame (channel/frame channel))
@@ -169,6 +174,10 @@
   (let ((frame clim:*application-frame*))
     (lparallel:future
       (potato-client:send-message (channel/id channel) text :connection (potato-frame/connection frame)))))
+
+(define-potato-frame-command (open-url-in-browser :name "Open URL")
+  ((url 'string))
+  (uiop:run-program (list "xdg-open" url)))
 
 (defun display-user-list (frame stream)
   (alexandria:when-let ((channel (potato-frame/active-channel frame)))

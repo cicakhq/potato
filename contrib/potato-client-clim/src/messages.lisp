@@ -3,6 +3,7 @@
 (defparameter *code-colour* (clim:make-rgb-color 0.3 0.7 0.3))
 (defparameter *code-shadow* (clim:make-rgb-color 0.5 0.5 0.5))
 (defparameter *code-border* (clim:make-rgb-color 0.88 0.894 0.894))
+(defparameter *url-colour* (clim:make-rgb-color 0.2 0.2 1.0))
 (defparameter *code-background* (clim:make-rgb-color 0.988 0.988 0.988))
 (defparameter *code-padding* 2)
 
@@ -81,6 +82,14 @@
              :initarg :code
              :reader code-block-element/code)))
 
+(defclass url-element (text-element)
+  ((addr        :type string
+                :initarg :addr
+                :reader url-element/addr)
+   (description :type string
+                :initarg :description
+                :reader url-element/description)))
+
 (defun parse-text-content (content)
   (etypecase content
     (string content)
@@ -100,6 +109,10 @@
         ("code-block" (make-instance 'code-block-element
                                      :language (nil-if-json-null (st-json:getjso "language" content))
                                      :code (st-json:getjso "code" content)))
+        ("url" (let ((addr (st-json:getjso "addr" content)))
+                 (make-instance 'url-element
+                                :addr addr
+                                :description (or (nil-if-json-null (st-json:getjso "description" content)) addr))))
         (t (format nil "[unknown type:~a]" type))))))
 
 (clim:define-presentation-method clim:present (obj (type message) stream (view channel-content-view) &key)
@@ -152,3 +165,8 @@
 (clim:define-presentation-method clim:present (obj (type set-element) stream (view channel-content-view) &key)
   (dolist (element (set-element/elements obj))
     (clim:present element)))
+
+(clim:define-presentation-method clim:present (obj (type url-element) stream (view channel-content-view) &key)
+  (clim:with-drawing-options (stream :ink *url-colour*)
+    (clim:surrounding-output-with-border (stream :shape :underline)
+      (format stream "~a" (url-element/description obj)))))

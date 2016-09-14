@@ -4,6 +4,7 @@
   :serial t
   :depends-on (:mcclim
                :drakma
+               :uiop
                :log4cl
                :st-json
                :flexi-streams
