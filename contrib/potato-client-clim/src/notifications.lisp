@@ -25,9 +25,7 @@
     (funcall fn arg)))
 
 (defun process-message-event (state event)
-  (let ((msg (make-message-from-json event)))
-    (log:trace "Created message: ~s" msg)
-    (call-notification-callback (notification-reader-state/message-callback state) msg)))
+  (call-notification-callback (notification-reader-state/message-callback state) event))
 
 (defun process-state-notification-event (state event)
   (let ((add-type (string-case:string-case ((st-json:getjso "add-type" event))

@@ -11,7 +11,7 @@
   ((id           :type string
                  :initarg :id
                  :reader message/id)
-   (channel      :type string
+   (channel      :type channel
                  :initarg :channel
                  :reader message/channel)
    (from         :type string
@@ -34,15 +34,18 @@
   (print-unreadable-safely (id text) obj stream
     (format stream "ID ~s TEXT ~s" id text)))
 
-(defun make-message-from-json (msg)
-  (make-instance 'message
-                 :id (st-json:getjso "id" msg)
-                 :channel (st-json:getjso "channel" msg)
-                 :from (st-json:getjso "from" msg)
-                 :from-name (st-json:getjso "from_name" msg)
-                 :created-date (parse-timestamp (st-json:getjso "created_date" msg))
-                 :text (parse-text-content (st-json:getjso "text" msg))
-                 :deleted (eq (st-json:getjso "deleted" msg) :true)))
+(defun make-message-from-json (channel msg)
+  (let ((cid (st-json:getjso "channel" msg)))
+    (unless (equal (channel/id channel) cid)
+      (error "Attempt to create a message for incorrenct channel"))
+    (make-instance 'message
+                   :id (st-json:getjso "id" msg)
+                   :channel channel
+                   :from (st-json:getjso "from" msg)
+                   :from-name (st-json:getjso "from_name" msg)
+                   :created-date (parse-timestamp (st-json:getjso "created_date" msg))
+                   :text (parse-text-content channel (st-json:getjso "text" msg))
+                   :deleted (eq (st-json:getjso "deleted" msg) :true))))
 
 (defclass channel-content-view (clim:view)
   ())
@@ -90,16 +93,26 @@
                 :initarg :description
                 :reader url-element/description)))
 
-(defun parse-text-content (content)
+(defun parse-text-content (channel content)
   (etypecase content
     (string content)
-    (list (make-instance 'set-element :elements (mapcar #'parse-text-content content)))
-    (st-json:jso (parse-text-part content))))
+    (list (make-instance 'set-element :elements (mapcar (lambda (v) (parse-text-content channel v)) content)))
+    (st-json:jso (parse-text-part channel content))))
 
-(defun parse-text-part (content)
+(defun make-url-element (content)
+  (let ((addr (st-json:getjso "addr" content)))
+    (make-instance 'url-element
+                   :addr addr
+                   :description (or (nil-if-json-null (st-json:getjso "description" content)) addr))))
+
+(defun make-user-element (channel content)
+  (log:info "Content: ~s" content)
+  (find-user (channel/users channel) (st-json:getjso "user_id" content)))
+
+(defun parse-text-part (channel content)
   (let ((type (st-json:getjso "type" content)))
     (labels ((make-element (name)
-               (make-instance name :text (parse-text-content (st-json:getjso "e" content)))))
+               (make-instance name :text (parse-text-content channel (st-json:getjso "e" content)))))
       (string-case:string-case (type)
         ("p" (make-element 'paragraph-element))
         ("b" (make-element 'bold-element))
@@ -109,10 +122,8 @@
         ("code-block" (make-instance 'code-block-element
                                      :language (nil-if-json-null (st-json:getjso "language" content))
                                      :code (st-json:getjso "code" content)))
-        ("url" (let ((addr (st-json:getjso "addr" content)))
-                 (make-instance 'url-element
-                                :addr addr
-                                :description (or (nil-if-json-null (st-json:getjso "description" content)) addr))))
+        ("url" (make-url-element content))
+        ("user" (make-user-element channel content))
         (t (format nil "[unknown type:~a]" type))))))
 
 (clim:define-presentation-method clim:present (obj (type message) stream (view channel-content-view) &key)
@@ -170,3 +181,6 @@
   (clim:with-drawing-options (stream :ink *url-colour*)
     (clim:surrounding-output-with-border (stream :shape :underline)
       (format stream "~a" (url-element/description obj)))))
+
+(clim:define-presentation-method clim:present (obj (type user) stream (view channel-content-view) &key)
+  (format stream "~a (~a)" (user/description obj) (user/id obj)))

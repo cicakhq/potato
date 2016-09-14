@@ -147,7 +147,7 @@
   (let ((messages (loop
                     with result = (potato-client:message-history (channel/id channel) :connection conn :format "json")
                     for msg-json in (st-json:getjso "messages" result)
-                    collect (make-message-from-json msg-json))))
+                    collect (make-message-from-json channel msg-json))))
     (with-call-in-event-handler frame
       (dolist (msg messages)
         (insert-message-to-channel channel msg))
@@ -206,10 +206,11 @@
         (clim:present msg 'message :stream stream)
         (format stream "~%")))))
 
-(defun handle-message-received (frame msg)
+(defun handle-message-received (frame event)
   (with-call-in-event-handler frame
-    (alexandria:when-let ((channel (find-frame-channel-by-id frame (message/channel msg))))
-      (insert-message-to-channel channel msg))))
+    (let ((message-id (st-json:getjso "channel" event)))
+      (alexandria:when-let ((channel (find-frame-channel-by-id frame message-id)))
+        (insert-message-to-channel channel (make-message-from-json channel event))))))
 
 (defun handle-channel-state-update (frame event)
   (with-call-in-event-handler frame
