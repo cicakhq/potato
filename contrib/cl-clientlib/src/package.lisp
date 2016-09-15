@@ -15,4 +15,5 @@
            #:list-users
            #:listener-loop
            #:subscribe-to-channel
-           #:message-history))
+           #:message-history
+           #:load-domain))

@@ -64,6 +64,36 @@
                     (st-json:getjso "name" domain)
                     (st-json:getjso "type" domain)))))
 
+(defun parse-channels (channels)
+  (loop
+    for channel in channels
+    collect `((:id . ,(st-json:getjso "id" channel))
+              (:name . ,(st-json:getjso "name" channel))
+              (:private . ,(eq (st-json:getjso "private" channel) :true)))))
+
+(defun parse-groups (groups)
+  (loop
+    for group in groups
+    for channels = (st-json:getjso "channels" group)
+    collect `((:id . ,(st-json:getjso "id" group))
+              (:name . ,(st-json:getjso "name" group))
+              (:type . ,(st-json:getjso "type" group))
+              ,@(if channels
+                    `((:channels . ,(parse-channels channels)))
+                    nil))))
+
+(defun load-domain (domain-id &key (connection *connection*) include-groups include-channels)
+  (check-type connection connection)
+  (let ((res (authenticated-request connection (format nil "/domains/~a" domain-id)
+                                    :params `(("include-groups" . ,(if include-groups "1" "0"))
+                                              ("include-channels" . ,(if include-channels "1" "0"))))))
+    (let ((groups (st-json:getjso "groups" res)))
+      `((:id . ,(st-json:getjso "id" res))
+        (:type . ,(st-json:getjso "type" res))
+        ,@(if groups
+              `((:groups . ,(parse-groups groups)))
+              nil)))))
+
 (defun load-channel (channel-id &key (connection *connection*))
   (check-type channel-id string)
   (check-type connection connection)
