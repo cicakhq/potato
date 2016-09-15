@@ -67,7 +67,10 @@
                    :accessor potato-frame/channels)
    (active-channel :type (or null channel)
                    :initform nil
-                   :accessor potato-frame/active-channel))
+                   :accessor potato-frame/active-channel)
+   (domain         :type string
+                   :initarg :domain
+                   :reader potato-frame/domain))
   (:panes (channel-list    :application
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list
@@ -126,6 +129,11 @@
     (obj)
   (list (url-element/addr obj)))
 
+(clim:define-presentation-to-command-translator select-user
+    (user switch-to-private-channel-frame potato-frame)
+    (obj)
+  (list obj))
+
 (defun redisplay-channel-content (channel)
   (let* ((frame (channel/frame channel))
          (pane (clim:find-pane-named frame 'channel-content)))
@@ -177,6 +185,10 @@
     (lparallel:future
       (potato-client:send-message (channel/id channel) text :connection (potato-frame/connection frame)))))
 
+(define-potato-frame-command (switch-to-private-channel-frame :name "Open private conversation")
+  ((obj 'user))
+  (log:error "Open private conversation not implemented. user = ~s" (user/id obj)))
+
 (define-potato-frame-command (open-url-in-browser :name "Open URL")
   ((url 'string))
   (uiop:run-program (list "xdg-open" url)))
@@ -227,11 +239,12 @@
 
 (defvar *frame* nil)
 
-(defun potato-client-clim (api-key)
+(defun potato-client-clim (api-key domain)
   (unless lparallel:*kernel*
     (setf lparallel:*kernel* (lparallel:make-kernel 10)))
   (let* ((frame (clim:make-application-frame 'potato-frame
                                              :api-key api-key
+                                             :domain domain
                                              :width 700 :height 500
                                              :left 10 :top 10))
          (reader (start-notifications (potato-frame/connection frame)
@@ -247,20 +260,19 @@
 (defun init-connection (frame)  
   (lparallel:future
     (let ((channels (loop
-                      with channel-tree = (potato-client:load-channel-tree :connection (potato-frame/connection frame))
-                      for domain in channel-tree
-                      for domain-name = (cdr (assoc :name domain))
-                      for type = (cdr (assoc :type domain))
-                      unless (eq type :private)
-                        append (loop
-                                 for channel in (cdr (assoc :channels domain))
-                                 for name = (cdr (assoc :name channel))
-                                 for group-type = (cdr (assoc :group-type channel))
-                                 unless (eq group-type :private)
-                                   collect (make-instance 'channel
-                                                          :id (cdr (assoc :id channel))
-                                                          :name (format nil "~a - ~a" domain-name name)
-                                                          :frame frame)))))
+                      with domain = (potato-client:load-domain (potato-frame/domain frame)
+                                                               :connection (potato-frame/connection frame)
+                                                               :include-channels t)
+                      for group in (cdr (assoc :groups domain))
+                      append (loop
+                               for channel in (cdr (assoc :channels group))
+                               for name = (cdr (assoc :name channel))
+                               for private = (cdr (assoc :private channel))
+                               unless private
+                                 collect (make-instance 'channel
+                                                        :id (cdr (assoc :id channel))
+                                                        :name name
+                                                        :frame frame)))))
       (log:trace "Channels loaded: ~s" channels)
       (with-call-in-event-handler frame
         (setf (potato-frame/channels frame) channels)
