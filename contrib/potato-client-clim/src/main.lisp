@@ -126,12 +126,15 @@
     (obj)
   (list (url-element/addr obj)))
 
-(defun insert-message-to-channel (channel msg)
-  (receptacle:sorted-list-insert (channel/messages channel) msg)
+(defun redisplay-channel-content (channel)
   (let* ((frame (channel/frame channel))
          (pane (clim:find-pane-named frame 'channel-content)))
     (when (eq (potato-frame/active-channel frame) channel)
       (clim:redisplay-frame-pane frame pane))))
+
+(defun insert-message-to-channel (channel msg)
+  (receptacle:sorted-list-insert (channel/messages channel) msg)
+  (redisplay-channel-content channel))
 
 (defun send-message-selected (gadget)
   (declare (ignore gadget))
@@ -143,16 +146,15 @@
         (clim:execute-frame-command frame `(send-message ,channel ,text))
         (setf (clim:gadget-value pane) "")))))
 
-(defun load-history-and-update (channel conn frame)
+(defun load-history-and-update (channel conn)
   (let ((messages (loop
                     with result = (potato-client:message-history (channel/id channel) :connection conn :format "json")
                     for msg-json in (st-json:getjso "messages" result)
                     collect (make-message-from-json channel msg-json))))
-    (with-call-in-event-handler frame
+    (with-call-in-event-handler (channel/frame channel)
       (dolist (msg messages)
         (insert-message-to-channel channel msg))
-      (when (eq (potato-frame/active-channel frame) channel)
-        (clim:redisplay-frame-pane frame (clim:find-pane-named frame 'channel-content))))))
+      (redisplay-channel-content channel))))
 
 (define-potato-frame-command (switch-to-channel-frame :name "Switch to channel")
     ((obj 'channel))
@@ -165,7 +167,7 @@
             (cid (channel/id obj)))
         (lparallel:future
           (potato-client:subscribe-to-channel cid :connection conn)
-          (load-history-and-update obj conn frame)
+          (load-history-and-update obj conn)
           (update-users-from-channel (channel/users obj) conn cid))))))
 
 (define-potato-frame-command (send-message :name "Send message")
