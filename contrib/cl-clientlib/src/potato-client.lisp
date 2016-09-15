@@ -38,15 +38,21 @@
             (if (eql (aref prefix (1- (length prefix))) #\/) "" "/")
             suffix)))
 
+(defun authenticated-request-raw (conn suffix &rest args)
+  (apply #'drakma:http-request
+         (make-potato-url conn suffix)
+         :additional-headers `(("API-Token" . ,(connection/api-key conn)))
+         args))
+
 (defun authenticated-request (conn suffix &key (method :get) content params)
   (multiple-value-bind (content code headers uri stream should-close reason)
-      (drakma:http-request (make-potato-url conn suffix)
-                           :additional-headers `(("API-Token" . ,(connection/api-key conn)))
-                           :parameters params
-                           :want-stream t
-                           :method method
-                           :content content
-                           :force-binary t)
+      (authenticated-request-raw conn suffix
+                                 :additional-headers `(("API-Token" . ,(connection/api-key conn)))
+                                 :parameters params
+                                 :want-stream t
+                                 :method method
+                                 :content content
+                                 :force-binary t)
     (declare (ignore content headers uri))
     (unwind-protect
          (progn
@@ -205,3 +211,19 @@
                                                     (if num `(("num" . ,(princ-to-string num))) nil)
                                                     (if format `(("format" . ,format)) nil)))))
     res))
+
+(defun user-image (uid stream &key (connection *connection*))
+  (check-type uid string)
+  (check-type connection connection)
+  (multiple-value-bind (content code headers uri remote-stream should-close reason)
+      (authenticated-request-raw connection (format nil "/users/~a/image" uid)
+                                 :want-stream t
+                                 :force-binary t)
+    (declare (ignore content headers uri))
+    (unwind-protect
+         (progn
+           (unless (= code 200)
+             (error 'request-error :code code :reason reason))
+           (uiop:copy-stream-to-stream remote-stream stream :element-type '(unsigned-byte 8)))
+     (when should-close
+       (close remote-stream)))))

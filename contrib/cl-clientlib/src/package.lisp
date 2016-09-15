@@ -16,4 +16,5 @@
            #:listener-loop
            #:subscribe-to-channel
            #:message-history
-           #:load-domain))
+           #:load-domain
+           #:user-image))
