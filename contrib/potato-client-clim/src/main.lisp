@@ -206,7 +206,7 @@
     (receptacle:do-container (msg (channel/messages channel))
       (unless (message/deleted msg)
         (clim:present msg 'message :stream stream)
-        (format stream "~%")))))
+        (format stream "~&")))))
 
 (defun handle-message-received (frame event)
   (with-call-in-event-handler frame
