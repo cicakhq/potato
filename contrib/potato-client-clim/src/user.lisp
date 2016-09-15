@@ -9,11 +9,7 @@
                 :accessor user/description)
    (nickname    :type string
                 :initarg :nickname
-                :accessor user/nickname)
-   (sync-active :type (or null (eql t))
-                :initarg :sync-active
-                :initform nil
-                :accessor user/sync-active)))
+                :accessor user/nickname)))
 
 (defmethod print-object ((obj user) stream)
   (print-unreadable-safely (id description) obj stream
@@ -40,8 +36,7 @@
              (let ((u (make-instance 'user
                                      :id uid
                                      :description "empty"
-                                     :nickname "empty"
-                                     :sync-active t)))
+                                     :nickname "empty")))
                (setf (gethash uid (user-db/users user-db)) u)
                (log:warn "Currently not updating the user name")
                u))
