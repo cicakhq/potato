@@ -77,8 +77,18 @@
         #'string< :key #'user/description))
 
 (defmethod load-image-from-src ((user user) stream cache)
-  (potato-client:user-image (user/id user) stream :connection (image-cache/connection cache))
-  "image/png")
+  (handler-case
+      (progn
+        (potato-client:user-image (user/id user) stream :connection (image-cache/connection cache))
+        "image/png")
+    (potato-client:request-error (condition)
+      (cond ((= (potato-client:request-error/code condition) 404)
+             nil)
+            (t
+             (log:error "Error downloading image. code: ~a, reason: ~a"
+                        (potato-client:request-error/code condition)
+                        (potato-client:request-error/reason condition))
+             nil)))))
 
 (defmethod make-image-cache-key ((user user))
   (list :user (user/id user)))

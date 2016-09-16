@@ -223,7 +223,7 @@
         (clim:updating-output (stream :unique-id msg
                                       :id-test (lambda (a b)
                                                  (log:info "Comparing ~s and ~s → ~s"
-                                                           (message/id a) (message/id b) (eq a b))
+                                                           (sxhash a) (sxhash b) (eq a b))
                                                  (eq a b))
                                       :cache-value #'message/cache-key
                                       :cache-test #'equal)
