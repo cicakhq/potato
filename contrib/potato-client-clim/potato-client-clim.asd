@@ -20,6 +20,7 @@
                                      (:file "misc")
                                      (:file "flexichain-output-history")
                                      (:file "largelist")
+                                     (:file "image-cache")
                                      (:file "user")
                                      (:file "messages")
                                      (:file "notifications")

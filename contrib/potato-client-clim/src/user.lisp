@@ -1,5 +1,7 @@
 (in-package :potato-client-clim)
 
+(declaim (optimize (speed 0) (safety 3) (debug 3)))
+
 (defclass user ()
   ((id          :type string
                 :initarg :id
@@ -73,3 +75,10 @@
           for ch being each hash-value in (user-db/users user-db)
           collect ch)
         #'string< :key #'user/description))
+
+(defmethod load-image-from-src ((user user) stream)
+  (potato-client:user-image (user/id user) stream)
+  "image/png")
+
+(defmethod make-image-cache-key ((user user))
+  (list :user (user/id user)))

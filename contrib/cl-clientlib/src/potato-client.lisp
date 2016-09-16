@@ -215,6 +215,7 @@
 (defun user-image (uid stream &key (connection *connection*))
   (check-type uid string)
   (check-type connection connection)
+  (log:info "Loading user-image for uid: ~s, stream: ~s" uid stream)
   (multiple-value-bind (content code headers uri remote-stream should-close reason)
       (authenticated-request-raw connection (format nil "/users/~a/image" uid)
                                  :want-stream t

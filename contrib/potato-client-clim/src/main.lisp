@@ -70,7 +70,10 @@
                    :accessor potato-frame/active-channel)
    (domain         :type string
                    :initarg :domain
-                   :reader potato-frame/domain))
+                   :reader potato-frame/domain)
+   (image-cache    :type image-cache
+                   :initform (make-instance 'image-cache)
+                   :reader potato-frame/image-cache))
   (:panes (channel-list    :application
                            :default-view (make-instance 'potato-view)
                            :display-function 'display-channel-list

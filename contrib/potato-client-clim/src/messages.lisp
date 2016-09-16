@@ -28,7 +28,9 @@
                  :reader message/text)
    (deleted      :type t
                  :initarg :deleted
-                 :reader message/deleted)))
+                 :reader message/deleted)
+   (from-image   :initform nil
+                 :accessor message/from-image)))
 
 (defmethod print-object ((obj message) stream)
   (print-unreadable-safely (id text) obj stream
@@ -38,14 +40,20 @@
   (let ((cid (st-json:getjso "channel" msg)))
     (unless (equal (channel/id channel) cid)
       (error "Attempt to create a message for incorrenct channel"))
-    (make-instance 'message
-                   :id (st-json:getjso "id" msg)
-                   :channel channel
-                   :from (st-json:getjso "from" msg)
-                   :from-name (st-json:getjso "from_name" msg)
-                   :created-date (parse-timestamp (st-json:getjso "created_date" msg))
-                   :text (parse-text-content channel (st-json:getjso "text" msg))
-                   :deleted (eq (st-json:getjso "deleted" msg) :true))))
+    (let* ((from (st-json:getjso "from" msg))
+           (message (make-instance 'message
+                                   :id (st-json:getjso "id" msg)
+                                   :channel channel
+                                   :from from
+                                   :from-name (st-json:getjso "from_name" msg)
+                                   :created-date (parse-timestamp (st-json:getjso "created_date" msg))
+                                   :text (parse-text-content channel (st-json:getjso "text" msg))
+                                   :deleted (eq (st-json:getjso "deleted" msg) :true))))
+      (let ((sender (find-user (channel/users channel) from)))
+        (find-image-from-url (potato-frame/image-cache (channel/frame channel)) sender
+                             (lambda (entry)
+                               (setf (message/from-image message) (image-cache-entry/pixmap entry))))
+        message))))
 
 (defclass channel-content-view (clim:view)
   ())
