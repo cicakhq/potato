@@ -135,21 +135,27 @@
         (t (format nil "[unknown type:~a]" type))))))
 
 (clim:define-presentation-method clim:present (obj (type message) stream (view channel-content-view) &key)
-  (format stream "~a - " (message/from-name obj))
-  (clim:present (message/text obj)))
+  (clim:formatting-table (stream)
+    (clim:formatting-row (stream)
+      (clim:formatting-cell (stream)
+        (alexandria:when-let ((image (message/from-image obj)))
+          (clim:draw-pattern* stream image 0 0)))
+      (clim:formatting-cell (stream)
+        (clim:with-text-style (stream (clim:make-text-style nil :bold nil))
+          (format stream "~a" (message/from-name obj)))
+        (format stream "~%")
+        (clim:present (message/text obj))))))
 
 (clim:define-presentation-method clim:present (obj (type formatted-element) stream (view channel-content-view) &key)
-  (clim:present (formatted-element/text obj)))
+  (present-to-stream (formatted-element/text obj) stream))
 
 (clim:define-presentation-method clim:present (obj (type bold-element) stream (view channel-content-view) &key)
   (clim:with-text-style (stream (clim:make-text-style nil :bold nil))
-    (let ((v (formatted-element/text obj)))
-      (clim:present v (clim:presentation-type-of v) :stream stream))))
+    (present-to-stream (formatted-element/text obj) stream)))
 
 (clim:define-presentation-method clim:present (obj (type italics-element) stream (view channel-content-view) &key)
   (clim:with-text-style (stream (clim:make-text-style nil :italic nil))
-    (let ((v (formatted-element/text obj)))
-      (clim:present v (clim:presentation-type-of v) :stream stream))))
+    (present-to-stream (formatted-element/text obj) stream)))
 
 (clim:define-presentation-method clim:present (obj (type code-element) stream (view channel-content-view) &key)
   (let ((delta (+ *code-padding* 1)))
@@ -183,7 +189,7 @@
 
 (clim:define-presentation-method clim:present (obj (type set-element) stream (view channel-content-view) &key)
   (dolist (element (set-element/elements obj))
-    (clim:present element)))
+    (present-to-stream element stream)))
 
 (clim:define-presentation-method clim:present (obj (type url-element) stream (view channel-content-view) &key)
   (clim:with-drawing-options (stream :ink *url-colour*)

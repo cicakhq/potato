@@ -76,8 +76,8 @@
           collect ch)
         #'string< :key #'user/description))
 
-(defmethod load-image-from-src ((user user) stream)
-  (potato-client:user-image (user/id user) stream)
+(defmethod load-image-from-src ((user user) stream cache)
+  (potato-client:user-image (user/id user) stream :connection (image-cache/connection cache))
   "image/png")
 
 (defmethod make-image-cache-key ((user user))

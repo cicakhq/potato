@@ -72,7 +72,6 @@
                    :initarg :domain
                    :reader potato-frame/domain)
    (image-cache    :type image-cache
-                   :initform (make-instance 'image-cache)
                    :reader potato-frame/image-cache))
   (:panes (channel-list    :application
                            :default-view (make-instance 'potato-view)
@@ -104,7 +103,8 @@
 (defmethod initialize-instance :after ((obj potato-frame) &key api-key)
   (check-type api-key string)
   (let ((conn (make-instance 'potato-client:connection :api-key api-key)))
-    (setf (slot-value obj 'connection) conn)))
+    (setf (slot-value obj 'connection) conn)
+    (setf (slot-value obj 'image-cache) (make-instance 'image-cache :connection conn))))
 
 (defun find-frame-channel-by-id (frame cid)
   (find cid (potato-frame/channels frame) :key #'channel/id :test #'equal))

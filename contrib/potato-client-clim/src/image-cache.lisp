@@ -15,12 +15,15 @@
               :accessor image-cache-entry/loading-p)))
 
 (defclass image-cache ()
-  ((images :initform (make-instance 'receptacle:hash-map :test 'equal)
-           :reader image-cache/images)
-   (lock   :initform (bordeaux-threads:make-lock "Image cache lock")
-           :reader image-cache/lock)))
+  ((images     :initform (make-instance 'receptacle:hash-map :test 'equal)
+               :reader image-cache/images)
+   (lock       :initform (bordeaux-threads:make-lock "Image cache lock")
+               :reader image-cache/lock)
+   (connection :type potato-client:connection
+               :initarg :connection
+               :reader image-cache/connection)))
 
-(defgeneric load-image-from-src (src stream))
+(defgeneric load-image-from-src (src stream cache))
 
 (defgeneric make-image-cache-key (src))
 
@@ -29,25 +32,12 @@
     ("image/png" "png")
     ("image/jpeg" "jpg")))
 
-(defun load-image-in-cache (entry)
+(defun load-image-in-cache (cache entry)
+  (check-type cache image-cache)
   (check-type entry image-cache-entry)
-
-  #+nil(x entry
-          (lambda (type fn)
-            (uiop:with-temporary-file :stream s :pathname file :suffix (suffix-from-type type)
-              (funcall fn s)
-              :close-stream
-              (let ((pattern (clim:make-pattern-from-bitmap-file file)))
-                (setf (image-cache-entry/pixmap entry) pattern)
-                (setf (image-cache-entry/loading-p entry) nil)
-                (let ((callbacks (image-cache-entry/callbacks entry)))
-                  (setf (image-cache-entry/callbacks entry) nil)
-                  (dolist (callback callbacks)
-                    (funcall callback entry)))))))
-
   (let (type)
     (let ((data (flexi-streams:with-output-to-sequence (seq-out)
-                  (setq type (load-image-from-src (image-cache-entry/src entry) seq-out)))))
+                  (setq type (load-image-from-src (image-cache-entry/src entry) seq-out cache)))))
       (uiop:with-temporary-file (:stream stream :pathname file :type (suffix-from-type type))
         (write-sequence data stream)
         :close-stream
@@ -62,7 +52,7 @@
 (defmethod make-image-cache-key ((src string))
   (list :url src))
 
-(defmethod load-image-from-src ((url string) stream)
+(defmethod load-image-from-src ((url string) stream cache)
   (multiple-value-bind (content code headers uri remote-stream should-close reason)
       (drakma:http-request url
                            :want-stream t
@@ -79,15 +69,15 @@
 
 (defun find-image-from-url (cache src callback)
   (let ((found (bordeaux-threads:with-lock-held ((image-cache/lock cache))
-                 (let* ((cache (image-cache/images cache))
+                 (let* ((values (image-cache/images cache))
                         (key (make-image-cache-key src))
-                        (entry (receptacle:hash-get cache key)))
+                        (entry (receptacle:hash-get values key)))
                    (cond ((null entry)
                           (let ((e (make-instance 'image-cache-entry :src src)))
                             (push callback (image-cache-entry/callbacks e))
-                            (setf (receptacle:hash-get cache key) e)
+                            (setf (receptacle:hash-get values key) e)
                             (lparallel:future
-                              (load-image-in-cache e))
+                              (load-image-in-cache cache e))
                             nil))
                          ((image-cache-entry/loading-p entry)
                           (push callback (image-cache-entry/callbacks entry))
