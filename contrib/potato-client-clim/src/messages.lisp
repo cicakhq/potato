@@ -30,11 +30,18 @@
                  :initarg :deleted
                  :reader message/deleted)
    (from-image   :initform nil
-                 :accessor message/from-image)))
+                 :accessor message/from-image)
+   (update-index :type integer
+                 :accessor message/update-index)))
 
 (defmethod print-object ((obj message) stream)
   (print-unreadable-safely (id text) obj stream
     (format stream "ID ~s TEXT ~s" id text)))
+
+(defun message/cache-key (message)
+  (check-type message message)
+  (log:info "Getting cache key for ~s" message)
+  (format nil "~a_~a" (message/id message) (message/update-index message)))
 
 (defun make-message-from-json (channel msg)
   (let ((cid (st-json:getjso "channel" msg)))

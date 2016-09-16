@@ -220,8 +220,15 @@
     (log:trace "Displaying channel content")
     (receptacle:do-container (msg (channel/messages channel))
       (unless (message/deleted msg)
-        (clim:present msg 'message :stream stream)
-        (format stream "~&")))))
+        (clim:updating-output (stream :unique-id msg
+                                      :id-test (lambda (a b)
+                                                 (log:info "Comparing ~s and ~s → ~s"
+                                                           (message/id a) (message/id b) (eq a b))
+                                                 (eq a b))
+                                      :cache-value #'message/cache-key
+                                      :cache-test #'equal)
+          (clim:present msg 'message :stream stream)
+          (format stream "~&"))))))
 
 (defun handle-message-received (frame event)
   (with-call-in-event-handler frame
