@@ -204,4 +204,5 @@
       (format stream "~a" (url-element/description obj)))))
 
 (clim:define-presentation-method clim:present (obj (type user) stream (view channel-content-view) &key)
-  (format stream "~a (~a)" (user/description obj) (user/id obj)))
+  (clim:surrounding-output-with-border (stream :padding 2)
+   (format stream "~a" (user/description obj))))
