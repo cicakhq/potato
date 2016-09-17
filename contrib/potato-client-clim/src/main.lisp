@@ -80,7 +80,8 @@
           (channel-content :application
                            :default-view (make-instance 'channel-content-view)
                            :display-function 'display-channel-content
-                           :scroll-bars :vertical)
+                           :scroll-bars :vertical
+                           :incremental-redisplay t)
           (user-list       :application
                            :default-view (make-instance 'user-list-view)
                            :display-function 'display-user-list)
@@ -221,10 +222,7 @@
     (receptacle:do-container (msg (channel/messages channel))
       (unless (message/deleted msg)
         (clim:updating-output (stream :unique-id msg
-                                      :id-test (lambda (a b)
-                                                 (log:info "Comparing ~s and ~s → ~s"
-                                                           (sxhash a) (sxhash b) (eq a b))
-                                                 (eq a b))
+                                      :id-test #'eq
                                       :cache-value #'message/cache-key
                                       :cache-test #'equal)
           (clim:present msg 'message :stream stream)
