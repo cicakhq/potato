@@ -151,7 +151,9 @@
       (clim:formatting-cell (stream)
         (clim:with-text-style (stream (clim:make-text-style nil :bold nil))
           (format stream "~a" (message/from-name obj)))
-        (format stream "~%")
+        (format stream " (~a)~%"
+                (local-time:format-timestring nil (message/created-date obj)
+                                              :format '(:day " " :short-month " " :year " " :hour ":" :min)))
         (clim:present (message/text obj))))))
 
 (clim:define-presentation-method clim:present (obj (type formatted-element) stream (view channel-content-view) &key)
