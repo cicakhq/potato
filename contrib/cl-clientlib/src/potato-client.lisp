@@ -17,7 +17,7 @@
 
 (defclass connection ()
   ((api-key    :type string
-               :initform (error "~s not specified when creating new ~s" :api-key 'connection-state)
+               :initform (error "~s not specified when creating new ~s" :api-key 'connection)
                :initarg :api-key
                :reader connection/api-key)
    (url-prefix :type string
