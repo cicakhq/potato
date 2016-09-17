@@ -6,6 +6,7 @@
 (defparameter *url-colour* (clim:make-rgb-color 0.2 0.2 1.0))
 (defparameter *code-background* (clim:make-rgb-color 0.988 0.988 0.988))
 (defparameter *code-padding* 2)
+(defparameter *user-background* (clim:make-rgb-color 0.9 0.9 0.9))
 
 (defclass message ()
   ((id           :type string
@@ -204,5 +205,5 @@
       (format stream "~a" (url-element/description obj)))))
 
 (clim:define-presentation-method clim:present (obj (type user) stream (view channel-content-view) &key)
-  (clim:surrounding-output-with-border (stream :padding 2)
+  (clim:surrounding-output-with-border (stream :background *user-background* :padding 2)
    (format stream "~a" (user/description obj))))
