@@ -33,6 +33,7 @@
    (from-image   :initform nil
                  :accessor message/from-image)
    (update-index :type integer
+                 :initform 0
                  :accessor message/update-index)))
 
 (defmethod print-object ((obj message) stream)
@@ -41,7 +42,7 @@
 
 (defun message/cache-key (message)
   (check-type message message)
-  (log:info "Getting cache key for ~s" message)
+  (log:trace "Getting cache key for ~s" (message/id message))
   (format nil "~a_~a" (message/id message) (message/update-index message)))
 
 (defun make-message-from-json (channel msg)

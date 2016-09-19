@@ -222,9 +222,13 @@
     (receptacle:do-container (msg (channel/messages channel))
       (unless (message/deleted msg)
         (clim:updating-output (stream :unique-id msg
-                                      :id-test #'eq
-                                      :cache-value #'message/cache-key
-                                      :cache-test #'equal)
+                                      :id-test (lambda (a b)
+                                                 (log:trace "ID-TEST ~s → ~s" (message/id a) (eq a b))
+                                                 (eq a b))
+                                      :cache-value (message/cache-key msg)
+                                      :cache-test (lambda (a b)
+                                                    (log:trace "CACHE-TEST ~s : ~s → ~s" a b (equal a b))
+                                                    (equal a b)))
           (clim:present msg 'message :stream stream)
           (format stream "~&"))))))
 
