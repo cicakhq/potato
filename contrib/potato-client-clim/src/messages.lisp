@@ -129,6 +129,8 @@
     (clim:formatting-row (stream)
       (clim:formatting-cell (stream)
         (alexandria:when-let ((image (message/from-image obj)))
+          ;; Workaround for bug #92
+          (format stream "a")
           (clim:draw-pattern* stream image 0 0)))
       (clim:formatting-cell (stream)
         (clim:with-text-style (stream (clim:make-text-style nil :bold nil))
