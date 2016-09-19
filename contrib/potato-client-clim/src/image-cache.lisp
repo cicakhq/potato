@@ -39,7 +39,7 @@
              (let ((callbacks (image-cache-entry/callbacks entry)))
                (setf (image-cache-entry/callbacks entry) nil)
                (dolist (callback callbacks)
-                 (funcall callback entry)))))
+                 (funcall callback entry nil)))))
     (let (type)
       (let ((data (flexi-streams:with-output-to-sequence (seq-out)
                     (setq type (load-image-from-src (image-cache-entry/src entry) seq-out cache)))))
@@ -92,4 +92,4 @@
                          (t
                           entry))))))
     (when found
-      (funcall callback found))))
+      (funcall callback found t))))

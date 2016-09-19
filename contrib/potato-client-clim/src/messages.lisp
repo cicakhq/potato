@@ -21,7 +21,7 @@
    (from-name    :type string
                  :initarg :from-name
                  :reader message/from-name)
-   (created-date :type local-time
+   (created-date :type local-time:timestamp
                  :initarg :created-date
                  :reader message/created-date)
    (text         :type t
@@ -44,25 +44,6 @@
   (check-type message message)
   (log:trace "Getting cache key for ~s" (message/id message))
   (format nil "~a_~a" (message/id message) (message/update-index message)))
-
-(defun make-message-from-json (channel msg)
-  (let ((cid (st-json:getjso "channel" msg)))
-    (unless (equal (channel/id channel) cid)
-      (error "Attempt to create a message for incorrenct channel"))
-    (let* ((from (st-json:getjso "from" msg))
-           (message (make-instance 'message
-                                   :id (st-json:getjso "id" msg)
-                                   :channel channel
-                                   :from from
-                                   :from-name (st-json:getjso "from_name" msg)
-                                   :created-date (parse-timestamp (st-json:getjso "created_date" msg))
-                                   :text (parse-text-content channel (st-json:getjso "text" msg))
-                                   :deleted (eq (st-json:getjso "deleted" msg) :true))))
-      (let ((sender (find-user (channel/users channel) from)))
-        (find-image-from-url (potato-frame/image-cache (channel/frame channel)) sender
-                             (lambda (entry)
-                               (setf (message/from-image message) (image-cache-entry/pixmap entry))))
-        message))))
 
 (defclass channel-content-view (clim:view)
   ())

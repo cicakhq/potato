@@ -158,6 +158,28 @@
         (clim:execute-frame-command frame `(send-message ,channel ,text))
         (setf (clim:gadget-value pane) "")))))
 
+(defun make-message-from-json (channel msg)
+  (let ((cid (st-json:getjso "channel" msg)))
+    (unless (equal (channel/id channel) cid)
+      (error "Attempt to create a message for incorrenct channel"))
+    (let* ((from (st-json:getjso "from" msg))
+           (message (make-instance 'message
+                                   :id (st-json:getjso "id" msg)
+                                   :channel channel
+                                   :from from
+                                   :from-name (st-json:getjso "from_name" msg)
+                                   :created-date (parse-timestamp (st-json:getjso "created_date" msg))
+                                   :text (parse-text-content channel (st-json:getjso "text" msg))
+                                   :deleted (eq (st-json:getjso "deleted" msg) :true))))
+      (let ((sender (find-user (channel/users channel) from)))
+        (find-image-from-url (potato-frame/image-cache (channel/frame channel)) sender
+                             (lambda (entry immediate-p)
+                               (setf (message/from-image message) (image-cache-entry/pixmap entry))
+                               (unless immediate-p
+                                 (incf (message/update-index message))
+                                 (redisplay-channel-content channel))))
+        message))))
+
 (defun load-history-and-update (channel conn)
   (let ((messages (loop
                     with result = (potato-client:message-history (channel/id channel) :connection conn :format "json")
