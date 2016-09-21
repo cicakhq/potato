@@ -54,7 +54,13 @@
                              (value->persisted-value (cadr type) v))
                          value)
                  'clouchdb:json-list))
-      (:inst (make-doc-from-instance (class-of value) value))))
+      (:inst (make-doc-from-instance (class-of value) value))
+      (:alist (let ((value-type (cadr type)))
+                (loop
+                  for (key . alist-val) in value
+                  unless (keywordp key)
+                    do (error "Keys in persisted alists must be keywords")
+                  collect (cons (symbol-value key) (value->persisted-value value-type alist-val)))))))
   (:method ((type (eql :string)) (value string))
     value)
   (:method ((type (eql :string)) (value integer))
@@ -81,7 +87,11 @@
       (:list (mapcar #'(lambda (v)
                          (persisted-value->value (cadr type) v))
                      value))
-      (:inst (load-instance-from-doc (cadr type) value :accept-empty-type t))))
+      (:inst (load-instance-from-doc (cadr type) value :accept-empty-type t))
+      (:alist (let ((value-type (cadr type)))
+                (loop
+                  for (key . alist-val) in value
+                  collect (cons key (persisted-value->value value-type alist-val)))))))
   (:method ((type (eql :string)) (value string))
     value)
   (:method ((type (eql :integer)) (value string))
