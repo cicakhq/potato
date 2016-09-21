@@ -61,7 +61,16 @@
                           :persisted-type :boolean
                           :persisted-allow-missing-value t
                           :persisted-missing-default nil
-                          :documentation "If true, the user needs to be shown the initial welcome screen."))
+                          :documentation "If true, the user needs to be shown the initial welcome screen.")
+   (note                  :type list
+                          :initarg :node
+                          :initform nil
+                          :accessor user/note
+                          :persisted-p t
+                          :persisted-allow-missing-value t
+                          :persisted-missing-default nil
+                          :persisted-type (:alist :string)
+                          :documentation "Alist of additional information attached to the user"))
   (:metaclass potato.db:persisted-entry-class)
   (:attachments-p t)
   (:memcached-enabled-p t)
