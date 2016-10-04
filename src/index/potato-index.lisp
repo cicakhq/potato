@@ -34,13 +34,13 @@
 
 (defun find-cached-channel (channel-id)
   (receptacle:hash-get-or-update *channel-group-cache* channel-id
-                                    #'(lambda ()
-                                        (let* ((channel-result (clouchdb:get-document channel-id))
-                                               (group-id (getfield :|group| channel-result)))
-                                          (let ((group-result (clouchdb:get-document group-id)))
-                                            (make-cached-channel :group-id group-id
-                                                                 :channel-name (getfield :|name| channel-result)
-                                                                 :group-name (getfield :|name| group-result)))))))
+                                 (lambda ()
+                                   (let* ((channel-result (clouchdb:get-document channel-id))
+                                          (group-id (getfield :|group| channel-result)))
+                                     (let ((group-result (clouchdb:get-document group-id)))
+                                       (make-cached-channel :group-id group-id
+                                                            :channel-name (getfield :|name| channel-result)
+                                                            :group-name (getfield :|name| group-result)))))))
 
 (defvar *num-imports* 0)
 
@@ -113,8 +113,8 @@
         (let ((solr-document `(("id" . ,user-id)
                                ("potato_type" . "user")
                                ("user_description" . ,user-description)
-                               ;("user_email" . ,user-email)
-                               ("user_domain" . ,(mapcar #'(lambda (v) (getfield :|domain| (getfield :|value| v))) domains-rows)))))
+                               ;;("user_email" . ,user-email)
+                               ("user_domain" . ,(mapcar (lambda (v) (getfield :|domain| (getfield :|value| v))) domains-rows)))))
           (send-update-to-index solr-document seq-field seq)))))
 
 (defun update-memberdomain (doc seq-field seq)
