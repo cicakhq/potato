@@ -306,7 +306,7 @@
         (permission-error () (raise-message-error))))))
 
 (defun load-message-log (channel num-messages start)
-  (check-type channel channel)
+  (check-type channel (or channel string))
   (check-type num-messages integer)
   (check-type start (or null string))
   (with-messages-db
