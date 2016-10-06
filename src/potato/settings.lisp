@@ -31,7 +31,7 @@
                  (cond ((not (equal password1 password2))
                         (push '(:password-error . "Passwords do not match") response))
                        ((zerop (length password1))
-                        (push '(:password-error . "Password can't be blank") response))
+                        nil)
                        ((plusp (length password1))
                         (potato.core:user/update-password loaded-user password1)
                         (setq updated t)
