@@ -1,6 +1,6 @@
 #!/bin/sh
 
-deps="librabbitmq-dev libfixposix-dev openjdk-8-jdk libffi-dev gcc g++ nodejs nodejs-legacy npm imagemagick couchdb rabbitmq-server wget"
+deps="librabbitmq-dev libfixposix-dev openjdk-8-jdk libffi-dev gcc g++ nodejs nodejs-legacy npm imagemagick couchdb rabbitmq-server memcached wget"
 
 potato_root=`pwd`
 
@@ -11,7 +11,7 @@ fail () {
 
 check_deps_ubuntu () {
 	for package in $deps ; do
-		if ! (dpkg -L $package >/dev/null 2>&1) ; then
+		if ! (dpkg -s $package | egrep '^Status:.*installed' >/dev/null 2>&1) ; then
 			echo $package
 		fi
 	done
@@ -58,6 +58,8 @@ if ! in_path apt-get ; then
     echo "following the instructions in docs/INSTALL.md"
     exit 1
 fi
+
+ensure_deps_ubuntu
 
 if ! (sbcl --non-interactive --quit --eval '(sb-ext:exit :code 0)' >/dev/null 2>&1) ; then
 	echo "SBCL is not installed, or not available in the PATH"
