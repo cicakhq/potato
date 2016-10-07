@@ -109,20 +109,20 @@ if ! in_path gulp ; then
     echo -n "press return>"
     read foo
 
-    sudo npm install -g gulp
+    sudo npm install -g gulp || fail "Error running global gulp install"
 fi
 
 if [ ! -d web-app/node_modules ] ; then
     (
 	cd web-app
-	npm install gulp
+	npm install gulp || fail "Error running gulp install"
     )
 fi
 
 if [ ! -d public ] ; then
     (
         cd web-app
-        gulp build
+        gulp build || fail "Error building resources"
     )
 fi
 
