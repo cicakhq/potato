@@ -23,7 +23,8 @@
            #:*external-websocket-listen-address*
            #:*allow-passwordless-login*
            #:*allow-password-recovery*
-           #:*user-registration-validation-function*))
+           #:*user-registration-validation-function*
+           #:init-dev-db))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)

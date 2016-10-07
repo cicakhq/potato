@@ -147,3 +147,14 @@ if [ ! -f init-potato.lisp ] ; then
   (potato:start-server-debug))
 EOF
 fi
+
+echo
+echo "Development environment has been set up."
+echo "In order to load the system into a running SBCL instance,"
+echo "load the file init-potato.lisp. This loads all dependencies"
+echo "and defines a function potato-run that can be used to start"
+echo "the application. By default, a local installation runs on"
+echo "port 8080."
+echo
+echo "In order to set up a basic test configuration (domain, channel,"
+echo "user, etc...) run the function potato:init-dev-db from the REPL."

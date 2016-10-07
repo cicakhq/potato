@@ -47,3 +47,16 @@
   (potato.views:init-views)
   (cl-memcached:mc-flush-all)
   (values))
+
+(defun init-dev-db ()
+  (setup-initial-database)
+  (let* ((domain (potato.core:make-and-save-domain "Test domain" :corporate :public t :join-default t))
+         (group (potato.core:find-default-group-in-domain domain)))
+    (potato.core:create-channel "Foo" group nil)
+    (let ((email "foo@foo.com")
+          (password "foo"))
+      (potato.workflow:register-user email "Foo" password nil t)
+      (format t (concatenate 'string
+                             "The database has been set up and the user ~a has been created with password '~a'.~%"
+                             "It should now be possible to log in to the test system.")
+              email password))))
