@@ -5,7 +5,9 @@ deps="librabbitmq-dev libfixposix-dev openjdk-8-jdk libffi-dev gcc g++ nodejs no
 potato_root=`pwd`
 
 fail () {
-    echo "$1"
+    if [ $# -ge 1 ] ; then
+        echo "$1"
+    fi
     exit 1
 }
 
@@ -115,7 +117,8 @@ fi
 if [ ! -d web-app/node_modules ] ; then
     (
 	cd web-app
-	npm install gulp || fail "Error running gulp install"
+        npm install || fail
+	npm install gulp || fail
     )
 fi
 
