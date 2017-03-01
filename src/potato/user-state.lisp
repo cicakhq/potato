@@ -106,7 +106,7 @@ sometimes avoids updating the database if the list of users with
                  for user-string = (string user)
                  for values = (cdr element)
                  for count = (getfield :|count| values)
-                 for user-is-active-p = (and active-users (dhs-sequences:tree-find-element active-users user-string))
+                 for user-is-active-p = (and active-users (receptacle:tree-find-element active-users user-string))
                  for hidden = (getfield :|hide| values :accept-missing t)
                  for user-is-updated-p = (or hidden
                                              (and (zerop count)

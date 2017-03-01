@@ -3,11 +3,11 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defun make-channel-id-to-name-map (channel-ids)
-  (let ((map (dhs-sequences:make-hash-map :test 'equal)))
+  (let ((map (receptacle:make-hash-map :test 'equal)))
     (dolist (cid channel-ids)
-      (unless (dhs-sequences:hash-get map cid)
+      (unless (receptacle:hash-get map cid)
         (let ((channel (potato.db:load-instance 'potato.core:channel cid)))
-          (setf (dhs-sequences:hash-get map cid) (potato.core:channel/name channel)))))
+          (setf (receptacle:hash-get map cid) (potato.core:channel/name channel)))))
     map))
 
 (defun load-channels-for-notifications (notifications)

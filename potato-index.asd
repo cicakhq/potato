@@ -6,7 +6,7 @@
   :depends-on (:potato-common
                :alexandria
                :cl-solr
-               :containers
+               :receptacle
                :cl-markup
                :string-case)
   :components ((:module "src/index"

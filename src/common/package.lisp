@@ -109,7 +109,7 @@
            #:sorted-list-first-item
            #:plain-sorted-list
            #:cl-containers-sorted-list
-           #:dhs-sequences-sorted-list
+           #:receptacle-sorted-list
            #:*state-server-reader-expire-time*
            #:*state-server-reader-high-prio*
            #:*state-server-reader-low-prio*

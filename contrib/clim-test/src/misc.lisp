@@ -2,7 +2,7 @@
   (:use :cl))
 
 (defvar *job-handler* nil)
-(defvar *job-handler-queue* (dhs-sequences:make-blocking-queue :name "Job handler queue"))
+(defvar *job-handler-queue* (receptacle:make-blocking-queue :name "Job handler queue"))
 
 (defclass channel ()
   ((id      :type string
@@ -52,7 +52,7 @@
 
 (defun job-handler-loop ()
   (loop
-    for job = (dhs-sequences:queue-pop-wait *job-handler-queue*)
+    for job = (receptacle:queue-pop-wait *job-handler-queue*)
     do (restart-case
             (funcall (job/callback job))
          (skip-current-job ()
@@ -67,7 +67,7 @@
 
 (defun submit-new-job (callback)
   (let ((job (make-instance 'job :callback callback)))
-    (dhs-sequences:queue-push *job-handler-queue* job)))
+    (receptacle:queue-push *job-handler-queue* job)))
 
 (defmacro with-submitted-job ((conn) &body body)
   (let ((conn-sym (gensym "CONN-")))

@@ -14,7 +14,7 @@
 (defparameter *session-refresh-interval* (* 15 60))
 
 (defstruct active-eventsource-socket-data request socket)
-(defvar *active-eventsource-sockets* (dhs-sequences:make-cas-wrapper (fset:empty-set)))
+(defvar *active-eventsource-sockets* (receptacle:make-cas-wrapper (fset:empty-set)))
 
 (defun cleanup-name (string)
   (with-output-to-string (s)
@@ -367,7 +367,7 @@
 
         ;; This is purely for debugging purposes so that we can find the
         ;; list of active connections when using the debugger
-        (dhs-sequences:with-cas-update (v *active-eventsource-sockets*)
+        (receptacle:with-cas-update (v *active-eventsource-sockets*)
           (fset:with v active-eventsource-data))
 
         (unwind-protect
@@ -408,7 +408,7 @@
                  ;; Unwind form
                  (log:trace "Closing channel: ~s" rchannel)
                  ;; Remove the connection information from the list of active connections
-                 (dhs-sequences:with-cas-update (v *active-eventsource-sockets*)
+                 (receptacle:with-cas-update (v *active-eventsource-sockets*)
                    (fset:less v active-eventsource-data))
                  ;; Ensure that the ping timer is disabled, and mark the connection as inactive
                  (bordeaux-threads:with-lock-held (lock)
