@@ -4,7 +4,7 @@
 
 (deftype timer-trigger () '(and real (satisfies plusp)))
 
-(defclass checked-receptacle-sorted-list (potato.common:dhs-sequences-sorted-list)
+(defclass checked-receptacle-sorted-list (potato.common:receptacle-sorted-list)
   ()
   (:documentation "Special version of receptacle-sorted-list which
 verifies that removed objects actually exists in the list, and throws
