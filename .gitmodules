@@ -3,10 +3,10 @@
 	url = https://github.com/lokedhs/lofn
 [submodule "vendor/cl-solr"]
 	path = vendor/cl-solr
-	url = git://github.com/lokedhs/cl-solr
+	url = https://github.com/lokedhs/cl-solr
 [submodule "vendor/containers"]
 	path = vendor/containers
-	url = git://github.com/lokedhs/containers
+	url = https://github.com/lokedhs/containers
 [submodule "vendor/cl-markup"]
 	path = vendor/cl-markup
 	url = https://github.com/lokedhs/cl-markup
