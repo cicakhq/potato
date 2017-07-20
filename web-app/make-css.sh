@@ -3,7 +3,7 @@
 SASSC=sassc
 SCSS_SRC=src/css
 CSS_OUT=../public/assets/css
-MANIFEST=css.manifest
+MANIFEST=$(readlink -e ../src/template/manifest/css.manifest)
 
 function make_scss {
   cd $1
@@ -13,13 +13,13 @@ function make_scss {
 	  ${SASSC} $f $2/$BASE.css
 	  CKSUM_NAME=$BASE-`md5sum $2/$BASE.css | cut -b 26-32`.css
 	  mv $2/$BASE.css $2/$CKSUM_NAME
-	  echo "$BASE.css: $CKSUM_NAME" >> $2/$MANIFEST
+	  echo "$BASE.css: $CKSUM_NAME" >> $MANIFEST
   done
 }
 
 function clean {
   rm -f $1/*.css
-  rm -f $1/$MANIFEST
+  rm -f $MANIFEST
 }
 
 clean $CSS_OUT
