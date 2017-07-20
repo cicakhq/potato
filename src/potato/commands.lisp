@@ -336,6 +336,16 @@ group limits the list of channels to that group only."
     "Sets the nickname for the given channel. If the channel already had a nickname, the old one will become available for a different channel."
   (potato.core:set-nickname-for-channel channel (if (string= nickname "") nil nickname)))
 
+(define-command set-channel-topic "set-channel-topic"
+    ((channel "The is of the channel")
+     (topic "The topic for this channel"))
+    ()
+    "Set the topic for a channel"
+    "Set the topic for a channel."
+  (let ((channel (potato.db:load-instance 'potato.core:channel channel)))
+    (setf (potato.core:channel/topic channel) topic)
+    (potato.db:save-instance channel)))
+
 (define-command create-group "create-group"
     ((domain "domain id")
      (name "name of the group"))
