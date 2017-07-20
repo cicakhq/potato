@@ -12,8 +12,8 @@ aside#toolbar {
     background-color:    lighten($glaciergray, 19%);
 
     section#search {
-        @search-height:  $line-height;
-        @padding:        2*$font-size;
+        $search-height:  $line-height;
+        $padding:        2*$font-size;
         border:          0;
         padding:         0;
         flex:            0 0 $header-height;
