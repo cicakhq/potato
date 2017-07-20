@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Compile the CSS files"
+
 SASSC=sassc
 SCSS_SRC=src/css
 CSS_OUT=../public/assets/css
