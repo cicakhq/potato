@@ -26,13 +26,11 @@ gulp.task('build', [
     'img:package',
     'vendor:package',
     'html:compile',
-    'css:compile',
     'js:lint',
     'js:compile'
 ]);
 
 gulp.task('watch', [
-    'css:watch',
     'js:watch',
     'html:watch'
 ]);
