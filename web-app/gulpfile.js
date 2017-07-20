@@ -25,13 +25,10 @@ gulp.task('build', [
     'fonts:package',
     'img:package',
     'vendor:package',
-    'html:compile',
-    'js:lint',
-    'js:compile'
+    'html:compile'
 ]);
 
 gulp.task('watch', [
-    'js:watch',
     'html:watch'
 ]);
 
