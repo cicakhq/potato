@@ -1,6 +1,7 @@
 #!/bin/bash
 
-if [ ! -f out/font-awe.zip ] || [ ! -f out/font-ssp.zip ] || [ ! -f out/font-symb.zip ]; then
+if [ ! -f out/font-awe.zip ] || [ ! -f out/font-ssp.zip ] \
+   || [ ! -f out/font-symb.zip ] || [ ! -f out/NotoColorEmoji.ttf ]; then
 	echo "Download and copy fonts:"
 	mkdir out
 	echo "1. Font Awesome"
@@ -15,6 +16,10 @@ if [ ! -f out/font-awe.zip ] || [ ! -f out/font-ssp.zip ] || [ ! -f out/font-sym
 	curl -o out/font-symb.zip https://codeload.github.com/ChALkeR/Symbola-Emoji/zip/master
 	mkdir -p ../public/assets/fonts/symb/
 	unzip -oj out/font-symb.zip '**/Symbola-Emoji*' -d ../public/assets/fonts/symb/
+	echo "4. Google Noto Color Emoji"
+	curl -o out/NotoColorEmoji.ttf https://raw.githubusercontent.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf
+	mkdir -p ../public/assets/fonts/noto/
+	cp out/NotoColorEmoji.ttf ../public/assets/fonts/noto/
 else
 	echo "Fonts already are installed"
 fi
