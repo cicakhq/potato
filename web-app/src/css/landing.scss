@@ -1,11 +1,11 @@
-@import (inline) "include/normalize.css";
-@import "themes/marsala-light";
+//+TODO: @import (inline) "include/normalize.css";
+@import "themes/colours-2016";
 @import "include/fonts";
 
 @import "include/potato";
 
 html, body {
-    line-height:             1.2*@line-height;
+    line-height:             1.2*$line-height;
 }
 
 @import "include/header";
@@ -15,7 +15,7 @@ main#landing {
     @spacer:                 50px;
 
     padding-top:             10px;
-    padding-bottom:          3*@spacer;
+    padding-bottom:          3*$spacer;
     height:                  100%;
     text-align:              center;
     display:                 flex;
@@ -25,13 +25,13 @@ main#landing {
     overflow-y:              auto;
 
     h1 {
-        color:               darken(@tangerine, 30%);
+        color:               darken($tangerine, 30%);
     }
 
     fieldset {
         margin:              0 auto;
         padding:             0;
-        padding-top:         @spacer;
+        padding-top:         $spacer;
         border:              0;
         text-align:          left;
 
@@ -45,33 +45,33 @@ main#landing {
             margin-right:    5px;
             font-size:       1.1rem;
             height:          48px;
-            width:           20 * @font-size;
+            width:           20 * $font-size;
             transition:      border-color .1s;
             box-sizing:      border-box;
-            border-color:    @tangerine;
-            color:           @black;
+            border-color:    $tangerine;
+            color:           $black;
             &:hover {
-                border:      2px solid darken(@tangerine, 20%);
+                border:      2px solid darken($tangerine, 20%);
             }
         }
 
         input[type="text"]::-webkit-input-placeholder { /* WebKit browsers */
-            color:    @titanium;
+            color:    $titanium;
         }
 
         input[type="text"]::-moz-placeholder { /* Mozilla Firefox 19+ */
             opacity:  1;
-            color:    @titanium;
+            color:    $titanium;
         }
 
         input[type="text"]:-ms-input-placeholder { /* Internet Explorer 10+ */
-            color:    @titanium;
+            color:    $titanium;
         }
 
         #button {
-            background-color: @tangerine;
-            color:            @white;
-            border-color:     darken(@tangerine, 10%);
+            background-color: $tangerine;
+            color:            $white;
+            border-color:     darken($tangerine, 10%);
         }
 
         input[type="submit"] {
@@ -80,8 +80,8 @@ main#landing {
             border-radius:    .25rem;
             cursor:           pointer;
             height:           48px;
-            font-size:        1.2 * @font-size;
-            width:            10  * @font-size;
+            font-size:        1.2 * $font-size;
+            width:            10  * $font-size;
             margin:           0;
             margin-top:       15px;
             padding:          0;
@@ -89,15 +89,15 @@ main#landing {
 
             &:hover {
                 border:        2px solid;
-                border-color:  darken(@tangerine, 20%);
+                border-color:  darken($tangerine, 20%);
             }
         }
 
         p {
-            color:            @sandstone;
+            color:            $sandstone;
             margin:           0;
-            padding-top:      @font-size/2;
-            font-size:        0.9 * @font-size;
+            padding-top:      $font-size/2;
+            font-size:        0.9 * $font-size;
         }
     }
 }

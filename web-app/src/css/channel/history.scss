@@ -17,7 +17,7 @@ article {
     overflow:         hidden;
     overflow-y:       auto;
     flex:             1;
-    background-color: @white;
+    background-color: $white;
 
     ul {
         position:     absolute;
@@ -29,18 +29,18 @@ article {
         padding:      0;
         list-style:   none;
         display:      inline-block;
-        padding-left: @chat-left-margin;
+        padding-left: $chat-left-margin;
 
         li {
             margin:        0;
             padding:       0;
             padding-right: 8px;
-            font:          bold @font-size @fonts-list;
-            line-height:   @line-height;
+            font:          bold $font-size $fonts-list;
+            line-height:   $line-height;
             position:      relative;
 
             &:last-child > figure {
-                padding-bottom: @line-height/2;
+                padding-bottom: $line-height/2;
             }
 
             &.chat-monologue {

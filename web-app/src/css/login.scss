@@ -1,19 +1,19 @@
-@import (inline) "include/normalize.css";
-@import "themes/marsala-light";
+//+TODO: @import (inline) "include/normalize.css";
+@import "themes/colours-2016";
 @import "include/fonts";
 
-@header-height: 80px;
-@margin-side:   10px;
-@margin-top:    15px;
-@image-width:   70px;
+$header-height: 80px;
+$margin-side:   10px;
+$margin-top:    15px;
+$image-width:   70px;
 
 html, body {
     height:           100%;
     width:            100%;
-    line-height:      1.2*@line-height;
-    background-color: lighten(@glaciergray, 20%);
-    font:             @font-size @fonts-list;
-    color:            @black;
+    line-height:      1.2*$line-height;
+    background-color: lighten($glaciergray, 20%);
+    font:             $font-size $fonts-list;
+    color:            $black;
 }
 
 body {
@@ -21,7 +21,7 @@ body {
     flex-direction:   column;
 }
 
-@import "include/header.less";
+@import "include/header";
 
 @media screen and (max-width: 500px) {
     form#login {
@@ -46,29 +46,29 @@ main {
         padding:          0;
         outline:          0;
         border:           0;
-        min-width:        320px - 4*@font-size;  // small iPhone
+        min-width:        320px - 4*$font-size;  // small iPhone
         max-width:        50%;
-        background-color: @white;
-        //padding-top:      @font-size;
-        padding-top:      @font-size;
-        padding-bottom:   @font-size;
-        padding-right:    6*@font-size;
-        padding-left:     6*@font-size;
-        border-radius:    @line-height;
-        border:           1px solid lighten(@glaciergray, 15%);
+        background-color: $white;
+        //padding-top:      $font-size;
+        padding-top:      $font-size;
+        padding-bottom:   $font-size;
+        padding-right:    6*$font-size;
+        padding-left:     6*$font-size;
+        border-radius:    $line-height;
+        border:           1px solid lighten($glaciergray, 15%);
 
         legend {
             position:         relative;
             text-align:       center;
             margin-top:       0;
-            padding-left:     2*@font-size;
-            padding-right:    2*@font-size;
-            padding-top:      0.2*@line-height;
-            padding-bottom:   0.2*@line-height;
-            font-size:        2*@font-size;
-            border:           1px solid lighten(@glaciergray, 18%);
+            padding-left:     2*$font-size;
+            padding-right:    2*$font-size;
+            padding-top:      0.2*$line-height;
+            padding-bottom:   0.2*$line-height;
+            font-size:        2*$font-size;
+            border:           1px solid lighten($glaciergray, 18%);
             border-radius:    10px;
-            background-color: @white;
+            background-color: $white;
             font-weight:      600;
         }
     }
@@ -91,15 +91,15 @@ form#login {
     p#email:before,
     p#password:before {
         position:         absolute;
-        left:             -3*@font-size;
+        left:             -3*$font-size;
         font-family:      'FontAwesome', sans-serif;
-        background-color: @white;
-        color:            @black;
+        background-color: $white;
+        color:            $black;
         display:          block;
-        height:           2*@line-height;
-        line-height:      2*@line-height;
+        height:           2*$line-height;
+        line-height:      2*$line-height;
         text-align:       center;
-        width:            3*@font-size;
+        width:            3*$font-size;
         font-size:        140%;
     }
 
@@ -112,16 +112,16 @@ form#login {
     }
 
     #email input, #password input, #submit input {
-        height:             2*@line-height;
+        height:             2*$line-height;
     }
 
     @keyframes border-pulsate {
-        0%   { border-color: lighten(@tangerine, 20%); }
-        20%  { border-color: @tangerine; }
-        40%  { border-color: darken(@tangerine, 20%); }
-        80%  { border-color: @tangerine; }
-        90%  { border-color: lighten(@tangerine, 10%); }
-        100% { border-color: lighten(@tangerine, 20%); }
+        0%   { border-color: lighten($tangerine, 20%); }
+        20%  { border-color: $tangerine; }
+        40%  { border-color: darken($tangerine, 20%); }
+        80%  { border-color: $tangerine; }
+        90%  { border-color: lighten($tangerine, 10%); }
+        100% { border-color: lighten($tangerine, 20%); }
     }
 
     input[type="text"], input[type="password"] {
@@ -129,20 +129,20 @@ form#login {
         padding              : 0;
         border               : none;
         outline              : 0;
-        font-family          : @fonts-list;
-        font-size            : @font-size;
-        line-height          : @line-height;
+        font-family          : $fonts-list;
+        font-size            : $font-size;
+        line-height          : $line-height;
         -webkit-appearance   : none;
-        background-color     : lighten(@glaciergray, 10%);
-        border               : 2px solid lighten(@glaciergray, 10%);
-        border-radius        : 0px @font-size/2 @font-size/2 0px;
-        color                : @black;
-        padding-left         : @font-size;
+        background-color     : lighten($glaciergray, 10%);
+        border               : 2px solid lighten($glaciergray, 10%);
+        border-radius        : 0px $font-size/2 $font-size/2 0px;
+        color                : $black;
+        padding-left         : $font-size;
         box-sizing           : border-box;
 
         &:focus {
-            background-color : lighten(@glaciergray, 18%);
-            border           : 2px solid lighten(@tangerine, 12%);
+            background-color : lighten($glaciergray, 18%);
+            border           : 2px solid lighten($tangerine, 12%);
             animation        : border-pulsate 4s infinite;
         }
     }
@@ -151,11 +151,11 @@ form#login {
     }
 
     @keyframes color-pulsate {
-        0%   { color: lighten(@custard, 10%); font-size: 1.1*@font-size;}
-        20%  { color: lighten(@custard, 20%); font-size: 1.11*@font-size;}
-        40%  { color: lighten(@custard, 50%); font-size: 1.12*@font-size; }
-        90%  { color: lighten(@custard, 10%); font-size: @font-size; }
-        100% { color: lighten(@custard, 5%);  font-size: 1.05*@font-size;}
+        0%   { color: lighten($custard, 10%); font-size: 1.1*$font-size;}
+        20%  { color: lighten($custard, 20%); font-size: 1.11*$font-size;}
+        40%  { color: lighten($custard, 50%); font-size: 1.12*$font-size; }
+        90%  { color: lighten($custard, 10%); font-size: $font-size; }
+        100% { color: lighten($custard, 5%);  font-size: 1.05*$font-size;}
     }
 
 
@@ -164,43 +164,43 @@ form#login {
         border:             none;
         padding:            0;
         -webkit-appearance: none;
-        border-radius:      @font-size/3;
-        background-color:   @tangerine;
-        color:              @white;
+        border-radius:      $font-size/3;
+        background-color:   $tangerine;
+        color:              $white;
         font-weight:        bold;
         -webkit-appearance: none;
-        margin-bottom:      @line-height/4;
+        margin-bottom:      $line-height/4;
         text-transform:     uppercase;
-        padding-left:       @font-size;
+        padding-left:       $font-size;
         box-sizing:         border-box;
 
         &:focus {
-            color:             @custard;
+            color:             $custard;
             animation        : color-pulsate 4s infinite;
         }
     }
 
     input[type="submit"]:hover {
-        background-color:   @treetop;
+        background-color:   $treetop;
     }
 
     p#remember {
         text-align:         right;
-        margin-bottom:      @line-height;
+        margin-bottom:      $line-height;
     }
 
     input[type="checkbox"] + label {
-        color:              @titanium;
+        color:              $titanium;
         font-style:         normal;
         display:            inline-block;
-        margin-left:        @font-size/3;
+        margin-left:        $font-size/3;
     }
 
     input[type="checkbox"]:checked + label {
-        color:              @treetop;
-        background-color:   @custard;
+        color:              $treetop;
+        background-color:   $custard;
         font-style:         normal;
-        margin-left:        @font-size/3;
+        margin-left:        $font-size/3;
     }
 }
 
@@ -209,11 +209,11 @@ form#login {
     font-style: italic;
 
     a {
-        color:           @scubablue;
+        color:           $scubablue;
         text-decoration: none;
         font-style:      normal;
         font-weight:     700;
-        margin-left:     0.5*@font-size;
+        margin-left:     0.5*$font-size;
 
         &:hover {
             text-decoration: underline;
@@ -226,19 +226,19 @@ form#login {
     font-style: italic;
 
     &:after {
-        padding-left:  0.4*@font-size;
+        padding-left:  0.4*$font-size;
         font-family:   'FontAwesome', sans-serif;
-        color:         @scubablue;
+        color:         $scubablue;
         content:       "\f061";
         font-style:    normal;
     }
 
     a {
-        color:           @scubablue;
+        color:           $scubablue;
         text-decoration: none;
         font-style:      normal;
         font-weight:     700;
-        margin-left:     0.5*@font-size;
+        margin-left:     0.5*$font-size;
 
         &:hover {
             text-decoration: underline;

@@ -1,11 +1,11 @@
-@import (inline) "include/normalize.css";
-@import "themes/marsala-light";
+//@import (inline) "include/normalize.css";
+@import "themes/colours-2016";
 @import "include/fonts";
 
 @import "include/potato";
 
 html, body {
-    line-height:      1.2*@line-height;
+    line-height:      1.2*$line-height;
 }
 
 @import "include/header";

@@ -1,19 +1,19 @@
 footer#potato-foot {
-    @footer-height:          50px;
-    @local-line-height:      0.9*@line-height;
+    $footer-height:          50px;
+    $local-line-height:      0.9*$line-height;
 
     display:                 flex;
     flex-direction:          column;
     justify-content:         center;
-    line-height:             @local-line-height;
+    line-height:             $local-line-height;
     overflow:                hidden;
-    flex:                    0 0 @footer-height;
-    font-size:               0.9*@font-size;
+    flex:                    0 0 $footer-height;
+    font-size:               0.9*$font-size;
     box-shadow:              0 1px 4px rgba(0,0,0,0.15);
     padding-right:           20px;
     text-align:              right;
-    background-color:        @white;
-    color:                   darken(@titanium, 10%);
+    background-color:        $white;
+    color:                   darken($titanium, 10%);
 
     p {
         margin:              0;
@@ -22,11 +22,11 @@ footer#potato-foot {
     a,
     a:visited {
         text-decoration:     none;
-        color:               darken(@duskblue, 10%);
+        color:               darken($duskblue, 10%);
         &:hover,
         &:active {
             text-decoration: underline;
-            color:           darken(@classicblue, 10%);
+            color:           darken($classicblue, 10%);
         }
     }
 

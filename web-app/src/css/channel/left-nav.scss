@@ -1,9 +1,9 @@
 nav#left {
     margin:                  0;
     min-height:              100%;
-    width:                   @side-nav-width;
+    width:                   $side-nav-width;
     overflow-y:              auto;
-    flex:                    0 0 @side-nav-width;
+    flex:                    0 0 $side-nav-width;
     border-right-width:      0px;
     border-right-style:      solid;
     overflow-x:              hidden;
@@ -16,52 +16,52 @@ nav#left {
     section#domain {
         text-align:          center;
         width:               100%;
-        min-height:          @header-height;
-        max-height:          @header-height;
+        min-height:          $header-height;
+        max-height:          $header-height;
         background-color:    #000;
         border-bottom:       1px solid black;
-        flex:                0 0 @header-height;
+        flex:                0 0 $header-height;
 
         h1 {
             margin:          0;
             padding:         0;
-            line-height:     @line-height;
-            padding-top:     (@header-height - @line-height) / 2;
-            color:           @white;
+            line-height:     $line-height;
+            padding-top:     ($header-height - $line-height) / 2;
+            color:           $white;
         }
     }
 
     section#channels {
         height:                     100%;
-        padding-top:                @line-height;
+        padding-top:                $line-height;
         padding-left:               5px;
-        background-color:           @black;
+        background-color:           $black;
         flex:                       1 1 auto;
         overflow-y:                 auto;
         overflow-x:                 hidden;
-        scrollbar-face-color:       @glaciergray;
-        scrollbar-shadow-color:     @black;
-        scrollbar-highlight-color:  @black;
-        scrollbar-3dlight-color:    @black;
-        scrollbar-darkshadow-color: @black;
-        scrollbar-track-color:      @black;
-        scrollbar-arrow-color:      @black;
+        scrollbar-face-color:       $glaciergray;
+        scrollbar-shadow-color:     $black;
+        scrollbar-highlight-color:  $black;
+        scrollbar-3dlight-color:    $black;
+        scrollbar-darkshadow-color: $black;
+        scrollbar-track-color:      $black;
+        scrollbar-arrow-color:      $black;
 
         &::-webkit-scrollbar {
             width:            3px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background:       @glaciergray;
+            background:       $glaciergray;
         }
 
         h1 {
-            margin-top:       0.7*@font-size;
+            margin-top:       0.7*$font-size;
             padding:          0;
             text-align:       left;
             width:            100%;
             margin-bottom:    10px;
-            color:            @toastedalmond;
+            color:            $toastedalmond;
         }
 
         #channels-list, #conversations-list {
@@ -70,14 +70,14 @@ nav#left {
                 content:         '\f057';
                 font-family:     FontAwesome;
                 position:        absolute;
-                right:           @font-size/2;
-                padding-left:    @font-size;
-                width:           @font-size;
+                right:           $font-size/2;
+                padding-left:    $font-size;
+                width:           $font-size;
 
             }
 
             h1 {
-                font-size:       0.7*@font-size;
+                font-size:       0.7*$font-size;
                 font-weight:     700;
                 text-transform:  uppercase;
                 text-align:      left;
@@ -94,18 +94,18 @@ nav#left {
                 margin:          0;
                 padding-left:    10px;
                 margin-bottom:   3em;
-                font-size:       0.9*@font-size;
+                font-size:       0.9*$font-size;
 
                 a.close {
                     display:     none;
                     position:    absolute;
-                    top:         @list-padding/2 + @list-padding/4;
+                    top:         $list-padding/2 + $list-padding/4;
                     right:       0;
-                    color:       @glaciergray;
+                    color:       $glaciergray;
                     z-index:     1;
 
                     &:hover {
-                        color:   @white !important;
+                        color:   $white !important;
                     }
                 }
 
@@ -114,26 +114,26 @@ nav#left {
                     position:    relative;
 
                     &.current {
-                        padding:          @list-padding/2 @list-padding @list-padding/2;
+                        padding:          $list-padding/2 $list-padding $list-padding/2;
                         border:           0;
                         width:            100%;
                         z-index:          100;
-                        background-color: @treetop;
-                        color:            @custard;
+                        background-color: $treetop;
+                        color:            $custard;
                         border-top-left-radius:    4px;
                         border-bottom-left-radius: 4px;
                     }
 
                     a.channel {
-                        padding:          @list-padding/2 @list-padding @list-padding/2;
+                        padding:          $list-padding/2 $list-padding $list-padding/2;
                         text-decoration:  none !important;
                         display:          block;
-                        color:            @glaciergray;
+                        color:            $glaciergray;
                         border-top-left-radius:    4px;
                         border-bottom-left-radius: 4px;
                         &:hover {
-                            background-color: @titanium !important;
-                            color:            @white;
+                            background-color: $titanium !important;
+                            color:            $white;
                         }
                     } // a
                 } // li
@@ -142,7 +142,7 @@ nav#left {
 
         #conversations-list {
             h1 {
-                font-size:       .7*@font-size;
+                font-size:       .7*$font-size;
                 font-weight:     700;
                 text-transform:  uppercase;
                 text-align:      left;
@@ -153,7 +153,7 @@ nav#left {
             }
 
             ul {
-                font-size:       0.9*@font-size;
+                font-size:       0.9*$font-size;
                 list-style:      none;
             }
         }
@@ -161,12 +161,12 @@ nav#left {
 
     footer#myself {
         align-self:           flex-end;
-        min-height:           @input-height;
-        max-height:           @input-height;
+        min-height:           $input-height;
+        max-height:           $input-height;
         width:                100%;
         text-align:           center;
         border-top:           1px solid #000;
-        flex:                 0 0 @input-height;
+        flex:                 0 0 $input-height;
         display:              flex;
         flex-direction:       column;
         justify-content:      center;
@@ -182,7 +182,7 @@ nav#left {
 
 
         a {
-            color:            @white;
+            color:            $white;
             text-decoration:  none;
 
             &.myself-menu {
@@ -193,9 +193,9 @@ nav#left {
                 content:         '\f0c9';
                 font-family:     FontAwesome;
                 text-decoration: none !important;
-                padding-left:    0.5*@font-size;
-                padding-right:   @font-size;
-                color:           @titanium;
+                padding-left:    0.5*$font-size;
+                padding-right:   $font-size;
+                color:           $titanium;
             }
 
         }
@@ -204,8 +204,8 @@ nav#left {
             flex:             1 1 auto;
             margin:           0;
             padding:          0;
-            font-size:        0.9*@font-size;
-            line-height:      @line-height;
+            font-size:        0.9*$font-size;
+            line-height:      $line-height;
             font-weight:      600;
         }
     }

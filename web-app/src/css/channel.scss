@@ -1,6 +1,6 @@
-@import (inline) "include/normalize.css";
-@import (inline) "include/noscript.less";
-@import "themes/marsala-light";
+//+TODO: @import (inline) "include/normalize.css";
+//+TODO: @import (inline) "include/noscript.less";
+@import "themes/colours-2016";
 
 @import "include/potato";
 @import "include/fonts";
@@ -8,21 +8,21 @@
 @import "include/animations";
 
 // metrics
-@default-spacing:        10px;
-@default-corner-radius:  3px;
-@side-nav-width:         220px;
+$default-spacing:        10px;
+$default-corner-radius:  3px;
+$side-nav-width:         220px;
 
-@header-height:          60px; // the channel header bar
-@input-height:           55px; // the input div area
-@footer-height:          15px; // the branding footer
-@chat-left-margin:       60px;
-@alert-height:           30px;
+$header-height:          60px; // the channel header bar
+$input-height:           55px; // the input div area
+$footer-height:          15px; // the branding footer
+$chat-left-margin:       60px;
+$alert-height:           30px;
 
 html, body {
     overflow:            hidden;
     height:              100%;
     width:               100%;
-    line-height:         @line-height;
+    line-height:         $line-height;
     -webkit-user-select: text;
 }
 
@@ -40,29 +40,29 @@ div#potato {
 }
 
 footer#potato-foot {
-    height:              @footer-height;
+    height:              $footer-height;
     border-top-width:    0;
-    background-color:    @classicblue;
-    color:               @aquamarine;
+    background-color:    $classicblue;
+    color:               $aquamarine;
 
     text-align:          center;
-    line-height:         @footer-height;
+    line-height:         $footer-height;
 }
 
 #potato-alert {
-    height:              @alert-height;
-    font-family:         @fonts-list;
+    height:              $alert-height;
+    font-family:         $fonts-list;
     font-weight:         900;
-    background-color:    @strawberryice;
-    color:               @white;
+    background-color:    $strawberryice;
+    color:               $white;
     text-align:          center;
-    line-height:         @line-height;
-    padding-top:         (@alert-height - @line-height)/1.8;
-    font-size:           1.2*@font-size;
+    line-height:         $line-height;
+    padding-top:         ($alert-height - $line-height)/1.8;
+    font-size:           1.2*$font-size;
     text-shadow:         0 1px 1px rgba(0,0,0,0.25);
 
     a.enable {
-        color:           @white;
+        color:           $white;
         text-decoration: underline;
         cursor:          pointer;
     }
@@ -73,7 +73,7 @@ footer#potato-foot {
             content:     "\f00d";
             font-family: FontAwesome;
             float:       right;
-            padding-right: @font-size;
+            padding-right: $font-size;
         }
     }
 }
@@ -131,8 +131,8 @@ main#potato-core {
     line-height:      50px;
     font-size:        2em;
     text-align:       center;
-    background-color: @strawberryice !important;
-    color:            @white;
+    background-color: $strawberryice !important;
+    color:            $white;
 }
 
 #upload-progress {
@@ -150,31 +150,31 @@ main#potato-core {
     left:                 0;
     right:                0;
     z-index:              10;
-    min-height:           2*@font-size;
-    height:               2*@font-size;
+    min-height:           2*$font-size;
+    height:               2*$font-size;
     opacity:              0.9;
-    background-color:     @glaciergray !important;
+    background-color:     $glaciergray !important;
 
     #uploading-text {
         position:         absolute;
         top:              0;
         left:             0;
-        line-height:      2*@font-size;
+        line-height:      2*$font-size;
         padding-left:     10px;
         z-index:          14;
-        color:            @white;
+        color:            $white;
     }
 
     #uploading-percent {
         position:         relative;
         left:             0%;
         padding-left:     10px;
-        line-height:      2*@font-size;
+        line-height:      2*$font-size;
         padding-right:    10px;
         opacity:          .96;
         z-index:          16;
-        color:            @woodbine;
-        background-color: @glaciergray;
+        color:            $woodbine;
+        background-color: $glaciergray;
     }
 
     #uploading-cancel {
@@ -188,9 +188,9 @@ main#potato-core {
         right:            0;
         display:          block;
         z-index:          11;
-        min-height:       2*@font-size;
-        height:           2*@font-size;
-        background-color: @treetop !important;
+        min-height:       2*$font-size;
+        height:           2*$font-size;
+        background-color: $treetop !important;
     }
 }
 
@@ -208,9 +208,9 @@ main#potato-core {
     padding:          30px;
     font-size:        5em;
     text-align:       center;
-    background-color: @glaciergray-background !important;
-    border-color:     @titanium;
-    color:            @marsala;
+    background-color: $glaciergray-background !important;
+    border-color:     $titanium;
+    color:            $marsala;
 }
 
 .red {
@@ -242,8 +242,8 @@ main#potato-core {
     padding:          15px;
     border:           1px solid;
     z-index:          100;
-    border-color:     @titanium;
-    background-color: @glaciergray-background;
+    border-color:     $titanium;
+    background-color: $glaciergray-background;
 }
 
 menu#activeBehaviour {
@@ -251,31 +251,31 @@ menu#activeBehaviour {
     display:          none;
     overflow:         auto;
     z-index:          33 !important;
-    max-height:       6*@line-height;
+    max-height:       6*$line-height;
     border-radius:    3px;
     border:           1px solid #DDD;
     padding:          0;
     margin:           0;
     color:            black;
     background:       white;
-    margin-top:       @line-height;
-    margin-bottom:    0.2*@line-height;
+    margin-top:       $line-height;
+    margin-bottom:    0.2*$line-height;
     left:             0;
     right:            0;
 
     menuitem {
         display:       block;
-        padding-left:  @font-size;
+        padding-left:  $font-size;
     }
 
     menuitem.active {
-        background-color: @custard;
+        background-color: $custard;
         font-weight:      700;
     }
 
     div.notice {
         display:       block;
-        padding-left:  @font-size;
+        padding-left:  $font-size;
         font-style:    italic;
     }
 }
