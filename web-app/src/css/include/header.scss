@@ -127,7 +127,7 @@ nav#potato-links {
 @media screen and (max-width: 500px) {
     header hgroup {
         background-size: 12vh auto;
-        padding-left:    12vh + 2vw;
+        padding-left:    calc(12vh + 2vw);
         h1 {
             font-size:   4.8vw;
             line-height: 3.5vh;
