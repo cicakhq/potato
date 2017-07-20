@@ -12,7 +12,7 @@ html, body {
 @import "include/footer";
 
 main#landing {
-    @spacer:                 50px;
+    $spacer:                 50px;
 
     padding-top:             10px;
     padding-bottom:          3*$spacer;
