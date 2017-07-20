@@ -2,8 +2,8 @@ $fonts-list:  "Source Sans Pro", "Helvetica Neue", "Helvetica", Arial, sans-seri
 $code-fonts:  Monaco,Menlo,Consolas,"Courier New",monospace;
 $font-size:   15px;
 $line-height: 1.4*$font-size;
-$emoji-unicode-ranges: ~'U+2600-26FF, U+1F1E0-U+1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF';
-$non-emoji-unicode-ranges: ~'U+0-10FFF';
+$emoji-unicode-ranges: unquote("U+2600-26FF, U+1F1E0-U+1F1FF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF");
+$non-emoji-unicode-ranges: unquote("U+0-10FFF");
 
 @import "font-awe";  // 'FontAwesome'
 @import "font-ssp";  // 'Source Sans Pro'
