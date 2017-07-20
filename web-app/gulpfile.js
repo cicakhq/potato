@@ -15,8 +15,7 @@ var gulp       = require('gulp');
 global.basePath = {
     src:   'src/',
     dest:  '../public/assets/',
-    bower: 'libs/',
-    tmpl:  '../src/template/manifest/'
+    bower: 'libs/'
 };
 
 requireDir('./gulp');
@@ -24,15 +23,9 @@ requireDir('./gulp');
 gulp.task('build', [
     'fonts:package',
     'img:package',
-    'vendor:package',
-    'html:compile'
-]);
-
-gulp.task('watch', [
-    'html:watch'
+    'vendor:package'
 ]);
 
 gulp.task('default', [
-    'build',
-    'watch'
+    'build'
 ]);
