@@ -21,8 +21,7 @@ global.basePath = {
 requireDir('./gulp');
 
 gulp.task('build', [
-    'fonts:package',
-    'vendor:package'
+    'fonts:package'
 ]);
 
 gulp.task('default', [
