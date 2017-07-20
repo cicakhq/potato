@@ -276,7 +276,7 @@
     }
 
     code {
-        @spacearound:     $font-size/4;
+        $spacearound:     $font-size/4;
         margin-right:     $spacearound;
         padding-left:     $spacearound;
         padding-right:    $spacearound;
