@@ -5,16 +5,6 @@ var plumber    = require("gulp-plumber");
 
 var basePath   = global.basePath;
 
-gulp.task('fonts:ssp', function () {
-  var source      = basePath.bower+'fontface-source-sans-pro/fonts/';
-
-  gulp.
-    src([ source + '**/*.{ttf,woff,eof,svg}' ]).
-    pipe(plumber()).
-    pipe(flatten()).
-    pipe(gulp.dest(basePath.dest+'fonts/ssp'));
-});
-
 gulp.task('fonts:symb', function() {
     var source = basePath.src + 'fonts/symb/';
     gulp.
@@ -33,4 +23,4 @@ gulp.task('fonts:noto', function() {
         pipe(gulp.dest(basePath.dest+'fonts/Noto'));
 });
 
-gulp.task('fonts:package', [ 'fonts:ssp', 'fonts:symb', 'fonts:noto' ]);
+gulp.task('fonts:package', [ 'fonts:symb', 'fonts:noto' ]);
