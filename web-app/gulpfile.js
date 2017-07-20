@@ -22,7 +22,6 @@ requireDir('./gulp');
 
 gulp.task('build', [
     'fonts:package',
-    'img:package',
     'vendor:package'
 ]);
 
