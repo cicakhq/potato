@@ -9,10 +9,10 @@
              [cljs.pprint])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
-(def no-results-text    "No results")
+(def no-results-text "No results")
 (def search-placeholder "Search")
 
-(def search-message-url         "/search_message")
+(def search-message-url "/search_message")
 
 (defn found-message-component [message owner opts]
   (reify
