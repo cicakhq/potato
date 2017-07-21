@@ -7,7 +7,8 @@ echo "Compile the CSS files"
 SASSC=sassc
 SCSS_SRC=src/css
 CSS_OUT=../public/assets/css
-MANIFEST=$(readlink -e ../src/template/manifest/css.manifest)
+MANIFEST_DIR=$(readlink -e ../src/template/manifest)
+MANIFEST="$MANIFEST_DIR/manifest.lisp"
 
 function make_scss {
   cd $1
@@ -17,7 +18,7 @@ function make_scss {
 	  ${SASSC} $f $2/$BASE.css
 	  CKSUM_NAME=$BASE-`md5sum $2/$BASE.css | cut -b 26-32`.css
 	  mv $2/$BASE.css $2/$CKSUM_NAME
-	  echo "$BASE.css: $CKSUM_NAME" >> $MANIFEST
+	  echo '  ("'$BASE.css'" . "'$CKSUM_NAME'")' >> $MANIFEST
   done
 }
 
@@ -27,4 +28,6 @@ function clean {
 }
 
 clean $CSS_OUT
+echo "(" > $MANIFEST
 make_scss $(readlink -e $SCSS_SRC) $(readlink -e $CSS_OUT)
+echo ")" >> $MANIFEST
