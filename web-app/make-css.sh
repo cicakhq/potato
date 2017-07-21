@@ -7,8 +7,8 @@ echo "Compile the CSS files"
 SASSC=sassc
 SCSS_SRC=src/css
 CSS_OUT=../public/assets/css
-MANIFEST_DIR=$(readlink -e ../src/template/manifest)
-MANIFEST="$MANIFEST_DIR/manifest.lisp"
+MANIFEST_DIR=$(readlink -e ../src/template/)
+MANIFEST="$MANIFEST_DIR/manifest"
 
 function make_scss {
   cd $1
