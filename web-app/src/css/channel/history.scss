@@ -1,0 +1,84 @@
+.channel-history-range {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    animation-duration: 1s;
+    animation-name: range-history-enable;
+}
+
+@keyframes range-history-enable {
+    from { flex: 0; }
+    to { flex: 2; }
+}
+
+article {
+    margin:           0;
+    position:         relative;
+    overflow:         hidden;
+    overflow-y:       auto;
+    flex:             1;
+    background-color: $white;
+
+    ul {
+        position:     absolute;
+        bottom:       0;
+        left:         0;
+        right:        0;
+        max-height:   100%;
+        margin:       0;
+        padding:      0;
+        list-style:   none;
+        display:      inline-block;
+        padding-left: $chat-left-margin;
+
+        li {
+            margin:        0;
+            padding:       0;
+            padding-right: 8px;
+            font:          bold $font-size $fonts-list;
+            line-height:   $line-height;
+            position:      relative;
+
+            &:last-child > figure {
+                padding-bottom: $line-height/2;
+            }
+
+            &.chat-monologue {
+                .chat-author-picture,
+                figcaption {
+                    display: none !important;
+                }
+            }
+
+            // This style is applied to the centre message in the
+            // range panel. For example, when a user has clicked on a
+            // search result and want to display the context in which
+            // the message was posted. The selected message will then
+            // be highlighted using this class.
+            &.chat-highlighted {
+                background: #f0f0f0;
+            }
+
+            @import "entry";
+        }
+    }
+}
+
+.channel-history-range-splitter {
+    padding: 4px;
+    background: #a0ffc0;
+    border-bottom-width: 2px;
+    border-bottom-color: black;
+
+    a.splitter-control {
+        //border: 1px solid black;
+        padding: 2px;
+        text-decoration: none;
+        color: black;
+        margin-right: 20px;
+
+        &:hover {
+            background: #c0c0c0;
+        }
+    }
+}

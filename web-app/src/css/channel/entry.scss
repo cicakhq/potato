@@ -1,0 +1,374 @@
+// -- CHAT ENTRY
+.chat-entry { // figure
+    width:             100%;
+    margin:            0;
+    font-weight:       400;
+
+    blockquote {
+        text-align:    left;
+        padding:       0;
+        margin:        0;
+        margin-bottom: 0.2*$font-size;
+        position:      relative;
+
+        .empty {
+            display:   inline-block;
+        }
+
+        img {
+            display:   block;
+        }
+
+        &.hover {
+            background-color: lighten($lucitegreen, 30%);
+            a.chat-actions {
+                display:  block !important;
+            }
+        }
+
+        // This is :hover, as opposed to .hover above. This is intentional.
+        &:hover {
+            a.starred {
+                display: block !important;
+            }
+        }
+
+        .chat-content-style {
+            word-break:    break-all;
+            overflow-wrap: break-word;
+            word-break:    break-word;
+            hyphens:       auto;
+        }
+
+        .chat-content-text {
+            @extend .chat-content-style;
+            img {
+                max-width:  360px;
+                max-height: 360px;
+                cursor:     pointer;
+                transition: -webkit-transform 0.1s ease;
+
+                &.zoom {
+                    -webkit-transform: scale(2);
+                    -webkit-transform-origin-x: 0;
+                    max-width: 720px;
+                    max-height: 720px;
+                }
+            }
+        }
+
+        p {
+            @extend .chat-content-style;
+            display:      inline;
+            margin:       0;
+        }
+
+        p + p {
+            @extend .chat-content-style;
+            display:      block;
+            margin-top:   0.2*$line-height;
+        }
+
+        .chat-file-size::before,
+        .chat-updated::before,
+        .chat-deleted::before {
+            content:      '(';
+        }
+
+        .chat-file-size::after,
+        .chat-updated::after,
+        .chat-deleted::after {
+            content:      ')';
+        }
+
+        .chat-deleted {
+            color:        darken($glaciergray, 20%);
+            font-style:   italic;
+            font-weight:  200;
+            font-size:    0.8*$font-size;
+        }
+
+        .chat-updated {
+            color:        darken($glaciergray, 20%);
+            font-weight:  200;
+            font-size:    0.7*$font-size;
+            padding-left: 0.5*$font-size;
+        }
+
+        .chat-attachments {
+            a,
+            a:link,
+            a:visited {
+                font-weight:     900;
+                text-decoration: none;
+                position:        relative;
+                margin-left:     1.4em;
+
+                &:before {
+                    content:     "\f0ab";
+                    font-family: FontAwesome;
+                    position:    absolute;
+                    right:       100%;
+                    top:         -1px;
+                    width:       1.4em;
+                }
+            }
+
+            a:hover,
+            a:active,
+            a:focus {
+                text-decoration: underline;
+
+                &:before {
+                    text-decoration: none !important;
+                }
+            }
+
+            .chat-file-size {
+                font-size:    0.9em;
+                padding-left: 1em;
+            }
+        }
+
+        a.chat-actions {
+            display:      none;
+            position:     absolute;
+            right:        0;
+            top:          0;
+
+            &:before {
+                color:            $duskblue;
+                font-size:        $font-size;
+                font-family:      FontAwesome;
+                content:          "\f040";
+                background-color: lighten($lucitegreen, 30%);
+                padding-right:    $font-size/2;
+                padding-left:     $font-size/2;
+                height:           $line-height;
+            }
+
+            &:active,
+            &:focus,
+            &:hover {
+                text-decoration: none;
+
+                &:before {
+                    text-decoration: none;
+                    color: $strawberryice;
+                }
+            }
+        }
+
+        ////////////////////////////////////////////////////////////
+        // Code dealing with display of message stars
+        ////////////////////////////////////////////////////////////
+        .starred {
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 0;
+
+            // This is mostly copied from a.chat-action above. I'm
+            // sure Less provides some neat way where the common
+            // values could be merged.
+            &:before {
+                color:            $duskblue;
+                font-size:        $font-size;
+                font-family:      FontAwesome;
+                //background-color: lighten($lucitegreen, 30%);
+                padding-right:    $font-size/2;
+                padding-left:     $font-size/2;
+                height:           $line-height;                
+            }
+        }
+
+        .starred-enable {
+            display: block;
+            &:before {
+                content:          "\2605";
+            }
+        }
+
+        .starred-disable {
+            &:before {
+                content:          "\2606";
+            }
+        }
+        ////////////////////////////////////////////////////////////
+        // End of message star code
+        ////////////////////////////////////////////////////////////
+
+        menu#chat-popup-menu {
+            margin:        0;
+            padding:       3px;
+            z-index:       20;
+            position:      fixed;
+            max-height:    100px; // footer height
+            border-radius: 5px;
+            border:        1px solid $titanium;
+            overflow-y:    auto;
+
+            menuitem {
+                line-height:   20px;
+                text-size:     0.9em;
+                display:       block;
+                text-align:    right;
+                padding-left:  10px;
+                padding-right: 5px;
+                border:        0;
+
+                .chat-popup-item-active {
+                    font-weight:   700;
+                    border:        1px solid;
+                    border-radius: 3px;
+                }
+            }
+        }
+    }
+
+    figcaption {
+        margin-top:    0.4*$font-size;
+        margin-right:  10px;
+        position:      relative;
+        line-height:   $line-height;
+        height:        $line-height;
+
+        time::before {
+            padding-left: 0.5*$font-size;
+            padding-right: 0.4*$font-size;
+            content: '•';
+        }
+
+        time {
+            font-size: 0.8*$font-size;
+            font-family: $fonts-list;
+            color: darken($glaciergray, 10%);
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        address {
+            color: $black;
+            display: inline-block;
+            font-weight: 900;
+            font-style: normal;
+            white-space: nowrap;
+        }
+    }
+
+    #edit-entry {
+        border-radius:  2px;
+        border:         1px solid $tangerine;
+        margin-top:     $line-height / 6;
+        margin-bottom:  $line-height / 6;
+        padding-top:    $line-height / 6;
+        padding-bottom: $line-height / 6;
+        padding-left:   $font-size / 4;
+        padding-right:  $font-size / 4;
+    }
+
+    .code-block-style {
+        border:           1px solid lighten($glaciergray, 10%);
+        border-radius:    3px;
+        color:            darken($strawberryice,25%);
+        background-color: lighten($glaciergray, 20%);
+        font-family:      $code-fonts;
+    }
+
+    code {
+        $spacearound:     $font-size/4;
+        margin-right:     $spacearound;
+        padding-left:     $spacearound;
+        padding-right:    $spacearound;
+        padding-top:      1px;
+        padding-bottom:   1px;
+        @extend .code-block-style;
+        font-size:        0.8*$font-size;
+    }
+
+    em.user {
+        color:            darken($classicblue,20%);
+        background-color: lighten($glaciergray, 20%);
+        border-radius:    4px;
+        border:           1px solid lighten($glaciergray, 15%);
+        padding:          0;
+        padding-right:    0.2*$font-size;
+        padding-left:     0.2*$font-size;
+        margin-right:     0.1*$font-size;
+        margin-left:      0.1*$font-size;
+        line-height:      $line-height - 2px;
+        text-decoration:  none;
+        font-style:       normal;
+
+        &.me {
+            background-color: lighten($custard, 15%);
+            border:           1px solid lighten($custard, 5%);
+        }
+    }
+
+    .at {
+        color:            darken($classicblue,10%);
+        background-color: lighten($glaciergray, 20%);
+        border-radius:    4px;
+        cursor:           pointer;
+        border:           1px solid lighten($glaciergray, 15%);
+        padding:          0;
+        padding-right:    0.2*$font-size;
+        padding-left:     0.2*$font-size;
+        line-height:      $line-height - 2px;
+        font-style:       normal;
+    }
+
+    pre {
+        margin:           0;
+        padding-top:      $line-height/4;
+        padding-right:    $font-size/2;
+        padding-left:     $font-size/2;
+        padding-bottom:   $line-height/6;
+        white-space:      pre-wrap;
+        display:          block;
+        @extend .code-block-style;
+        font-size:        0.7*$font-size;
+
+        &.highlighted-code .comment {
+            color:        $titanium;
+            font-style:   italic;
+        }
+        &.highlighted-code .paren1 {
+            color:        $marsala;
+        }
+        &.highlighted-code .paren2 {
+            color:        darken($marsala, 5%);
+        }
+        &.highlighted-code .paren3 {
+            color:        darken($marsala, 10%);
+        }
+        &.highlighted-code .string {
+            color:        $treetop;
+        }
+        &.highlighted-code .symbol {
+            color:        $classicblue;
+        }
+    }
+}
+
+.chat-author-picture {
+    $size: 30px;
+
+    position:            absolute;
+    left:                0 - $size - ($chat-left-margin - $size)/2 + $chat-left-margin/9;
+    top:                 (2*$line-height - $size) / 2;
+    background-position: 0 0px;
+    background-repeat:   no-repeat;
+    opacity:             0.9;
+    filter:              alpha(opacity=90);
+    width:               $size;
+    height:              $size;
+    display:             block;
+    border-radius:       5px 5px 5px 5px;
+
+    &:hover {
+        opacity:         1;
+        filter:          alpha(opacity=100);
+    }
+}

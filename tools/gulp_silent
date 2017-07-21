@@ -1,7 +1,0 @@
-#!/bin/sh
-
-DISABLE_NOTIFIER=true
-export DISABLE_NOTIFIER
-
-cd `dirname "$0"`/../web-app
-exec gulp "$@"
