@@ -10,6 +10,12 @@ CSS_OUT=../public/assets/css
 MANIFEST_DIR=$(readlink -e ../src/template/)
 MANIFEST="$MANIFEST_DIR/manifest"
 
+set -e 
+
+if [ ! -d $CSS_OUT ] && [ -d ../public ]; then
+	 mkdir -p $CSS_OUT
+fi
+
 function make_scss {
   cd $1
   for f in *.scss
