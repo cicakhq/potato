@@ -2,7 +2,7 @@ $awe-fontpath:  '/assets/fonts/awe';
 
 @font-face {
   font-family: 'FontAwesome';
-  src: url("#{$awe-fontpath}/fontawesome-webfont.eot");
+  src: url($awe-fontpath + '/fontawesome-webfont.eot');
   src: url("#{$awe-fontpath}/fontawesome-webfont.eot?#iefix") format('embedded-opentype'),
        url("#{$awe-fontpath}/fontawesome-webfont.woff") format('woff'),
        url("#{$awe-fontpath}/fontawesome-webfont.ttf") format('truetype'),

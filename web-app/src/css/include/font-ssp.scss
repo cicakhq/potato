@@ -63,10 +63,10 @@ $ssp-fontpath:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-Black'),
          local('Source Sans Pro Black'),
-         url("#{$ssp-fontpath}/SourceSansPro-Black.eot") format('embedded-opentype'),
-         url("#{$ssp-fontpath}/SourceSansPro-Black.otf.woff") format('woff'),
-         url("#{$ssp-fontpath}/SourceSansPro-Black.otf") format('opentype'),
-         url("#{$ssp-fontpath}/SourceSansPro-Black.ttf"\) format('truetype');
+         url($ssp-fontpath + '/SourceSansPro-Black.eot') format('embedded-opentype'),
+         url($ssp-fontpath + '/SourceSansPro-Black.otf.woff') format('woff'),
+         url($ssp-fontpath + '/SourceSansPro-Black.otf') format('opentype'),
+         url($ssp-fontpath + '/SourceSansPro-Black.ttf') format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
