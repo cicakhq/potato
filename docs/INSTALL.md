@@ -16,11 +16,10 @@ To do a standardlone installation, the following dependencies must be installed:
   - libffi (https://sourceware.org/libffi/)
   - GCC and G++
   - Leiningen (Clojure build tool)
-  - npm (for gulp. this dependency will be removed)
 
 On a clean Ubuntu system, these dependencies are available from the following packages:
 
-`git couchdb-server rabbitmq-server memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy npm`
+`git couchdb-server rabbitmq-server librabbitmq-dev memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy sassc unzip default-jdk`
 
 ### Initialise submodules
 
@@ -162,30 +161,18 @@ cd web-app
 lein with-profile -dev cljsbuild once prod admin-prod
 ```
 
-## CSS compilation
+## Assets compilation
 
-### Install gulp
-
-gulp is installed using npm. On Ubuntu this application is part of the
-package `nodejs`.
-
-The following command installs gulp globally:
+The assets are compiled by the `make.sh` script under the `web-app` directory.
+The shell script assumes that your current directory is `web-app`; to run it:
 
 ```
-sudo npm install -g gulp
+cd web-app
+./make.sh
 ```
 
-### Install npm
-
-Go to the `web-app` directory and run the following command:
-
-```
-npm install
-```
-
-### Run gulp
-
-Run `gulp build` once to build all the CSS files.
+This will download the fonts, copy a few files to the `public` directory, and
+compile the CSS from their `SCSS` source to the final CSS form.
 
 # Potato server configuration
 
