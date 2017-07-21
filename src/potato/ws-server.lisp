@@ -120,7 +120,7 @@
                         (ws-connection/client-session conn)))))
             (bordeaux-threads:with-lock-held ((ws-connection/lock conn))
               (let ((v (cl-rabbit-async:async-basic-consume rchannel q :no-ack nil)))
-                (log:trace "Enabled cosume. Consumer tag: ~s" v)
+                (log:trace "Enabled consume. Consumer tag: ~s" v)
                 (setq consumer-tag v)))
             (with-msgl-task conn
               (send-hunchensocket-message conn (st-json:jso "type" "event"

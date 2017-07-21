@@ -1,0 +1,18 @@
+@import "include/normalize";
+@import "themes/colours-2016";
+@import "include/fonts";
+
+@import "include/potato";
+
+html, body {
+    line-height:      1.2*$line-height;
+}
+
+@import "include/header";
+
+main#potato-core {
+    p {
+        font-style: italic;
+        text-align: center;
+    }
+}

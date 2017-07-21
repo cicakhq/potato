@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <% includeindex "manifest/js.manifest" %>
-  <% includeindex "manifest/css.manifest" %>
+  <% includeindex "manifest" %>
   <%
      var dev = dev
   %>
@@ -54,11 +53,10 @@
     <div id="channels-editor"Loading</div>
     <div id="group-admin">Loading</div>
   </div>
-  <script src="/assets/js/<% #index "manifest/js.manifest.imports.js" %>"></script>
   <% if ,dev %>
     <script src="http://localhost:10555/js/admin.js" type="text/javascript"></script>
   <% else %>
-    <script src="<% #"/assets/js/" #index "manifest/js.manifest.admin.js" $"admin.js" %>"></script>
+    <script src="<% #"/assets/js/" #index "manifest.admin.js" $"admin.js" %>"></script>
   <% end %>
   <!--<![endif]-->
 </body>

@@ -1,0 +1,112 @@
+footer#input {
+    flex:              0 0 auto;
+    min-height:        $input-height;
+    width:             100%;
+    display:           flex;
+    flex-direction:    row;
+    padding:           0;
+    margin:            0;
+    border-top:        1px solid lighten($glaciergray, 10%);
+    position:          relative;
+
+    .typing {
+        display:       block;
+        position:      absolute;
+        left:          $chat-left-margin;
+        top:           0;
+        line-height:   0.6*$line-height;
+        font-size:     0.7*$font-size;
+        color:         $woodbine;
+    }
+
+    fieldset {
+        $padding: ( $input-height - $line-height ) / 2;
+
+        margin:           0;
+        padding:          0;
+        border:           0;
+        position:         relative;
+        width:            100%;
+
+        #channel-input {
+            box-sizing:       border-box;
+            box-shadow:       none;
+            outline:          0;
+            vertical-align:   middle;
+            width:            100%;
+            font-size:        $font-size;
+            line-height:      $line-height !important;
+            min-height:       $input-height;
+            max-height:       $input-height + 3 * $line-height;
+            margin:           0;
+            padding-top:      $padding;
+            padding-bottom:   $padding;
+            padding-left:     $chat-left-margin;
+            padding-right:    $font-size;
+            overflow-y:       auto;
+            word-break:       break-all;
+            overflow-wrap:    break-word;
+            word-break:       break-word;
+            hyphens:          auto;
+            color:            $black;
+            background-color: $white;
+
+            &.locked {
+                background-color: lighten($glaciergray, 20%);
+            }
+
+            #marker {
+                background-color: lighten($custard, 15%);
+                border: 1px solid lighten($custard, 15%);
+                line-height:      $line-height;
+            }
+
+            .at {
+                color:            darken($classicblue,10%);
+                background-color: lighten($custard, 10%);
+                border-radius:    4px;
+                cursor:           pointer;
+                border:           1px solid $custard;
+                padding:          0;
+                padding-right:    0.5*$font-size;
+                padding-left:     0.5*$font-size;
+                line-height:      $line-height - 2px;
+            }
+        }
+
+        .placeholder {
+            position:       absolute;
+            top:            $padding;
+            padding-left:   $chat-left-margin + 3*$font-size;
+            left:           0;
+            display:        inline-block;
+            z-index:        1;
+            color:          $lucitegreen;
+
+            @keyframes finger-pointing {
+                0%   { left: $chat-left-margin + $font-size; }
+                50%  { left: $chat-left-margin; }
+                100% { left: $chat-left-margin + $font-size; }
+            }
+
+            &:before {
+                content:                   "\f0a5";
+                left:                      $chat-left-margin + $font-size;
+                font-family:               FontAwesome;
+                position:                  absolute;
+                animation-name:            finger-pointing;
+                animation-duration:        2s;
+                animation-delay:           3s;
+                animation-iteration-count: 10;
+            }
+        }
+
+        textarea#channel-input {
+            resize:         none  !important;
+
+            &:focus {
+                box-shadow:     none;
+            }
+        }
+    }
+}
