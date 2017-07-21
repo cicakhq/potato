@@ -24,7 +24,7 @@ deploy/ansible/vars/custom.yml
 *.retry
 deploy/ansible/roles/solr/files/solr-4.10.0.tgz
 deploy/ansible/roles/solr/files/jdk-8u20-linux-x64.rpm
-public/
+public/*
 src/template/manifest
 potato.bin
 potato.cfg
