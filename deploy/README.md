@@ -1,3 +1,9 @@
+**Deployment using Ansible has not been updated to match changes in the
+build of Potato (such as the removal of Gulp)**
+
+**It will probably not work, we recommend instead using the Docker containers
+packaged deployment**
+
 # Setup Vagrant VM for front end Development
 
     $ git clone  https://github.com/cicakhq/potato.git
