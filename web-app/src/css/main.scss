@@ -7,8 +7,8 @@ html, body {
     line-height:    1.2*$line-height;
 }
 
-//+TODO: @import "include/header";
-//+TODO: @import "include/footer";
+@import "include/header";
+@import "include/footer";
 
 main#register-key{
     width:           50%;
