@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 echo "Compile the CSS files"
 
 SASSC=sassc
