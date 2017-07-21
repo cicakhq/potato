@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e 
+set -e
 
 DEST=../public/assets/html/
 if [ ! -d $DEST ] && [ -d ../public ]; then
