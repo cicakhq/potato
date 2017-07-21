@@ -1,4 +1,4 @@
-$ssp-font-path:  '/assets/fonts/ssp';
+$ssp-fontpath:  '/assets/fonts/ssp';
 
 @font-face {
     font-family: 'Source Sans Pro';
@@ -7,10 +7,10 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-ExtraLight'),
          local('Source Sans Pro'),
-         url('${ssp-font-path}/SourceSansPro-ExtraLight.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-ExtraLight.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-ExtraLight.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-ExtraLight.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-ExtraLight.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-ExtraLight.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-ExtraLight.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-ExtraLight.ttf") format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
@@ -21,10 +21,10 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-Regular'),
          local('Source Sans Pro'),
-         url('${ssp-font-path}/SourceSansPro-Regular.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-Regular.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-Regular.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-Regular.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-Regular.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Regular.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-Regular.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Regular.ttf") format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
@@ -35,10 +35,10 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-Semibold'),
          local('Source Sans Pro'),
-         url('${ssp-font-path}/SourceSansPro-Semibold.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-Semibold.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-Semibold.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-Semibold.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-Semibold.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Semibold.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-Semibold.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Semibold.ttf") format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
@@ -49,10 +49,10 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-Bold'),
          local('Source Sans Pro Bold'),
-         url('${ssp-font-path}/SourceSansPro-Bold.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-Bold.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-Bold.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-Bold.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-Bold.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Bold.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-Bold.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Bold.ttf") format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
@@ -63,10 +63,10 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-Black'),
          local('Source Sans Pro Black'),
-         url('${ssp-font-path}/SourceSansPro-Black.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-Black.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-Black.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-Black.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-Black.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Black.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-Black.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-Black.ttf"\) format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }
 
@@ -77,9 +77,9 @@ $ssp-font-path:  '/assets/fonts/ssp';
     font-stretch: normal;
     src: local('SourceSansPro-It'),
          local('Source Sans Pro'),
-         url('${ssp-font-path}/SourceSansPro-It.eot') format('embedded-opentype'),
-         url('${ssp-font-path}/SourceSansPro-It.otf.woff') format('woff'),
-         url('${ssp-font-path}/SourceSansPro-It.otf') format('opentype'),
-         url('${ssp-font-path}/SourceSansPro-It.ttf') format('truetype');
+         url("#{$ssp-fontpath}/SourceSansPro-It.eot") format('embedded-opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-It.otf.woff") format('woff'),
+         url("#{$ssp-fontpath}/SourceSansPro-It.otf") format('opentype'),
+         url("#{$ssp-fontpath}/SourceSansPro-It.ttf") format('truetype');
     unicode-range: $non-emoji-unicode-ranges;
 }

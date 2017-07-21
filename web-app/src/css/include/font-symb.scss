@@ -1,12 +1,12 @@
-$symb-font-path:  '/assets/fonts/symb';
-$noto-font-path:  '/assets/fonts/noto';
+$symb-fontpath:  '/assets/fonts/symb';
+$noto-fontpath:  '/assets/fonts/noto';
 
 @font-face {
     font-family: 'Symbola';
-    src: url('${symb-font-path}/Symbola-Emoji.eot');
-    src: url('${symb-font-path}/Symbola-Emoji.eot?#iefix') format('embedded-opentype'),
-         url('${symb-font-path}/Symbola-Emoji.woff') format('woff'),
-         url('${symb-font-path}/Symbola-Emoji.ttf') format('truetype');
+    src: url("#{$symb-fontpath}/Symbola-Emoji.eot");
+    src: url("#{$symb-fontpath}/Symbola-Emoji.eot?#iefix") format('embedded-opentype'),
+         url("#{$symb-fontpath}/Symbola-Emoji.woff") format('woff'),
+         url("#{$symb-fontpath}/Symbola-Emoji.ttf") format('truetype');
     font-weight: normal;
     font-style: normal
 }
@@ -15,11 +15,11 @@ $noto-font-path:  '/assets/fonts/noto';
     font-family: 'Emoji';
     src: local('Apple Color Emoji'),
          local('Noto Color Emoji'),
-         url('${noto-font-path}/NotoColorEmoji.ttf') format('truetype'),
+         url("#{$noto-fontpath}/NotoColorEmoji.ttf") format('truetype'),
          local(Symbola),
-         url('${symb-font-path}/Symbola-Emoji.eot?#iefix') format('embedded-opentype'),
-         url('${symb-font-path}/Symbola-Emoji.woff') format('woff'),
-         url('${symb-font-path}/Symbola-Emoji.ttf') format('truetype');
+         url("#{$symb-fontpath}/Symbola-Emoji.eot?#iefix") format('embedded-opentype'),
+         url("#{$symb-fontpath}/Symbola-Emoji.woff") format('woff'),
+         url("#{$symb-fontpath}/Symbola-Emoji.ttf") format('truetype');
     unicode-range: $emoji-unicode-ranges;
 }
 
@@ -28,8 +28,8 @@ $emojiBW-size: 1.3em;
 
 @font-face {
     font-family: 'EmojiBW';
-    src: url('${symb-font-path}/Symbola-Emoji.eot?#iefix') format('embedded-opentype'),
-         url('${symb-font-path}/Symbola-Emoji.woff') format('woff'),
-         url('${symb-font-path}/Symbola-Emoji.ttf') format('truetype');
+    src: url("#{$symb-fontpath}/Symbola-Emoji.eot?#iefix") format('embedded-opentype'),
+         url("#{$symb-fontpath}/Symbola-Emoji.woff") format('woff'),
+         url("#{$symb-fontpath}/Symbola-Emoji.ttf") format('truetype');
     unicode-range: $emoji-unicode-ranges;
 }
