@@ -19,10 +19,8 @@
                                 (cons :redirect-path redirect-path))))
 
 (defun make-unregistered-user (description password)
-  (let* ((id (potato.db:make-random-couchdb-id))
-         (user (make-instance 'user
-                              :couchdb-id (concatenate 'string "user-" id)
-                              :nickname id
+  (let* ((user (make-instance 'user
+                              :nickname (potato.db:make-random-couchdb-id)
                               :description description
                               :password (or password "")
                               :activated-p nil

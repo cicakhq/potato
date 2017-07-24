@@ -20,7 +20,11 @@
    (modifications       :type (or null hash-table)
                         :initform nil
                         :accessor persisted-entry/modifications
-                        :documentation "Hashmap that records changes to the object"))
+                        :documentation "Hashmap that records changes to the object")
+   (loaded-p            :type t
+                        :initform nil
+                        :accessor persisted-entry/loaded-p
+                        :documentation "True if this instance was loaded from the database"))
   (:documentation "Superclass for clouchdb persisted instances"))
 
 (defun symbol-to-keyword (symbol)

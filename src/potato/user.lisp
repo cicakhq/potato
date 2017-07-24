@@ -76,6 +76,10 @@
   (:memcached-enabled-p t)
   (:documentation "Instance of a user in the system"))
 
+(defmethod initialize-instance :after ((obj user) &key)
+  (unless (potato.db:persisted-entry/couchdb-id obj)
+    (setf (potato.db:persisted-entry/couchdb-id obj) (format nil "user-~a" (potato.db:make-random-couchdb-id)))))
+
 (defmethod print-object ((obj user) stream)
   (print-unreadable-safely (description) obj stream
     (let ((couchdb-id (if (slot-boundp obj 'potato.db::couchdb-id)
@@ -170,7 +174,9 @@
   "Hook function that creates the user-nickname instance before the user is saved."
   (multiple-value-bind (updated-p value)
       (potato.db:persisted-entry-is-value-updated user 'nickname)
-    (when (and updated-p (not (equal (user/nickname user) value)))
+    (when (or (not (potato.db:persisted-entry/loaded-p user))
+              (and updated-p
+                   (not (equal (user/nickname user) value))))
       (let ((nick (make-instance 'user-nickname :user (user/id user) :nickname (user/nickname user))))
         ;; This call will throw an error if the nickname already exists
         (log:trace "Saving nick: ~s" (user/nickname user))

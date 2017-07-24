@@ -293,7 +293,8 @@
            #:remove-instance-nofail
            #:flush-cache-for-instance
            #:persisted-entry-is-value-updated
-           #:persisted-entry-clear-modifications-list))
+           #:persisted-entry-clear-modifications-list
+           #:persisted-entry/loaded-p))
 
 (defpackage :potato.search
   (:use :cl :potato :potato.common :potato.core)

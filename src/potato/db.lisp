@@ -207,13 +207,17 @@
     (let* ((memcached-enabled-p (persisted-entry-class/memcached-enabled-p class))
            (cached (and memcached-enabled-p (cl-memcached:mc-get (list (make-instance-memcached-key (class-name class) id))))))
       (if cached
-          (values (potato.common:decode-conspack-with-interning (fifth (car cached))))
+          (let ((obj (potato.common:decode-conspack-with-interning (fifth (car cached)))))
+            ;; Update the loaded flag since it is not persisted to memcached
+            (setf (slot-value obj 'loaded-p) t)
+            obj)
           ;; ELSE: Object not found in cache
           (let ((doc (clouchdb:get-document id :if-missing (if error-if-not-found :error :ignore))))
             (when doc
               (let ((obj (load-instance-from-doc (class-name class) doc)))
                 (when memcached-enabled-p
                   (cl-memcached:mc-set (make-instance-memcached-key (class-name class) id) (conspack:encode obj)))
+                (setf (slot-value obj 'loaded-p) t)
                 obj)))))))
 
 (defgeneric remove-instance (obj))
