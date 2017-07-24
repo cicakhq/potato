@@ -182,8 +182,9 @@
       (potato.db:persisted-entry-is-value-updated user 'nickname)
     (when (and updated-p (not (equal (user/nickname user) value)))
       (log:trace "Removing nick: ~s" value)
-      (let ((nick (potato.db:load-instance 'user-nickname (make-user-nickname-id value))))
-        (potato.db:remove-instance nick)))))
+      (let ((nick (potato.db:load-instance 'user-nickname (make-user-nickname-id value) :error-if-not-found nil)))
+        (when nick
+          (potato.db:remove-instance nick))))))
 
 (defun nickname-is-in-use-p (nickname)
   (if (potato.db:load-instance 'user-nickname (make-user-nickname-id nickname) :error-if-not-found nil) t nil))
