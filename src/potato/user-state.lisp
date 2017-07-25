@@ -101,22 +101,22 @@ sometimes avoids updating the database if the list of users with
         (let ((active-users (state-source/members state-source)))
           (multiple-value-bind (updated needs-update)
               (loop
-                 for element in (channel-users/users mapping)
-                 for user = (car element)
-                 for user-string = (string user)
-                 for values = (cdr element)
-                 for count = (getfield :|count| values)
-                 for user-is-active-p = (and active-users (receptacle:tree-find-element active-users user-string))
-                 for hidden = (getfield :|hide| values :accept-missing t)
-                 for user-is-updated-p = (or hidden
-                                             (and (zerop count)
-                                                  (not user-is-active-p)))
-                 when user-is-updated-p
-                 collect (list user-string (1+ count)) into needs-update
-                 collect `(,user . ((:|count|     . ,(if user-is-active-p 0 (1+ count)))
-                                    (:|last_read| . ,(getfield :|last_read| values))))
-                 into updated
-                 finally (return (values updated needs-update)))
+                for element in (channel-users/users mapping)
+                for user = (car element)
+                for user-string = (string user)
+                for values = (cdr element)
+                for count = (getfield :|count| values)
+                for user-is-active-p = (and active-users (receptacle:tree-find-element active-users user-string))
+                for hidden = (getfield :|hide| values :accept-missing t)
+                for user-is-updated-p = (or hidden
+                                            (and (zerop count)
+                                                 (not user-is-active-p)))
+                when user-is-updated-p
+                  collect (list user-string (1+ count)) into needs-update
+                collect `(,user . ((:|count|     . ,(if user-is-active-p 0 (1+ count)))
+                                   (:|last_read| . ,(getfield :|last_read| values))))
+                  into updated
+                finally (return (values updated needs-update)))
             (handler-case
                 ;; As an optimisation, we only update the document if there
                 ;; are any users that needs update. This means that the
@@ -130,9 +130,9 @@ sometimes avoids updating the database if the list of users with
                   (setf (channel-users/users mapping) updated)
                   (potato.db:save-instance mapping)
                   (loop
-                     for (user-id count) in needs-update
-                     do (log:trace "need update, user=~s channel=~s" user-id cid)
-                     do (flush-cached-user-channel-state user-id))
+                    for (user-id count) in needs-update
+                    do (log:trace "need update, user=~s channel=~s" user-id cid)
+                    do (flush-cached-user-channel-state user-id))
                   (push-user-channel-notification needs-update cid))
               ;; If there is a revision conflict here, that means that there is another message
               ;; being sent at exactly the same time. In this case, we'll simply skip the update,
