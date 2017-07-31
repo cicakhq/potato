@@ -18,6 +18,7 @@
   "Messages sent to a specific user session. Routing key format is: user.session.channel")
 (defparameter *gcm-unread-state-exchange-name* "gcm-unread-ex")
 (defparameter *gcm-queue-name* "user-notifications-gcm-send")
+(defparameter *apns-exchange-name* "apns-sender-ex")
 
 (defparameter *message-send-exchange-name* "message-send-ex"
   "Exchange that reecieves all messages that are sent in the system.
@@ -177,6 +178,9 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
                            :queue *gcm-queue-name*
                            :exchange *gcm-unread-state-exchange-name*
                            :routing-key "#")
+
+     ;; APNS queue
+     (cl-rabbit:exchange-declare conn 1 *apns-exchange-name* "topic" :durable t)
 
      ;; State server
      (cl-rabbit:exchange-declare conn 1 *state-server-reader-exchange-name* "topic" :durable t)

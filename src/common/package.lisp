@@ -129,7 +129,8 @@
            #:json-bind
            #:*gcm-unread-state-exchange-name*
            #:*session-notifications-exchange-name*
-           #:truncate-string))
+           #:truncate-string
+           #:*apns-exchange-name*))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)

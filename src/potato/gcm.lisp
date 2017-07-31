@@ -4,6 +4,8 @@
 
 (defvar *gcm-authorisation-key* nil)
 
+(deftype provider-type () '(member :gcm :apns))
+
 (defclass gcm-registration ()
   ((user         :type string
                  :reader gcm-registration/user
@@ -28,21 +30,38 @@
                  :accessor gcm-registration/notification-channels
                  :persisted-p t
                  :persisted-type (:list :string)
-                 :persisted-allow-missing-value t))
+                 :persisted-allow-missing-value t)
+   (provider     :type provider-type
+                 :initarg :provider
+                 :reader gcm-registration/provider
+                 :persisted-p t
+                 :persisted-type :symbol
+                 :persisted-allow-missing-value t
+                 :persisted-missing-default :gcm
+                 :persisted-name :|recipient_type|))
   (:metaclass potato.db:persisted-entry-class))
 
-(defun make-gcm-registration-key (user token)
-  (concatenate 'string "gcmkey-" (encode-name (potato.core:ensure-user-id user)) "-" (encode-name token)))
+(defun make-gcm-registration-key (user token provider)
+  (check-type user (or string potato.core:user))
+  (check-type token string)
+  (check-type provider provider-type)
+  (format nil "gcmkey-~a-~a-~a"
+          (encode-name (string-downcase (symbol-name provider)))
+          (encode-name (potato.core:ensure-user-id user))
+          (encode-name token)))
 
 (defmethod initialize-instance :after ((obj gcm-registration) &key)
-  (let ((id (make-gcm-registration-key (gcm-registration/user obj) (gcm-registration/gcm-token obj))))
+  (let ((id (make-gcm-registration-key (gcm-registration/user obj)
+                                       (gcm-registration/gcm-token obj)
+                                       (gcm-registration/provider obj))))
     (cond ((null (potato.db:persisted-entry/couchdb-id obj))
            (setf (potato.db:persisted-entry/couchdb-id obj) id))
           ((string/= (potato.db:persisted-entry/couchdb-id obj) id)
-           (error "GCM registration ID does not match user. id=~s, reg/user=~s, reg/token=~s"
+           (error "GCM registration ID does not match user. id=~s, reg/user=~s, reg/token=~s, reg/provider=~s"
                   (potato.db:persisted-entry/couchdb-id obj)
                   (gcm-registration/user obj)
-                  (gcm-registration/gcm-token obj))))))
+                  (gcm-registration/gcm-token obj)
+                  (gcm-registration/provider obj))))))
 
 (defun make-memcached-key-for-gcm-keys (uid)
   (format nil "gcm-~a" (encode-name uid)))
@@ -58,30 +77,41 @@
     (let ((result (clouchdb:invoke-view "gcm" "gcm_for_user" :key uid)))
       (loop
         for row in (getfield :|rows| result)
-        collect (getfield :|value| row)))))
+        for values = (getfield :|value| row)
+        collect (list (first values) (intern (second values) "KEYWORD"))))))
 
 (defun gcm-enabled-p ()
   (if *gcm-authorisation-key* t nil))
 
-(defun register-gcm (user token)
+(defun register-gcm (user token provider)
+  (check-type provider provider-type)
   (let* ((uid (potato.core:ensure-user-id user))
-         (id (make-gcm-registration-key uid token))
+         (id (make-gcm-registration-key uid token provider))
          (reg (potato.db:load-instance 'gcm-registration id :error-if-not-found nil)))
     (labels ((make-and-save-token ()
-               (let ((new-reg (make-instance 'gcm-registration :user uid :gcm-token token)))
+               (let ((new-reg (make-instance 'gcm-registration :user uid :gcm-token token :provider provider)))
                  (potato.db:save-instance new-reg))))
       (cond ((not reg)
              (make-and-save-token)
              :new-registration)
             ((string/= (gcm-registration/gcm-token reg) token)
-             (potato.db:remove-instance reg)
-             (make-and-save-token)
+             (error "Attempt to re-register a GCM token.")
+             ;; This code has been disabled since it would appear that
+             ;; it could never actually have been called. I think this
+             ;; is a leftover from older code where there could only
+             ;; be a single GCM registration per user. Before
+             ;; compltely removing it, I'm keeping this comment here
+             ;; until it can be proven that this will never be called.
+             #+broken
+             (progn
+               (potato.db:remove-instance reg)
+               (make-and-save-token))
              :token-updated)
             (t
              :not-changed)))))
 
-(defun unregister-gcm-key (uid token)
-  (clouchdb:delete-document (make-gcm-registration-key uid token))
+(defun unregister-gcm-key (uid token provider)
+  (clouchdb:delete-document (make-gcm-registration-key uid token provider))
   (flush-cached-gcm-keys-for-user-id uid))
 
 (defun copy-registration (uid reg token)
@@ -91,18 +121,20 @@
                  :unread (gcm-registration/unread reg)
                  :notification-channels (gcm-registration/notification-channels reg)))
 
-(defun update-gcm-key (uid old-token new-token)
-  (let ((reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key uid old-token) :error-if-not-found nil)))
+(defun update-gcm-key (uid old-token new-token provider)
+  (let* ((old-key (make-gcm-registration-key uid old-token provider))
+         (reg (potato.db:load-instance 'gcm-registration old-key :error-if-not-found nil)))
     (let ((new-reg (if reg
                        (progn
-                         (clouchdb:delete-document (make-gcm-registration-key uid old-token))
+                         (clouchdb:delete-document old-key)
                          (copy-registration uid reg new-token))
                        (make-instance 'gcm-registration :user uid :gcm-token new-token))))
       (potato.db:save-instance new-reg))))
 
-(defun update-unread-subscription (user token channel add-p)
+(defun update-unread-subscription (user token provider channel add-p)
   (let ((cid (potato.core:ensure-channel-id channel))
-        (reg (potato.db:load-instance 'gcm-registration (make-gcm-registration-key (potato.core:ensure-user-id user) token))))
+        (reg (potato.db:load-instance 'gcm-registration
+                                      (make-gcm-registration-key (potato.core:ensure-user-id user) token provider))))
     (unless reg
       (potato.core:raise-not-found-error "Incorrect GCM registration"))
     (if add-p
@@ -115,7 +147,7 @@
   (alexandria:if-let ((message-id (st-json:getjso "message_id" result)))
     ;; The message has been sent, but we may have to update the token
     (alexandria:when-let ((new-id (st-json:getjso "registration_id" result)))
-      (update-gcm-key uid gcm-key new-id))
+      (update-gcm-key uid gcm-key new-id :gcm))
     ;; ELSE: Check error
     (alexandria:if-let ((error-message (st-json:getjso "error" result)))
       ;; Check the error and possibly unregister the key
@@ -124,10 +156,10 @@
         ("Unavailable"
          (log:warn "Need to resend message here: ~s" result))
         ("NotRegistered"
-         (unregister-gcm-key uid gcm-key))
+         (unregister-gcm-key uid gcm-key :gcm))
         (t
          (log:error "Unexpected error message from GCM request: ~s" result)
-         (unregister-gcm-key uid gcm-key)))
+         (unregister-gcm-key uid gcm-key :gcm)))
       ;; ELSE: A GCM server reply should always contain either a message id or an error message
       (log:error "Unexpected reply from GCM request. user=~s, token=~s, result=~s" uid gcm-key result))))
 
@@ -167,16 +199,34 @@
     (destructuring-bind (&key user message-id from from-name text notification-type channel &allow-other-keys)
         (binary-to-lisp (cl-rabbit:message/body message))
       (loop
-        for key in (gcm-keys-for-user user)
+        for (key provider) in (gcm-keys-for-user user)
         do (log:info "Sending to key = ~s" key)
-        do (push-gcm-message user key
-                             (st-json:jso "potato_message_type" "message"
+        do (ecase provider
+             (:gcm
+              (push-gcm-message user key (st-json:jso "potato_message_type" "message"
+                                                      "message_id" message-id
+                                                      "sender_id" from
+                                                      "sender_name" from-name
+                                                      "channel" channel
+                                                      "notification_type" (symbol-name notification-type)
+                                                      "text" (truncate-string text 1000))))
+             (:apns
+              (with-pooled-rabbitmq-connection (conn)
+                (let* ((provider-name (string-downcase (symbol-name provider)))
+                       (json (st-json:jso "potato_message_type" "message"
                                           "message_id" message-id
                                           "sender_id" from
                                           "sender_name" from-name
                                           "channel" channel
                                           "notification_type" (symbol-name notification-type)
-                                          "text" (truncate-string text 1000)))))))
+                                          "text" (truncate-string text 1000)
+                                          "provider" provider-name
+                                          "token" key)))
+                  (cl-rabbit:basic-publish conn 1
+                                           :exchange *apns-exchange-name*
+                                           :routing-key (format nil "~a.~a" channel provider-name)
+                                           :properties `((:message-id . ,message-id))
+                                           :body (babel:string-to-octets (st-json:write-json-to-string json)))))))))))
 
 (defun process-unread (msg)
   (let ((message (cl-rabbit:envelope/message msg)))
@@ -209,6 +259,6 @@
 (potato.common.application:define-component gcm-sender
   (:dependencies potato.common::generic potato.db::db)
   (:start
-   (if (gcm-enabled-p)
-       (start-gcm-listener)
-       (log:warn "GCM key not configured. Not starting GCM sender."))))
+   (unless (gcm-enabled-p)
+     (log:warn "GCM key not configured. GCM notifications will not be available."))
+   (start-gcm-listener)))

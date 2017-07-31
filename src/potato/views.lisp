@@ -356,9 +356,9 @@
   (mkview "gcm"
           `((:|gcm_for_user|
               ,(zs (lambda (doc)
-                     (with-slots (type user gcm_token) doc
+                     (with-slots (type user gcm_token recipient_type) doc
                        (when (eql type #.(docname 'potato.gcm:gcm-registration))
-                         (emit user gcm_token))))))
+                         (emit user (list gcm_token recipient_type)))))))
             (:|unread_channel|
               ,(zs (lambda (doc)
                      (with-slots (type user gcm_token unread) doc
