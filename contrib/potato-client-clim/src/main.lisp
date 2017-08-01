@@ -123,7 +123,7 @@
 (clim:define-presentation-method clim:present (obj (type channel) stream (view clim:textual-view) &key)
   (format stream "~a" (channel/name obj)))
 
-(clim:define-presentation-to-command-translator select-channel
+(clim:define-presentation-to-command-translator select-chainnel
     (channel switch-to-channel-frame potato-frame)
     (obj)
   (list obj))

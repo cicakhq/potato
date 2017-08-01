@@ -100,32 +100,10 @@ if [ ! -f web-app/resources/public/js/potato.js ] ; then
     )
 fi
 
-if ! in_path gulp ; then
-    echo
-    echo "Gulp is not installed globally. Press <RETURN> to install"
-    echo "it (which needs to use sudo, so it will ask for the password)"
-    echo "or exit the script and use the following command to install"
-    echo "it manually:"
-    echo
-    echo "sudo npm install -g gulp"
-    echo -n "press return>"
-    read foo
-
-    sudo npm install -g gulp || fail "Error running global gulp install"
-fi
-
-if [ ! -d web-app/node_modules ] ; then
-    (
-	cd web-app
-        npm install || fail
-	npm install gulp || fail
-    )
-fi
-
 if [ ! -d public ] ; then
     (
         cd web-app
-        gulp build || fail "Error building resources"
+        ./make.sh || fail "Error building resources"
     )
 fi
 
