@@ -358,13 +358,13 @@
               ,(zs (lambda (doc)
                      (with-slots (type user gcm_token recipient_type) doc
                        (when (eql type #.(docname 'potato.gcm:gcm-registration))
-                         (emit user (list gcm_token recipient_type)))))))
+                         (emit user (list gcm_token (or recipient_type "GCM"))))))))
             (:|unread_channel|
               ,(zs (lambda (doc)
-                     (with-slots (type user gcm_token unread) doc
+                     (with-slots (type user gcm_token unread recipient_type) doc
                        (when (eql type #.(docname 'potato.gcm:gcm-registration))
                          (dolist (cid unread)
-                           (emit cid (list user gcm_token))))))))))
+                           (emit cid (list user gcm_token (or recipient_type "GCM")))))))))))
 
   (delete-document "_design/index_filter" :if-missing :ignore)
   (create-document `((:|filters| . ((:|index_updates| . ,(zs (lambda (doc req)
