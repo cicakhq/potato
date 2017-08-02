@@ -3,11 +3,9 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defun parse-provider-name (name)
-  (if name
-      (string-case:string-case (name)
-        ("gcm" :gcm)
-        ("apns" :apns))
-      "gcm"))
+  (string-case:string-case (name)
+    ("gcm" :gcm)
+    ("apns" :apns)))
 
 (define-api-method (register-gcm-token "/register-gcm" nil ())
   (api-case-method
