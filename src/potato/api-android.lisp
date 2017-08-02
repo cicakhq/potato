@@ -11,7 +11,7 @@
   (api-case-method
     (:post
      (json-bind ((token "token")
-                 (provider "provider" :required nil))
+                 (provider "provider"))
          (parse-and-check-input-as-json)
        (ecase (potato.gcm:register-gcm (potato.core:current-user) token (parse-provider-name provider))
          (:not-changed (st-json:jso "result" "ok" "detail" "already_registered"))
