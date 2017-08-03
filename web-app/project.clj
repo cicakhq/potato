@@ -14,18 +14,20 @@
   :hooks        [leiningen.cljsbuild]
 
   :profiles {:dev {:cljsbuild
-                   {:builds {:client {:figwheel   {:on-load    "potato.recore/main"}
-                                      :compiler   {:main       "potato.recore"
-                                                   :asset-path "js"
+                   {:builds {:client {:figwheel   {:websocket-url "ws://localhost:3450/figwheel-ws"
+                                                   :on-jsload     "potato.recore/main"}
+                                      :compiler   {:main          "potato.recore"
+                                                   :asset-path    "/js/out"
                                                    :optimizations :none
-                                                   :source-map true
+                                                   :source-map    true
                                                    :source-map-timestamp true}}}}}
              :prod {:cljsbuild
                     {:builds {:client {:compiler  {:optimizations :advanced
                                                    :elide-asserts true
                                                    :pretty-print  false}}}}}}
 
-  :figwheel {:repl false}
+  :figwheel {:server-port 3450
+             :repl        true}
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
