@@ -11,7 +11,7 @@ if [ ! -d $DEST_IMG ] && [ -d ../public ]; then
 fi
 
 echo "Copy images"
-cp -r src/images/* $DEST_IMG
+cp -r src/img/* $DEST_IMG
 
 ### Fonts
 CACHE=.fontcache
