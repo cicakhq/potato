@@ -1,6 +1,6 @@
 ;; ClojureScript by Mathieu Legrand <mathieu@legrand.im>
 (ns potato.emoji
-  (:require [om.dom :include-macros true]))
+  (:require [cljsjs.preact :as p]))
 
 (declare unicode-to-aliases)
 
@@ -11,9 +11,10 @@
     ""))
 
 (defn span [item]
-  (om.dom/span nil
-               (om.dom/span #js {:className "emoji"} (:text item))
-               (get-name (:id item))))
+  (p/createElement :span nil
+                   (p/createElement :span {:class-name "emoji"}
+                                    (:text item))
+                   (get-name (:id item))))
 
 (def unicode-to-aliases
   {"\uD83D\uDE04"       ["smile" ")" "-)"]
