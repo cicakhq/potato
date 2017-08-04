@@ -7,7 +7,8 @@
 ;;;   (cljs-repl)
 
 (ns ^:figwheel-load potato.core
-  (:require [goog.dom]
+  (:require [cljsjs.preact :as p]
+            [goog.dom]
             [goog.dom.xml]
             [goog.events]
             [goog.events.EventType]
@@ -517,12 +518,12 @@ id's. Returns the updated value."
     om/IDisplayName (display-name [_] "myself-view")
     om/IRender
     (render [_]
-      (om.dom/footer #js {:id "myself"}
-        (om.dom/section #js {:className "myself-wrapper"
-                             :onClick   (fn [e] (potato.preferences/open-screen owner true) (.preventDefault e))}
-          (om.dom/h1 nil
-              (om.dom/a #js {:className "myself-name" :href potato.urls/settings} (:name user)))
-          (om.dom/a #js {:className "myself-menu" :href potato.urls/settings}))))))
+      (p/createElement :footer {:id "myself"}
+        (p/createElement :section {:class-name "myself-wrapper"
+                                   :on-click   (fn [e] (potato.preferences/open-screen owner true) (.preventDefault e))}
+                         (p/createElement :h1 nil
+                                          (p/createElement :a {:class-name "myself-name" :href potato.urls/settings} (:name user)))
+                         (p/createElement :a {:class-name "myself-menu" :href potato.urls/settings}))))))
 
 (defn channel-in-list [[this-channel-id this-channel-details] owner {:keys [current-channel-id] :as opts}]
   (reify
@@ -532,25 +533,25 @@ id's. Returns the updated value."
       {:show-close false})
     om/IRenderState
     (render-state [_ {:keys [show-close]}]
-      (om.dom/li #js {:data-id this-channel-id
-                      :className (if (= this-channel-id current-channel-id) "current")
-                      :onMouseEnter #(om/set-state! owner :show-close true)
-                      :onMouseLeave #(om/set-state! owner :show-close false)}
+      (p/createElement :li {:data-id this-channel-id
+                            :class-name (if (= this-channel-id current-channel-id) "current")
+                            :on-mouse-enter #(om/set-state! owner :show-close true)
+                            :on-mouse-leave #(om/set-state! owner :show-close false)}
         (if (= this-channel-id current-channel-id)
           (str (:name this-channel-details))
-          (om.dom/a #js {:className "channel"
-                         :href      (str potato.urls/channel-root "/" this-channel-id)} ;; DDC
-            (om.dom/span nil
-                (:name this-channel-details)
+          (p/createElement :a {:class-name "channel"
+                               :href      (str potato.urls/channel-root "/" this-channel-id)} ;; DDC
+            (p/createElement :span nil
+                             (:name this-channel-details)
               (if (> (:unread-count this-channel-details) 0)
                 (if (:private this-channel-details)
-                  (om.dom/span #js {:className "private-unread"} "\u00a0(unread)\u00a0\ud83d\udd08" )
-                  (om.dom/span #js {:className "channel-unread"} "\u00a0(unread)"))))))
-        (om.dom/a #js {:className "close"
-                       :style (display (and show-close (not= this-channel-id current-channel-id)))
-                       :onClick (if (:private this-channel-details)
-                                  #(hide-channel-button-clicked this-channel-id)
-                                  #(close-channel-button-clicked this-channel-id))}
+                  (p/createElement :span {:class-name "private-unread"} "\u00a0(unread)\u00a0\ud83d\udd08" )
+                  (p/createElement :span {:class-name "channel-unread"} "\u00a0(unread)"))))))
+        (p/createElement :a {:class-name "close"
+                             :style (display (and show-close (not= this-channel-id current-channel-id)))
+                             :on-click (if (:private this-channel-details)
+                                        #(hide-channel-button-clicked this-channel-id)
+                                        #(close-channel-button-clicked this-channel-id))}
           nil)))))
 
 (defn- lower-case-channel-name [[key value]]
@@ -565,14 +566,14 @@ id's. Returns the updated value."
     om/IDisplayName (display-name [_] "channels-list")
     om/IRender
     (render [_]
-      (om.dom/nav #js {:id "left"}
-        (om.dom/section #js {:id "domain"}
-          (om.dom/h1 #js {:onClick (fn [e] (aset js/window "location" potato.urls/domain))}
-            (:name (:current-domain data))))
-        (om.dom/section #js {:id "channels"}
-          (om.dom/div #js {:id "channels-list"}
-            (om.dom/h1 nil channels-text)
-            (apply om.dom/ul nil
+      (p/createElement :nav {:id "left"}
+        (p/createElement :section {:id "domain"}
+          (p/createElement :h1 {:on-click (fn [e] (aset js/window "location" potato.urls/domain))}
+                           (:name (:current-domain data))))
+        (p/createElement :section {:id "channels"}
+          (p/createElement :div {:id "channels-list"}
+            (p/createElement :h1 nil channels-text)
+            (apply p/createElement :ul nil
                    (om/build-all channel-in-list
                                  (sort-by lower-case-channel-name
                                           (filter-channels #(not (:private %)) (:channels data)))
@@ -580,9 +581,9 @@ id's. Returns the updated value."
           (let [private-channels (sort-by lower-case-channel-name
                                           (filter-channels #(:private %) (:channels data)))]
             (when (> (count private-channels) 0)
-              (om.dom/div #js {:id "conversations-list"}
-                (om.dom/h1 nil private-text)
-                (apply om.dom/ul nil
+              (p/createElement :div {:id "conversations-list"}
+                (p/createElement :h1 nil private-text)
+                (apply p/createElement :ul nil
                        (om/build-all channel-in-list private-channels
                                      {:opts {:current-channel-id (:active-channel data)}}))))))
         (om/build myself-view (:current-user data))))))
@@ -598,15 +599,15 @@ id's. Returns the updated value."
     om/IDisplayName (display-name [_] "channel-header")
     om/IRender
     (render [_]
-      (om.dom/header #js {:id "channel"}
-        (om.dom/div  #js {:className "hgroup"}
-          (om.dom/h1 nil (:name channel))   ;; channel-name
-          (om.dom/h2 nil (:topic channel))) ;; channel-topic
-        (om.dom/aside nil
-            (om.dom/a {:href "#"} ""))))))
+      (p/createElement :header {:id "channel"}
+        (p/createElement :div  {:class-name "hgroup"}
+          (p/createElement :h1 nil (:name channel))   ;; channel-name
+          (p/createElement :h2 nil (:topic channel)))               ;; channel-topic
+        (p/createElement :aside nil
+            (p/createElement :a {:href "#"} ""))))))
 
 (defn display-time [time]
-  (om.dom/time #js {:dateTime time} (.fromNow (js/moment time))))
+  (p/createElement :time {:dateTime time} (.fromNow (js/moment time))))
 
 ;;; ISeqable for NodeList from https://groups.google.com/forum/#!topic/clojure/unHrE3amqNs
 (extend-type js/NodeList
@@ -627,9 +628,9 @@ id's. Returns the updated value."
     om/IDisplayName (display-name [_] "message-attachment")
     om/IRender
     (render [_]
-      (om.dom/span #js {:className "chat-attachment"}
-        (om.dom/a #js {:href (:location attachment)} (:name attachment))
-        (om.dom/span #js {:className "chat-file-size"} (printable-size (:size attachment)))))))
+      (p/createElement :span {:class-name "chat-attachment"}
+        (p/createElement :a {:href (:location attachment)} (:name attachment))
+        (p/createElement :span {:class-name "chat-file-size"} (printable-size (:size attachment)))))))
 
 ;; (potato.core/request-range-for-message "7e77259b7b5bfde0bb2964217f083c0e" "msg-7e77259b7b5bfde0bb2964217f083c0e-2014-12-27T14:09:53.178690Z_00000")
 (defn request-range-for-message [cid msgid]
@@ -672,12 +673,12 @@ id's. Returns the updated value."
         (goog.style/setPosition menu-el left (.-y offset))))
     om/IRender
     (render [_]
-      (apply om.dom/menu #js {:id "chat-popup-menu" :type "popup"}
+      (apply p/createElement :menu {:id "chat-popup-menu" :type "popup"}
              (map (fn [menuentry]
-                    (om.dom/menuitem #js {:label        (:label menuentry)
-                                          :onClick      (:onclick menuentry)
-                                          :onMouseEnter #(goog.dom.classlist/add    (.-currentTarget %) "chat-popup-item-active")
-                                          :onMouseLeave #(goog.dom.classlist/remove (.-currentTarget %) "chat-popup-item-active")}
+                    (p/createElement :menuitem {:label           (:label menuentry)
+                                                :on-click        (:onclick menuentry)
+                                                :on-mouse-enter #(goog.dom.classlist/add    (.-currentTarget %) "chat-popup-item-active")
+                                                :on-mouse-leave #(goog.dom.classlist/remove (.-currentTarget %) "chat-popup-item-active")}
                       (:label menuentry)))
                   (concat [{:label "Hide" :onclick #(toggle-hidden message)}]
                           (if (:can-edit-p opts)
@@ -726,57 +727,57 @@ id's. Returns the updated value."
             hasGearMenu  (and editable (not isDeleted))
             isEmpty      (== (count (:text message)) 0)
             isHidden     (message-hidden-p message)]
-        (om.dom/blockquote
+        (p/createElement :blockquote
             (clj->js ((fn [c]
                         (if hasGearMenu
                           (assoc c
-                                 :onMouseEnter #(goog.dom.classlist/add (.-currentTarget %) "hover")
-                                 :onMouseLeave #(goog.dom.classlist/remove (.-currentTarget %) "hover"))))
-                      {:className "chat-blockquote"
+                                 :on-mouse-enter #(goog.dom.classlist/add (.-currentTarget %) "hover")
+                                 :on-mouse-leave #(goog.dom.classlist/remove (.-currentTarget %) "hover"))))
+                      {:class-name "chat-blockquote"
                        :style (display (not editing))}))
-            (om.dom/div #js {:className "chat-content-text"}
+            (p/createElement :div {:class-name "chat-content-text"}
               (if (and (:image message) (not isDeleted) (not isHidden))
                 (let [[width height] (compute-image-size (:width (:image message))
                                                          (:height (:image message))
                                                          max-image-width
                                                          max-image-height)]
-                  (om.dom/img #js {:src (:file (:image message))
+                  (p/createElement :img #js {:src (:file (:image message))
                                    :width width :height height
-                                   :onClick #(goog.dom.classlist/toggle (.-currentTarget %) "zoom")})))
+                                   :on-click #(goog.dom.classlist/toggle (.-currentTarget %) "zoom")})))
               (if (and (not isDeleted) (:files message))
-                (apply om.dom/div #js {:className (str "chat-attachments" (if isEmpty " empty"))}
+                (apply p/createElement :div {:class-name (str "chat-attachments" (if isEmpty " empty"))}
                        (om/build-all message-attachment (:files message))))
               (if isDeleted
-                (om.dom/span #js {:className "chat-deleted"}
+                (p/createElement :span {:class-name "chat-deleted"}
                   message-deleted nonbreak-space (display-time (:updated_date message)))
-                (om.dom/div #js {:className (if isEmpty "empty")}
+                (p/createElement :div {:class-name (if isEmpty "empty")}
                   (cond
                     ;; Hidden
                     isHidden
-                    (om.dom/span nil
+                    (p/createElement :span nil
                       "Hidden")
                     ;; Unconfirmed
                     (and (:unconfirmed message) (:raw_field message))
-                    (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:raw_field message)}} nil)
+                    (p/createElement :span {:dangerously-set-innerHTML {:__html (:raw_field message)}} nil)
                     ;; This is a normal message
                     true
-                    (om.dom/span #js {:dangerouslySetInnerHTML #js {:__html (:text message)}} nil))
+                    (p/createElement :span {:dangerously-set-innerHTML {:__html (:text message)}} nil))
                   (if (:updated message)
-                    (om.dom/span #js {:className "chat-updated"}
+                    (p/createElement :span {:class-name "chat-updated"}
                                  message-updated nonbreak-space (display-time (:updated_date message)) nonbreak-space
                                  "by" nonbreak-space (:from_name message)))
                   (if (and (not isHidden) (:extra_html message))
-                    (om.dom/div #js {:className "extra-html"
-                                     :dangerouslySetInnerHTML #js {:__html (:extra_html message)}})))))
+                    (p/createElement :div {:class-name "extra-html"
+                                           :dangerously-set-innerHTML {:__html (:extra_html message)}})))))
           ;; Display the star next to the message
           (when (not (:unconfirmed message))
             (let [message-starred-p (some #{(:id (:current-user @potato.state/global))} (:star_users message))]
-              (om.dom/a #js {:className (str "starred " (if message-starred-p "starred-enable" "starred-disable"))
-                             :onClick #(send-update-star (:id message) (not message-starred-p))})))
+              (p/createElement :a {:class-name (str "starred " (if message-starred-p "starred-enable" "starred-disable"))
+                                   :on-click #(send-update-star (:id message) (not message-starred-p))})))
           ;; Display the gear menu
           (when (and hasGearMenu (not (:unconfirmed message)))
-            (om.dom/a #js {:className "chat-actions"
-                           :onClick   #(om/set-state! owner :menu-opened true)}))
+            (p/createElement :a {:class-name "chat-actions"
+                                 :on-click   #(om/set-state! owner :menu-opened true)}))
           (when menu-opened
             (goog.events/listen (:root-node (om/get-shared owner))
                                 goog.events.EventType/CLICK
@@ -899,28 +900,28 @@ id's. Returns the updated value."
       om/IRenderState
       (render-state [_ {:keys [update-time editing previous-from previous-date]}]
         (let [user-entry (-> @potato.state/global :user-to-name-map (get (:from message)))]
-          (om.dom/li
-              #js {:id (str (:key-prefix opts) "-" (:id message))
-                   :className (clojure.string/join " "
-                                                   (remove nil?
-                                                           [(if (and
-                                                                 (== (:from message) previous-from)
-                                                                 (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
-                                                              "chat-monologue")
-                                                            (if (:highlighted-p opts)
-                                                              "chat-highlighted")]))}
+          (p/createElement :li
+              {:id (str (:key-prefix opts) "-" (:id message))
+               :class-name (clojure.string/join " "
+                                                (remove nil?
+                                                        [(if (and
+                                                              (== (:from message) previous-from)
+                                                              (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
+                                                           "chat-monologue")
+                                                         (if (:highlighted-p opts)
+                                                           "chat-highlighted")]))}
               (let [image (:image-name user-entry)]
                 (if image
-                  (om.dom/img #js {:className "chat-author-picture"
-                                   :src image})
+                  (p/createElement :img {:class-name "chat-author-picture"
+                                         :src image})
                   ;; ELSE: Image information is not available yet, simply display an empty div
-                  (om.dom/div #js {:className "chat-author-picture"})))
-              (om.dom/figure #js {:className (str "chat-entry" (if (:unconfirmed message) " unconfirmed-message"))
-                                  :data-id   (:hash message)}
-                (om.dom/figcaption nil
-                  (om.dom/address #js {:className "chat-author"
-                                       :title (:nickname user-entry)}
-                                  (or (:description user-entry) ""))
+                  (p/createElement :div {:class-name "chat-author-picture"})))
+              (p/createElement :figure {:class-name (str "chat-entry" (if (:unconfirmed message) " unconfirmed-message"))
+                                        :data-id   (:hash message)}
+                (p/createElement :figcaption nil
+                  (p/createElement :address {:class-name "chat-author"
+                                             :title (:nickname user-entry)}
+                                   (or (:description user-entry) ""))
                   (display-time (:created_date message)))
                 (om/build message-quote message {:state {:update-time      update-time
                                                          :editing          editing
@@ -932,9 +933,9 @@ id's. Returns the updated value."
     om/IDisplayName (display-name [_] "user-in-list")
     om/IRender
     (render [_]
-      (om.dom/li #js {:className (if active "online-highlight")
-                      :onClick   (if uid #(start-private-chat uid))
-                      :title     nickname}
+      (p/createElement :li {:class-name (if active "online-highlight")
+                            :on-click   (if uid #(start-private-chat uid))
+                            :title     nickname}
         name
         (if active (str nonbreak-space active-text))))))
 
@@ -958,18 +959,17 @@ id's. Returns the updated value."
       om/IDisplayName (display-name [_] "roster-component")
       om/IRender
       (render [_]
-        (om.dom/section
-            #js {:id "roster"}
-          (om.dom/h2 nil users-text)
-          (apply om.dom/ul #js {:id "channel-online"} (build-user-list true))
-          (apply om.dom/ul #js {:id "channel-offline"} (build-user-list false)))))))
+        (p/createElement :section {:id "roster"}
+          (p/createElement :h2 nil users-text)
+          (apply p/createElement :ul {:id "channel-online"} (build-user-list true))
+          (apply p/createElement :ul {:id "channel-offline"} (build-user-list false)))))))
 
 (defn channel-toolbar [data owner]
   (reify
     om/IDisplayName (display-name [_] "channel-toolbar")
     om/IRender
     (render [_]
-      (om.dom/aside #js {:id "toolbar"}
+      (p/createElement :aside {:id "toolbar"}
         (om/build potato.search/search-component data)
         (om/build roster-component data)))))
 
@@ -1031,12 +1031,12 @@ highlighted-message - the message that should be highlighted (or
    messages-list))
 
 (defn channel-history-range-splitter [cid]
-  (om.dom/div #js {:className "channel-history-range-splitter"}
-      (om.dom/a #js {:href "#"
-                     :className "splitter-control"
-                     :onClick (fn [_] (close-message-history-range cid))}
-          "\u2715")
-    (om.dom/span nil "Showing search results")))
+  (p/createElement :div {:class-name "channel-history-range-splitter"}
+      (p/createElement :a {:href "#"
+                           :class-name "splitter-control"
+                           :on-click (fn [_] (close-message-history-range cid))}
+                       "\u2715")
+    (p/createElement :span nil "Showing search results")))
 
 (defn channel-history-range [range owner opts]
   (reify
@@ -1054,9 +1054,9 @@ highlighted-message - the message that should be highlighted (or
                 (.scrollIntoView element))))))
       om/IRenderState
       (render-state [_ _]
-        (om.dom/div #js {:className "channel-history-range"}
-            (om.dom/article nil
-                (apply om.dom/ul nil
+        (p/createElement :div {:class-name "channel-history-range"}
+            (p/createElement :article nil
+                (apply p/createElement :ul nil
                        (build-message-view (:range-messages range) {:update-time false} "h" (:message-id range))))
           (channel-history-range-splitter (:channel-id opts))))))
 
@@ -1119,9 +1119,9 @@ highlighted-message - the message that should be highlighted (or
                                        #(om/set-state! owner :update-time (not (:update-time (om/get-state owner)))) 60000)))
         om/IRenderState
         (render-state [_ {:keys [history-loaded update-time channel-scrolled]}]
-          (om.dom/article nil
+          (p/createElement :article nil
               (if history-loaded
-                (apply om.dom/ul nil
+                (apply p/createElement :ul nil
                        (build-message-view messages {:update-time update-time} "m" nil))
                 ;; ELSE: Display message stating that the history is being loaded
                 loading-history))))))
@@ -1286,25 +1286,25 @@ highlighted-message - the message that should be highlighted (or
       om/IRenderState
       (render-state [_ _]
         (when-let [has-autocomplete-menu (:has-autocomplete-menu channel)]
-          (apply om.dom/menu #js {:id    "activeBehaviour"
-                                  :style #js {:left     (:div-left  has-autocomplete-menu)
-                                              :right    (:div-right has-autocomplete-menu)
-                                              :bottom   (- (:viewport-height has-autocomplete-menu)
-                                                           (:event-y         has-autocomplete-menu))
-                                              :position "absolute"
-                                              :display  "block"}}
+          (apply p/createElement :menu {:id    "activeBehaviour"
+                                        :style {:left     (:div-left  has-autocomplete-menu)
+                                                :right    (:div-right has-autocomplete-menu)
+                                                :bottom   (- (:viewport-height has-autocomplete-menu)
+                                                             (:event-y         has-autocomplete-menu))
+                                                :position "absolute"
+                                                :display  "block"}}
                  (let [found-items (om/get-state owner :found-items)]
                    (if (> (count found-items) 0)
                      (let [selected (or (get-selected-entry) (select-default-entry))]
                        (map (fn [item]
-                              (om.dom/menuitem #js {:className    (if (= (:id item) (:id selected)) "active")
-                                                    :onMouseEnter #(select-entry item)
-                                                    :onClick      #(potato.keyboard/key-on-default
-                                                                    (om/get-shared owner :keyboard-control)
-                                                                    potato.keyboard/ENTER)}
+                              (p/createElement :menuitem {:class-name    (if (= (:id item) (:id selected)) "active")
+                                                          :on-mouse-enter #(select-entry item)
+                                                          :on-click      #(potato.keyboard/key-on-default
+                                                                          (om/get-shared owner :keyboard-control)
+                                                                          potato.keyboard/ENTER)}
                                 (if (= (:special item) "emoji") (potato.emoji/span item) (:text item))))
                             found-items))
-                     [(om.dom/div #js {:className "notice"} "no match")]))))))))
+                     [(p/createElement :div {:class-name "notice"} "no match")]))))))))
 
 (defn channel-input [channel owner]
   (reify
@@ -1356,14 +1356,14 @@ highlighted-message - the message that should be highlighted (or
             (recur)))))
     om/IRenderState
     (render-state [_ {typing :typing}]
-      (om.dom/footer #js {:id "input"}
+      (p/createElement :footer {:id "input"}
         (when (:has-autocomplete-menu channel)
           (om/build autocomplete-menu channel))
-        (om.dom/fieldset nil "")
+        (p/createElement :fieldset nil "")
         (let [user-id (:id (:current-user (deref potato.state/global)))
               other-users-typing (disj typing user-id)]
           (if (> (count other-users-typing) 0)
-            (om.dom/div #js {:className "typing"}
+            (p/createElement :div {:class-name "typing"}
               (cljs.pprint/cl-format nil "~1{~#[none~;~a~;~a and ~a~:;~@{~#[~;and ~]~a~^, ~}~]~:} ~:*~1{~#[are~;is~:;are~]~:} typing"
                                      (map (fn [uid]
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
@@ -1378,23 +1378,23 @@ highlighted-message - the message that should be highlighted (or
       nil)
     om/IRenderState
     (render-state [_ _]
-      (apply om.dom/div #js {:className "session-options"}
+      (apply p/createElement :div {:class-name "session-options"}
              (when options
                (list
-                (om.dom/div #js {:className "options-title"}
+                (p/createElement :div {:class-name "options-title"}
                   (:title options))
-                (apply om.dom/div #js {:className "options-list"}
+                (apply p/createElement :div {:class-name "options-list"}
                        (map (fn [e]
                               (let [title (:title e)
                                     image-url (:image-url e)
                                     code (:response e)]
-                                (apply om.dom/div #js {:className "options-value"}
+                                (apply p/createElement :div {:class-name "options-value"}
                                        (list
-                                        (om.dom/div #js {:className "options-value-title"}
+                                        (p/createElement :div {:class-name "options-value-title"}
                                           title)
                                         (if image-url
-                                          (list (om.dom/img #js {:src image-url} "Image")))
-                                        (om.dom/button nil (or (:button-text e) "Select"))))))
+                                          (list (p/createElement :img {:src image-url} "Image")))
+                                        (p/createElement :button nil (or (:button-text e) "Select"))))))
                             (:options options)))))))))
 
 (defn channel-view [channel owner opts]
@@ -1414,13 +1414,13 @@ highlighted-message - the message that should be highlighted (or
       om/IRender
       (render [_]
         (let [cid (:id channel)]
-          (apply om.dom/section #js {:className "channel"}
+          (apply p/createElement :section {:class-name "channel"}
                  (concat
-                  (list (om.dom/div #js {:id "upload-progress"}
-                            (om.dom/div #js {:id "show-progress"} nil)
-                            (om.dom/div #js {:id "uploading-text"} uploading-file-text)
-                            (om.dom/div #js {:id "uploading-percent"} "0%")
-                            (om.dom/a   #js {:id "uploading-cancel" :href "#"} nil))
+                  (list (p/createElement :div {:id "upload-progress"}
+                                         (p/createElement :div {:id "show-progress"} nil)
+                                         (p/createElement :div {:id "uploading-text"} uploading-file-text)
+                                         (p/createElement :div {:id "uploading-percent"} "0%")
+                                         (p/createElement :a   {:id "uploading-cancel" :href "#"} nil))
                         (om/build channel-header  channel))
                   (let [range (:range channel)]
                     (when range
@@ -1458,26 +1458,26 @@ highlighted-message - the message that should be highlighted (or
     (render-state [this {:keys [notifications-enabled hide-alerts preferences-open]}]
       (let [current-channel (get-in app [:channels (:active-channel app)])]
         (when current-channel
-          (om.dom/div #js {:id "potato"}
+          (p/createElement :div {:id "potato"}
             (when (and (not notifications-enabled) (not hide-alerts))
-              (om.dom/div #js {:id "potato-alert"} needs-your-permission-text nonbreak-space
-                          (om.dom/a #js {:className "enable"
-                                         :onClick   (fn [e] (potato.preferences/open-screen owner true)
-                                                      (.preventDefault e))}
+              (p/createElement :div {:id "potato-alert"} needs-your-permission-text nonbreak-space
+                          (p/createElement :a {:class-name "enable"
+                                               :on-click   (fn [e] (potato.preferences/open-screen owner true)
+                                                             (.preventDefault e))}
                             enable-notifications-text)
                           "."
-                          (om.dom/a #js {:className "dismiss"
-                                         :onClick   #(om/set-state! owner :hide-alerts true)} "")))
-            (om.dom/main #js {:id "potato-core"}
-                         (om/build channels-list app)
-                         (om/build channel-view current-channel)
-                         (om/build channel-toolbar app))
+                          (p/createElement :a {:class-name "dismiss"
+                                               :on-click   #(om/set-state! owner :hide-alerts true)} "")))
+            (p/createElement :main {:id "potato-core"}
+                             (om/build channels-list app)
+                             (om/build channel-view current-channel)
+                             (om/build channel-toolbar app))
             ;; add a div to capture clicks
             (when preferences-open
-              (om.dom/div #js {:id        "click-mask"
-                               :className "capture"
-                               :onClick   (fn [e] (potato.preferences/open-screen owner false)
-                                            (.preventDefault e))} ""))
+              (p/createElement :div {:id        "click-mask"
+                                     :class-name "capture"
+                                     :on-click   (fn [e] (potato.preferences/open-screen owner false)
+                                                  (.preventDefault e))} ""))
             (when preferences-open
               (om/build potato.preferences/preferences app))))))))
 
