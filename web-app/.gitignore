@@ -14,6 +14,7 @@ resources/public/js
 resources/public/css
 .lein-env
 target
+.fontcache
 out
 .lein-repl-history
 .nrepl-port
