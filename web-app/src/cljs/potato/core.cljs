@@ -7,9 +7,7 @@
 ;;;   (cljs-repl)
 
 (ns ^:figwheel-load potato.core
-  (:require [om.core :as om :include-macros true]
-            [om.dom :include-macros true]
-            [goog.dom]
+  (:require [goog.dom]
             [goog.dom.xml]
             [goog.events]
             [goog.events.EventType]
@@ -34,7 +32,6 @@
             [potato.emoji]
             [potato.preferences]
             [potato.search]
-            [potato.fineuploader]
             [potato.mathjax])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
@@ -1409,11 +1406,6 @@ highlighted-message - the message that should be highlighted (or
          :dnd      nil})
       om/IDidMount
       (did-mount [_]
-        (om/set-state! owner
-                       :uploader (potato.fineuploader/create-fine-uploader #(:uploader (om/get-state owner))
-                                                                           (:id (:current-user (deref potato.state/global))) (:id channel)))
-        (om/set-state! owner
-                       :dnd      (potato.fineuploader/enable-drag-and-drop (:uploader (om/get-state owner)) #(println "called back")))
         (request-user-list-for-channel (:id channel)))
       om/IWillUnmount
       (will-unmount [_]
@@ -1439,16 +1431,6 @@ highlighted-message - the message that should be highlighted (or
                         (om/build channel-input channel)))
                  (let [options (:options channel)]
                    (list (om/build render-session-options options))))))))
-
-(defn connection-state-build-root [conn owner]
-  (reify
-    om/IDisplayName
-    (display-name [_]
-      "connection-status")
-    om/IRender
-    (render [_]
-      (when (:error conn)
-        (om.dom/div #js {:className "active" :id "warning"} "Server connection failed")))))
 
 (defn potato [app owner]
   (reify
@@ -1514,12 +1496,11 @@ highlighted-message - the message that should be highlighted (or
 (defn- send-active-notification []
   (http/post "/update_active" {:json-params {:channel (:active-channel @potato.state/global)}}))
 
-(defn main []
+(defn ^:export main []
   (println (str "-- main called at " (.format (js/moment))))
   (let [event-channel    (make-polling-connection (:active-channel @potato.state/global))
         event-publisher  (async/pub event-channel (fn [[tag & _]] tag))
         root-node        (goog.dom/getElement "potato-root")
-        connection-state-info-node (goog.dom/getElement "connection-state")
         preferences-chan (async/chan (async/dropping-buffer 1))
         typing-chan      (async/chan (async/dropping-buffer 1))
         initial-load-completed (async/chan (async/dropping-buffer 1))]
@@ -1553,8 +1534,4 @@ highlighted-message - the message that should be highlighted (or
                        :preferences-chan       preferences-chan
                        :keyboard-control       (potato.keyboard/init root-node)
                        :initial-load-completed initial-load-completed}
-              :target root-node})
-
-    (om/root connection-state-build-root
-             potato.state/connection
-             {:target connection-state-info-node})))
+              :target root-node})))
