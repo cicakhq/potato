@@ -22,7 +22,7 @@ To compile, you will need [leiningen](http://leiningen.org); on Mac OS X:
 From there, *leiningen* will manage all the dependencies. To compile
 and get a debug REPL with auto-recompilation and auto-reload, run:
 
-    lein figwheel
+    lein do clean, figwheel
 
 ### Starting REPL in `emacs` via `cider`
 Start a new REPL, from the source file `web-app/project.clj`:
@@ -32,10 +32,3 @@ Start a new REPL, from the source file `web-app/project.clj`:
      (start-figwheel!)
      (cljs-repl)
 
-# View the source in Firefox
-
-At the time of writing only Firefox allow us to view the source in  `closurescript`, to do
-so:
-
-    $ cd public/assets/js
-    $ ln -s ../../../web-app/src
