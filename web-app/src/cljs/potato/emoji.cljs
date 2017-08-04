@@ -11,10 +11,10 @@
     ""))
 
 (defn span [item]
-  (p/createElement :span nil
-                   (p/createElement :span {:class-name "emoji"}
-                                    (:text item))
-                   (get-name (:id item))))
+  (p/h :span nil
+       (p/h :span {:class-name "emoji"}
+            (:text item))
+       (get-name (:id item))))
 
 (def unicode-to-aliases
   {"\uD83D\uDE04"       ["smile" ")" "-)"]
