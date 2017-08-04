@@ -82,6 +82,17 @@
            (recur (rest x) (inc pos))))))
    l 0))
 
+(defn build-all
+  "Build a sequence of components. f is the component constructor
+   function, xs a sequence of values, and m a map of options the
+   same as provided to om.core/build."
+  ([f xs] (build-all f xs nil))
+  ([f xs m]
+   {:pre [(ifn? f) (or (nil? m) (map? m))]}
+   (map (fn [x i]
+          (om/build f x (assoc m ::index i)))
+        xs (range))))
+
 (defn update-values-map [m f & args]
   "For each entry in hash map m, update its value by replacing its
   content by the value returned by function f applied on the original
@@ -574,18 +585,18 @@ id's. Returns the updated value."
           (p/createElement :div {:id "channels-list"}
             (p/createElement :h1 nil channels-text)
             (apply p/createElement :ul nil
-                   (om/build-all channel-in-list
-                                 (sort-by lower-case-channel-name
-                                          (filter-channels #(not (:private %)) (:channels data)))
-                                 {:opts {:current-channel-id (:active-channel data)}})))
+                   (map (fn [x i]
+                          (om/build  channel-in-list x (assoc {:opts {:current-channel-id (:active-channel data)}} ::index i)))
+                        (sort-by lower-case-channel-name
+                                 (filter-channels #(not (:private %)) (:channels data))) (range))))
           (let [private-channels (sort-by lower-case-channel-name
                                           (filter-channels #(:private %) (:channels data)))]
             (when (> (count private-channels) 0)
               (p/createElement :div {:id "conversations-list"}
                 (p/createElement :h1 nil private-text)
                 (apply p/createElement :ul nil
-                       (om/build-all channel-in-list private-channels
-                                     {:opts {:current-channel-id (:active-channel data)}}))))))
+                       (build-all channel-in-list private-channels
+                                  {:opts {:current-channel-id (:active-channel data)}}))))))
         (om/build myself-view (:current-user data))))))
 
 (defn start-private-chat [uid]
@@ -749,7 +760,7 @@ id's. Returns the updated value."
                                    :on-click #(goog.dom.classlist/toggle (.-currentTarget %) "zoom")})))
               (if (and (not isDeleted) (:files message))
                 (apply p/createElement :div {:class-name (str "chat-attachments" (if isEmpty " empty"))}
-                       (om/build-all message-attachment (:files message))))
+                       (build-all message-attachment (:files message))))
               (if isDeleted
                 (p/createElement :span {:class-name "chat-deleted"}
                   message-deleted nonbreak-space (display-time (:updated_date message)))
@@ -905,14 +916,15 @@ id's. Returns the updated value."
         (let [user-entry (-> @potato.state/global :user-to-name-map (get (:from message)))]
           (p/createElement :li
               {:id (str (:key-prefix opts) "-" (:id message))
-               :class-name (clojure.string/join " "
-                                                (remove nil?
-                                                        [(if (and
-                                                              (== (:from message) previous-from)
-                                                              (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
-                                                           "chat-monologue")
-                                                         (if (:highlighted-p opts)
-                                                           "chat-highlighted")]))}
+               :class-name (clojure.string/join
+                            " "
+                            (remove nil?
+                                    [(if (and
+                                          (== (:from message) previous-from)
+                                          (<  (.diff (js/moment (:created_date message)) (js/moment previous-date)) 60000))
+                                       "chat-monologue")
+                                     (if (:highlighted-p opts)
+                                       "chat-highlighted")]))}
               (let [image (:image-name user-entry)]
                 (if image
                   (p/createElement :img {:class-name "chat-author-picture"
@@ -945,19 +957,19 @@ id's. Returns the updated value."
 (defn roster-component [data owner]
   (let [build-user-list
         (fn [active-p]
-          (om/build-all user-in-list
-                        (sort-by #(clojure.string/lower-case (second %))
-                                 (remove nil?
-                                         (map (fn [[uid user-state]]
-                                                (let [user-name-entry (get (:user-to-name-map data) uid)
-                                                      user-active-p (:active user-state)]
-                                                  (if (and user-name-entry (or (and active-p user-active-p)
-                                                                               (and (not active-p) (not user-active-p))))
-                                                    (list uid
-                                                          (:description user-name-entry)
-                                                          (:nickname user-name-entry)
-                                                          user-active-p))))
-                                              (:users (get (:channels data) (:active-channel data))))))))]
+          (build-all user-in-list
+                     (sort-by #(clojure.string/lower-case (second %))
+                              (remove nil?
+                                      (map (fn [[uid user-state]]
+                                             (let [user-name-entry (get (:user-to-name-map data) uid)
+                                                   user-active-p (:active user-state)]
+                                               (if (and user-name-entry (or (and active-p user-active-p)
+                                                                            (and (not active-p) (not user-active-p))))
+                                                 (list uid
+                                                       (:description user-name-entry)
+                                                       (:nickname user-name-entry)
+                                                       user-active-p))))
+                                           (:users (get (:channels data) (:active-channel data))))))))]
     (reify
       om/IDisplayName (display-name [_] "roster-component")
       om/IRender
