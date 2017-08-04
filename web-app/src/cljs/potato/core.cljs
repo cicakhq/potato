@@ -660,12 +660,15 @@ id's. Returns the updated value."
   (let [hidden (message-hidden-p message)]
     (send-update-hidden (:id message) (not hidden))))
 
+(defn find-dom-node [component]
+  (or (and component (.base js/component) component)))
+
 (defn gear-menu [message owner opts]
   (reify
     om/IDisplayName (display-name [_] "gear-menu")
     om/IDidMount
     (did-mount [_]
-      (let [menu-el       (om/get-node owner)
+      (let [menu-el       (find-dom-node owner)
             blockquote-el (goog.dom/getAncestorByClass menu-el "chat-blockquote")
             offset        (goog.style/getPageOffset blockquote-el)
             outerWidth    (.-width (goog.style/getSize blockquote-el))
@@ -712,10 +715,10 @@ id's. Returns the updated value."
       {:menu-opened false})
     om/IDidMount
     (did-mount [_]
-      (doseq [u (goog.dom/getElementsByTagNameAndClass "em" "user" (om/get-node owner))]
+      (doseq [u (goog.dom/getElementsByTagNameAndClass "em" "user" (find-dom-node owner))]
         (if (== (.getAttribute u "user-id") (:id (:current-user (deref potato.state/global))))
           (goog.dom.classlist/add u "me")))
-      (let [chat-content-text-node (goog.dom/getElementByClass "chat-content-text" (om/get-node owner))]
+      (let [chat-content-text-node (goog.dom/getElementByClass "chat-content-text" (find-dom-node owner))]
         (doseq [a-link (goog.dom/getElementsByTagNameAndClass "a" nil chat-content-text-node)]
           (goog.dom.xml/setAttributes a-link #js {:target  "_blank"
                                                   :onClick (str "href=\"" (create-redirect-link a-link) "\"")}))))
@@ -814,7 +817,7 @@ id's. Returns the updated value."
 
 (defn message-view [message owner opts]
   (let [handle-update-or-mount (fn [owner]
-                                 (let [node (om/get-node owner)]
+                                 (let [node (find-dom-node owner)]
                                    (when (and (:use_math message)
                                               (not (om/get-state owner :editing)))
                                      (potato.mathjax/add-node node))))]
@@ -826,7 +829,7 @@ id's. Returns the updated value."
       om/IDidMount
       (did-mount [_]
         (let [user-id     (:id (:current-user (deref potato.state/global)))
-              the-node    (om/get-node owner)]
+              the-node    (find-dom-node owner)]
           (handle-update-or-mount owner)
           ;; Check if the screen should be scrolled to this message.
           ;; TODO: We should really only run this code when the
@@ -860,7 +863,7 @@ id's. Returns the updated value."
       om/IWillUpdate
       (will-update [_ next-props {:keys [editing]}]
         (when (and editing (not (om/get-render-state owner :editing)))
-          (let [fieldset            (goog.dom/getElementByClass "chat-entry" (om/get-node owner))
+          (let [fieldset            (goog.dom/getElementByClass "chat-entry" (find-dom-node owner))
                 keyboard-controller (om/get-shared owner :keyboard-control)
                 typing-chan         (om/get-shared owner :typing-chan)
                 editable            (potato.keyboard/append-editable-div {:parent-node     fieldset
@@ -1110,7 +1113,7 @@ highlighted-message - the message that should be highlighted (or
                   (recur))))))
         om/IDidMount
         (did-mount [_]
-          (let [node (om/get-node owner)
+          (let [node (find-dom-node owner)
                 channel-scrolled (om/get-state owner :channel-scrolled)]
             (goog.events/listen node goog.events/EventType.SCROLL (fn [xs] (if (== (.-scrollTop node) 0)
                                                                              (async/put! channel-scrolled xs)))))
@@ -1318,7 +1321,7 @@ highlighted-message - the message that should be highlighted (or
       (async/unsub (:event-publisher (om/get-shared owner)) :type (om/get-state owner :typing-channel)))
     om/IDidMount
     (did-mount [this]
-      (let [fieldset            (first (goog.dom/getElementsByTagNameAndClass "fieldset" nil (om/get-node owner)))
+      (let [fieldset            (first (goog.dom/getElementsByTagNameAndClass "fieldset" nil (find-dom-node owner)))
             keyboard-controller (om/get-shared owner :keyboard-control)
             typing-chan         (om/get-shared owner :typing-chan)
             editable            (potato.keyboard/append-editable-div {:parent-node      fieldset

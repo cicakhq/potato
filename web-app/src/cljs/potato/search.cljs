@@ -57,7 +57,7 @@
     (did-update [_ _ _]
       ;; Update the vertical position of the search results depending on the position of the input search box
       ;; Modify only the "top" value, and adds a 5px margin
-      (let [search-section (om.core/get-node owner)
+      (let [search-section (find-dom-node owner)
             bounds (goog.style/getBounds (first (goog.dom/getElementsByTagNameAndClass "input" nil search-section)))]
         (goog.style/setStyle (first (goog.dom/getElementsByTagNameAndClass nil "search-results" search-section))
                              "top" (cljs.pprint/cl-format nil "~dpx" (+ (.-top bounds) (.-height bounds) 5)))))
