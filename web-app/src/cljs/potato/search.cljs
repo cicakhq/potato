@@ -1,6 +1,5 @@
 (ns potato.search
   (:require  [om.core :include-macros true]
-             [om.dom :include-macros true]
              [goog.dom]
              [goog.dom.forms]
              [goog.style]
@@ -19,15 +18,15 @@
     om.core/IDisplayName (display-name [_] "found-message-component")
     om.core/IRender
     (render [_]
-      (om.dom/figure #js {:className "search-result-message"
-                          :onClick (fn [_]
-                                     (om.core/set-state! (:parent opts) :search-opened false)
-                                     (potato.core/request-range-for-message (:channel message) (:id message)))}
-        (om.dom/figcaption #js {:className "search-result-header"}
-          (om.dom/address #js {:className "chat-author"} (:sender_name message))
+      (p/createElement :figure {:class-name "search-result-message"
+                                :on-click (fn [_]
+                                            (om.core/set-state! (:parent opts) :search-opened false)
+                                            (potato.core/request-range-for-message (:channel message) (:id message)))}
+        (p/createElement :figcaption {:class-name "search-result-header"}
+          (p/createElement :address {:class-name "chat-author"} (:sender_name message))
           (potato.core/display-time (:created_date message)))
-        (om.dom/blockquote #js {:className "search-result-content"
-                                :dangerouslySetInnerHTML #js {:__html (:content message)}} nil)))))
+        (p/createElement :blockquote {:class-name "search-result-content"
+                                      :dangerously-set-innerHTML {:__html (:content message)}} nil)))))
 
 (defn search-component [data owner]
   (reify
@@ -64,41 +63,41 @@
                              "top" (cljs.pprint/cl-format nil "~dpx" (+ (.-top bounds) (.-height bounds) 5)))))
     om.core/IRenderState
     (render-state [_ {:keys [search-opened found-messages]}]
-      (om.dom/section #js {:id "search"}
-        (om.dom/input #js {:id "search-input" :type "search" :name "search"
-                           :placeholder search-placeholder :title "search"
-                           :onKeyUp (fn [event]
-                                      (om.core/set-state! owner :search-opened true)
-                                      (om.core/set-state! owner :search-string (goog.dom.forms/getValue (.-currentTarget event)))
-                                      (async/put! (om.core/get-state owner :search-channel) :search-text-changed)
-                                      (.preventDefault event))
-                           :onFocus #(om.core/set-state! owner :search-opened true)
-                           ;; TODO: :search-opened used to be set to false in the statement below.
-                           ;; It was changed to true simply to avoid having the dialog box close
-                           ;; every time an attempt was made to click on the checkbox. Obviously
-                           ;; this is incorrect, but it was done simply to test the new "favourited only"
-                           ;; search feature.
-                           :onBlur  #(cljs.pprint/cl-format true "blur, owner=~s" owner)})
-        (om.dom/div #js {:id "search-results"
-                         :className "search-results"
-                         :style (potato.core/display search-opened)}
-          (om.dom/div nil
-            (om.dom/input #js {:id "star_only"
-                               :type "checkbox"
-                               :name "star_only"
-                               :onChange (fn [event]
-                                           ;; TODO: We need to force a reload of the search
-                                           ;; results here.
-                                           (om.core/set-state! owner :star-only
-                                                               (not (nil? (goog.dom.forms/getValue (.-currentTarget event)))))
-                                           (async/put! (om.core/get-state owner :search-channel) :checkbox-changed))})
-            (om.dom/label #js {:htmlFor "star_only"} " Favourited only")
-            (om.dom/button #js {:className "search-close"
-                                :href "#"
-                                :onClick (fn [_] (om.core/set-state! owner :search-opened false))}
+      (p/createElement :section {:id "search"}
+        (p/createElement :input {:id "search-input" :type "search" :name "search"
+                                 :placeholder search-placeholder :title "search"
+                                 :on-key-up (fn [event]
+                                              (om.core/set-state! owner :search-opened true)
+                                              (om.core/set-state! owner :search-string (goog.dom.forms/getValue (.-currentTarget event)))
+                                              (async/put! (om.core/get-state owner :search-channel) :search-text-changed)
+                                              (.preventDefault event))
+                                 :on-focus #(om.core/set-state! owner :search-opened true)
+                                 ;; TODO: :search-opened used to be set to false in the statement below.
+                                 ;; It was changed to true simply to avoid having the dialog box close
+                                 ;; every time an attempt was made to click on the checkbox. Obviously
+                                 ;; this is incorrect, but it was done simply to test the new "favourited only"
+                                 ;; search feature.
+                                 :on-blur  #(cljs.pprint/cl-format true "blur, owner=~s" owner)})
+        (p/createElement :div {:id "search-results"
+                               :class-name "search-results"
+                               :style (potato.core/display search-opened)}
+          (p/createElement :div nil
+            (p/createElement :input {:id "star_only"
+                                     :type "checkbox"
+                                     :name "star_only"
+                                     :on-change (fn [event]
+                                                  ;; TODO: We need to force a reload of the search
+                                                  ;; results here.
+                                                  (om.core/set-state! owner :star-only
+                                                                      (not (nil? (goog.dom.forms/getValue (.-currentTarget event)))))
+                                                  (async/put! (om.core/get-state owner :search-channel) :checkbox-changed))})
+            (p/createElement :label {:html-for "star_only"} " Favourited only")
+            (p/createElement :button {:class-name "search-close"
+                                      :href "#"
+                                      :on-click (fn [_] (om.core/set-state! owner :search-opened false))}
                            "\u2715"))
           (if (> (count found-messages) 0)
-            (apply om.dom/div #js {:id "search-result-content"}
+            (apply p/createElement :div {:id "search-result-content"}
                    (om.core/build-all found-message-component found-messages {:opts {:parent owner}}))
             ;; ELSE: No results found, display the a message "no results"
-            (om.dom/div #js {:id "search-result-content"} no-results-text)))))))
+            (p/createElement :div {:id "search-result-content"} no-results-text)))))))
