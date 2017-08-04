@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure       "1.8.0"   ]
                  [org.clojure/clojurescript "1.9.854" :scope "provided"]
                  [org.clojure/core.async    "0.3.443" ]
+                 [cljsjs/preact             "7.1.0-0"]
                  [http-kit                  "2.1.19"  ]
                  [cljs-http                 "0.1.43" :exclusions [org.clojure/core.async]]
                  [cljsjs/moment             "2.9.0-0" ]]
