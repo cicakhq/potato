@@ -100,8 +100,7 @@
   value."
   (reduce (fn [r [k v]] (assoc r k (apply f v args))) {} m))
 
-(defn- state-root []
-  (om/root-cursor potato.state/global))
+(defn- state-root [] potato.state/global)
 
 (defn make-channel-descriptor [id name topic private hide unread-count]
   {:id id
@@ -1143,6 +1142,7 @@ highlighted-message - the message that should be highlighted (or
       (async/<! typing-chan)
       (recur))))
 
+;;; +FIXME: TODO: REWRITE with swap!
 (defn- get-unique-id []
   (let [counter (om.core/ref-cursor (:unique-counter (om.core/root-cursor potato.state/global)))]
     (om.core/transact! counter [0] inc)
