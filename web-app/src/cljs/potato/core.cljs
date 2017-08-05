@@ -169,17 +169,19 @@ id's. Returns the updated value."
 
 (defn hide-channel-button-clicked [cid]
   (http/post potato.urls/update-channel {:json-params {:channel cid :show false}})
-  (om/transact! (state-root) [:channels cid]
-    (fn [channel]
-      (when (nil? channel)
-        (throw (str "Attempt to hide nonexistent channel " cid)))
-      (conj channel {:hide true}))))
+  (swap! (state-root)
+         update-in [:channels cid]
+         (fn [channel]
+           (when (nil? channel)
+             (throw (str "Attempt to hide nonexistent channel " cid)))
+           (conj channel {:hide true}))))
 
 (defn close-channel-button-clicked [cid]
   (http/post potato.urls/remove-channel {:json-params {:channel cid}})
-  (om/transact! (state-root) [:channels]
-    (fn [channels]
-      (dissoc channels cid))))
+  (swap! (state-root)
+         update-in [:channels]
+         (fn [channels]
+           (dissoc channels cid))))
 
 (defn update-channel-state [app channel-info]
   ;;(cljs.pprint/cl-format true "Updating channel state: ~s" channel-info)
@@ -209,9 +211,9 @@ id's. Returns the updated value."
                                    (:unread_count channel-info)))))))
 
 (defn update-channel-list-for-channel-info [channel-info]
-  (om/transact! (state-root)
-      (fn [app]
-        (update-channel-state app channel-info))))
+  (swap! (state-root)
+         (fn [app]
+           (update-channel-state app channel-info))))
 
 (defn request-channel-info-for-all-channels [ready-callback]
   "Send a request to the server to retrieve a list of all channels the
@@ -219,14 +221,14 @@ id's. Returns the updated value."
   (go (let [current-domain       (:current-domain (deref (state-root)))
             {channel-info :body} (async/<! (http/post potato.urls/load-channels-for-user
                                                       {:json-params {:domain (:id current-domain)}}))]
-        (om/transact! (state-root)
-            (fn [app]
-              ((fn [a chlist]
-                 (if (empty? chlist)
-                   a
-                   (recur (update-channel-state a (first chlist))
-                          (rest chlist))))
-               app (:channels channel-info))))
+        (swap! (state-root)
+               (fn [app]
+                 ((fn [a chlist]
+                    (if (empty? chlist)
+                      a
+                      (recur (update-channel-state a (first chlist))
+                             (rest chlist))))
+                  app (:channels channel-info))))
         (ready-callback))))
 
 (defn request-channel-info [cid]
@@ -239,12 +241,13 @@ id's. Returns the updated value."
   (let [cid (:channel e)
         count (:count e)]
     (cljs.pprint/cl-format true "Unread notification, data: ~s" e)
-    (om/transact! (state-root) [:channels]
-      (fn [channels]
-        (if (get channels cid)
-          (update-in channels [cid]
-            (fn [v] (conj v {:unread-count count :hide (if (= count 0) (:hide v) false)})))
-          channels)))))
+    (swap! (state-root)
+           update-in [:channels]
+           (fn [channels]
+             (if (get channels cid)
+               (update-in channels [cid]
+                          (fn [v] (conj v {:unread-count count :hide (if (= count 0) (:hide v) false)})))
+               channels)))))
 
 (defn update-user-to-name-map-with-id-description-list [app user-list]
   "Given a list of users, update the user-to-name-map in app with the
@@ -276,14 +279,14 @@ id's. Returns the updated value."
 (defn handle-user-name-change [e]
   (cljs.pprint/cl-format true "Got user name change: ~s" e)
   (let [uid (:user e)]
-    (om/transact! (state-root)
-        (fn [app]
-          (let [updated (update-in app [:user-to-name-map uid]
-                          (fn [v]
-                            {:description (:description e)
-                             :nickname (:nickname e)
-                             :image-name (:image_name e)}))]
-            (refresh-messages-for-users updated #{uid}))))))
+    (swap! (state-root)
+           (fn [app]
+             (let [updated (update-in app [:user-to-name-map uid]
+                                      (fn [v]
+                                        {:description (:description e)
+                                         :nickname (:nickname e)
+                                         :image-name (:image_name e)}))]
+               (refresh-messages-for-users updated #{uid}))))))
 
 (defn request-details-for-users [app user-list]
   (cljs.pprint/cl-format true "Requesting details for users: ~s" user-list)
@@ -291,9 +294,9 @@ id's. Returns the updated value."
     (let [{user-list-result :body} (async/<! (http/post "/user_details"
                                                         {:json-params {:domain (-> app :current-domain :id)
                                                                        :ids user-list}}))]
-      (om/transact! (state-root)
-          (fn [app]
-            (update-user-to-name-map-with-id-description-list app (:users user-list-result)))))))
+      (swap! (state-root)
+             (fn [app]
+               (update-user-to-name-map-with-id-description-list app (:users user-list-result)))))))
 
 (defn update-app-for-user-notifications [app cid uid-list add-p sync-p]
   ;; Update the user state
@@ -323,24 +326,24 @@ id's. Returns the updated value."
     res))
 
 (defn handle-channel-user-notification [e]
-  (om/transact! (state-root)
-      (fn [app]
-        (if (= (:add-type e) "sync")
-          (update-app-for-user-notifications app (:channel e) (map :id (:users e)) true true)
-          (let [add-p (case (:add-type e)
-                        "add" true
-                        "remove" false
-                        (throw "Unexpected user notification type"))]
-            (update-app-for-user-notifications app (:channel e) [(:user e)] add-p false))))))
+  (swap! (state-root)
+         (fn [app]
+           (if (= (:add-type e) "sync")
+             (update-app-for-user-notifications app (:channel e) (map :id (:users e)) true true)
+             (let [add-p (case (:add-type e)
+                           "add" true
+                           "remove" false
+                           (throw "Unexpected user notification type"))]
+               (update-app-for-user-notifications app (:channel e) [(:user e)] add-p false))))))
 
 (defn update-user-list [cid members]
-  (om/transact! (state-root)
-      (fn [app]
-        (let [res (update-user-to-name-map-with-id-description-list app members)]
-          (update-in res [:channels cid :users]
-            (fn [users]
-              (let [new-user-list (remove #(get users (:id %)) members)]
-                (reduce conj users (map (fn [user] {(:id user) {:active false}}) new-user-list)))))))))
+  (swap! (state-root)
+         (fn [app]
+           (let [res (update-user-to-name-map-with-id-description-list app members)]
+             (update-in res [:channels cid :users]
+                        (fn [users]
+                          (let [new-user-list (remove #(get users (:id %)) members)]
+                            (reduce conj users (map (fn [user] {(:id user) {:active false}}) new-user-list)))))))))
 
 (defn request-user-list-for-channel [cid]
   (go (let [{user-list-result :body} (async/<! (http/post potato.urls/members {:json-params {:channel cid}}))]
@@ -352,10 +355,11 @@ id's. Returns the updated value."
 (defn mark-notifications []
   (let [ids (map :id (:outstanding-notifications (deref potato.state/global)))]
     (when (not (empty? ids))
-      (om/transact! (state-root) [:outstanding-notifications]
-        (fn [notifications]
-          (let [m (into #{} ids)]
-            (remove #(m (:id %)) notifications))))
+      (swap! (state-root)
+             update-in [:outstanding-notifications]
+             (fn [notifications]
+               (let [m (into #{} ids)]
+                 (remove #(m (:id %)) notifications))))
       (http/post "/clear_notification" {:json-params {:ids ids}}))))
 
 (defn fixup-input-text [s]
@@ -385,9 +389,10 @@ id's. Returns the updated value."
         created-date (:created_date e) ; The timestamp when the message was created
         type (:notification_type e)] ; Notification type, one of "PRIVATE", "MENTION" or "WORD".
     ;; Push the notification to the list of outstandning notifications
-    (om/transact! (state-root) [:outstanding-notifications]
-      (fn [notifications]
-        (conj notifications e)))
+    (swap! (state-root)
+           update-in [:outstanding-notifications]
+           (fn [notifications]
+             (conj notifications e)))
     ;; Display a notification popup
     (if (.hasOwnProperty js/window "Notification")
       (let [image (path-from-components potato.urls/user-image user "a")]
@@ -408,20 +413,22 @@ id's. Returns the updated value."
                       (= (:add-type e) "end")   false
                       :else                 (throw "Unexpected type for type notification"))]
     (when (get (:channels @potato.state/global) cid)
-      (om/transact! (state-root) [:channels cid :typing]
-        (fn [v]
-          (if begin-p
-            (conj v uid)
-            (disj v uid))))
+      (swap! (state-root)
+             update-in[:channels cid :typing]
+             (fn [v]
+               (if begin-p
+                 (conj v uid)
+                 (disj v uid))))
       (cljs.pprint/cl-format true "Updating typing state, cid=~s, uid=~s, type=~s, state=~s"
                              cid uid (:add-type e) (:typing (get (:channels @potato.state/global) cid)))
       ;; We need to tell the input field that the list of users have changed
       (async/put! async-channel [:type (-> @potato.state/global :channels (get cid) :typing)]))))
 
 (defn- handle-channel-change [e]
-  (om/transact! (state-root) [:channels (:channel e)]
-    (fn [channel]
-      (conj channel {:name (:name e) :topic (:topic e)}))))
+  (swap! (state-root)
+         update-in [:channels (:channel e)]
+         (fn [channel]
+           (conj channel {:name (:name e) :topic (:topic e)}))))
 
 (defn- update-message [channel msgid fn]
   (let [updated-channel (if (get (:messages channel) msgid)
@@ -436,31 +443,34 @@ id's. Returns the updated value."
   (let [cid (:channel e)
         msgid (:message e)
         enable-p (:add e)]
-    (om/transact! (state-root) [:channels cid]
-      (fn [channel]
-        (update-message channel msgid
-                        (fn [msg]
-                          (increment-message-index (conj msg {:star_users (if enable-p
-                                                                            [(:id (:current-user @potato.state/global))]
-                                                                            [])}))))))))
+    (swap! (state-root)
+           update-in [:channels cid]
+           (fn [channel]
+             (update-message channel msgid
+                             (fn [msg]
+                               (increment-message-index (conj msg {:star_users (if enable-p
+                                                                                 [(:id (:current-user @potato.state/global))]
+                                                                                 [])}))))))))
 
 (defn- handle-update-hidden [e]
   (let [cid (:channel e)
         msgid (:message e)
         enable-p (:add e)]
-    (om/transact! (state-root) [:channels cid]
-      (fn [channel]
-        (update-message channel msgid
-                        (fn [msg]
-                          (increment-message-index (conj msg {:hidden_users (if enable-p
-                                                                              [(:id (:current-user @potato.state/global))]
-                                                                              [])}))))))))
+    (swap! (state-root)
+           update-in [:channels cid]
+           (fn [channel]
+             (update-message channel msgid
+                             (fn [msg]
+                               (increment-message-index (conj msg {:hidden_users (if enable-p
+                                                                                   [(:id (:current-user @potato.state/global))]
+                                                                                   [])}))))))))
 
 (defn- handle-interactive-option [e]
   (cljs.pprint/cl-format true "Interactive options command: ~s" e)
   (let [cid (:channel e)]
-    (om/transact! (state-root) [:channels cid :options]
-      (fn [_] e))))
+    (swap! (state-root)
+           update-in [:channels cid :options]
+           (fn [_] e))))
 
 (defn dispatch-notification-entry [entry async-channel]
   (cljs.pprint/cl-format true "Got server message: ~s" entry)
@@ -636,15 +646,16 @@ id's. Returns the updated value."
 (defn request-range-for-message [cid msgid]
   (go (let [{range :body} (async/<! (http/post "/range" {:json-params {:message msgid :rows 20}}))
             msglist (:messages range)]
-        (om/transact! (state-root) [:channels cid]
-          (fn [channel]
-            (assoc channel :range {:message-id msgid
-                                   :range-messages (reduce (fn [l msg]
-                                                             (conj l {(:id msg) msg}))
-                                                           (sorted-map) msglist)}))))))
+        (swap! (state-root)
+               update-in [:channels cid]
+               (fn [channel]
+                 (assoc channel :range {:message-id msgid
+                                        :range-messages (reduce (fn [l msg]
+                                                                  (conj l {(:id msg) msg}))
+                                                                (sorted-map) msglist)}))))))
 
 (defn close-message-history-range [cid]
-  (om/transact! (state-root) [:channels cid :range] (fn [_] nil)))
+  (swap! (state-root) update-in [:channels cid :range] (fn [_] nil)))
 
 (defn edit-message [message opts]
   (go (let [{msg :body} (async/<! (http/post potato.urls/load-chat {:json-params {:message (:id message) :type "text"}}))]
@@ -783,9 +794,9 @@ id's. Returns the updated value."
   (let [cid (:active-channel @potato.state/global)
         channel (get-in (deref potato.state/global) [:channels cid])]
     (when-not (:has-autocomplete-menu channel)
-      (om/transact! (state-root)
-          [:channels cid :has-autocomplete-menu]
-        #(potato.keyboard/get-menu-position editable event)))
+      (swap! (state-root)
+             update-in [:channels cid :has-autocomplete-menu]
+             #(potato.keyboard/get-menu-position editable event)))
     (if (> (count text) 1)
       (async/put! (om/get-shared owner :search-item) {:text (subs text 1) :type type}))
     (when (potato.keyboard/is-UP? event)
@@ -798,8 +809,9 @@ id's. Returns the updated value."
       (.preventDefault event)
       (if (:has-autocomplete-menu channel)
         (when-let [selected-entry (:selected-menu-entry channel)]
-          (om/transact! (state-root)
-              [:channels cid :has-autocomplete-menu] (fn [] nil))
+          (swap! (state-root)
+                 update-in [:channels cid :has-autocomplete-menu]
+                 (fn [] nil))
           (potato.keyboard/create-uneditable-container selected-entry))))))
 
 (defn- at-magic-close! []
@@ -1074,8 +1086,9 @@ highlighted-message - the message that should be highlighted (or
               (async/<! channel-scrolled)
               (let [[min-id _]        (first @messages)
                     previous-messages (async/<! (fetch-messages min-id (:channel-id opts)))]
-                (om/transact! messages []
-                  #(reduce (fn [l v] (assoc l (:id v) (conj v {:client-top true}))) % previous-messages))
+                (swap! messages ;;; +FIXME: messages was a cursor in OM
+                       update-in []
+                       #(reduce (fn [l v] (assoc l (:id v) (conj v {:client-top true}))) % previous-messages))
                 (async/put! channel-scrolled true)
                 (async/<! channel-scrolled))
               (recur)))
@@ -1087,9 +1100,9 @@ highlighted-message - the message that should be highlighted (or
                   (let [msg-on-channel (last (async/<! messages-chan))]
                     (if (:updated msg-on-channel)
                       ;; The message is an update, modify the existing element
-                      (om/transact! messages [] #(merge-msg-update % msg-on-channel))
+                      (swap! messages update-in [] #(merge-msg-update % msg-on-channel)) ;;; +FIXME: messages was a cursor in OM
                       ;; ELSE: Not an update, simply append the message
-                      (om/transact! messages [] #(maybe-replace-draft % msg-on-channel)))
+                      (swap! messages update-in [] #(maybe-replace-draft % msg-on-channel))) ;;; +FIXME: messages was a cursor in OM
                     (recur)))
                 ;; ELSE: History is not loaded yet
                 (let [loaded-messages (async/<! (fetch-messages nil (:channel-id opts)))]
