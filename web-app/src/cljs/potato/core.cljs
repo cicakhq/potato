@@ -91,7 +91,7 @@
   ([f xs m]
    {:pre [(ifn? f) (or (nil? m) (map? m))]}
    (map (fn [x i]
-          (om/build f x (assoc m ::index i)))
+          (f x (assoc m ::index i)))
         xs (range))))
 
 (defn update-values-map [m f & args]
@@ -535,7 +535,7 @@ id's. Returns the updated value."
     #js {:display "block"}
     #js {:display "none"}))
 
-(c/defcomponent myself-view
+(c/defcomponent Myself-view
   :name "myself-view"
   [user owner] ;;; +FIXME: owner is the OM cursor, replace…
   (p/h :footer {:id "myself"}
@@ -545,7 +545,7 @@ id's. Returns the updated value."
                  (p/h :a {:class "myself-name" :href potato.urls/settings} (:name user)))
             (p/h :a {:class "myself-menu" :href potato.urls/settings}))))
 
-(c/defcomponent channel-in-list
+(c/defcomponent Channel-in-list
   :name     "channel-in-list"
   ;;;; --- what do I get? [[this-channel-id this-channel-details] owner {:keys [current-channel-id] :as opts}]
   [{:keys [show-close] :or {show-close false}}]
@@ -577,7 +577,7 @@ id's. Returns the updated value."
   (filter #(and (filter-fn (second %))
                 (not (:hide (second %)))) channels-list))
 
-(c/defcomponent channels-list
+(c/defcomponent Channels-list
   :name "channels-list"
   [data]
   (p/h :nav {:id "left"}
@@ -608,7 +608,7 @@ id's. Returns the updated value."
         (when (:channel dest)
           (aset js/window "location" (str potato.urls/channel-root "/" (:channel dest)))))))
 
-(c/defcomponent channel-header
+(c/defcomponent Channel-header
   :name "channel-header"
   [channel]
   (p/h :header {:id "channel"}
@@ -635,7 +635,7 @@ id's. Returns the updated value."
         (str (Math/floor (/ size kb)) nonbreak-space kilobytes-text)
         (str size nonbreak-space bytes-text)))))
 
-(c/defcomponent message-attachment
+(c/defcomponent Message-attachment
   :name "message-attachment"
   [attachment]
   (p/h :span {:class "chat-attachment"}
@@ -671,7 +671,7 @@ id's. Returns the updated value."
   (let [hidden (message-hidden-p message)]
     (send-update-hidden (:id message) (not hidden))))
 
-(c/defcomponent gear-menu
+(c/defcomponent Gear-menu
   :name     "gear-menu"
   :on-mount
   (fn [_] (let [menu-el       (c/find-dom-node owner)
@@ -712,7 +712,7 @@ id's. Returns the updated value."
                    (goog.Uri.QueryData/createFromMap #js {:location (.getAttribute a-link "href")})
                    nil nil))                  ; Fragment and IgnoreCase
 
-(c/defcomponent message-quote
+(c/defcomponent Message-quote
   :name  "message-quote"
   ;;;; +FIXME: initial-state {:menu-opened false}
   :on-mount
@@ -939,7 +939,7 @@ id's. Returns the updated value."
                                                          :editable         (not (:unconfirmed message))
                                                          :editing-callback #(om/set-state! owner :editing %)}}))))))))
 
-(c/defcomponent user-in-list
+(c/defcomponent User-in-list
   :name "user-in-list"
   [[uid name nickname active]]
   (p/h :li {:class    (if active "online-highlight")
@@ -948,7 +948,7 @@ id's. Returns the updated value."
        name
        (if active (str nonbreak-space active-text))))
 
-(c/defcomponent roster-component
+(c/defcomponent Roster-component
   :name "roster-component"
   [data]
   (let [build-user-list
@@ -972,12 +972,12 @@ id's. Returns the updated value."
          (apply p/h :ul {:id "channel-online"} (build-user-list true))
          (apply p/h :ul {:id "channel-offline"} (build-user-list false)))))
 
-(c/defcomponent channel-toolbar
+(c/defcomponent Channel-toolbar
   :name "channel-toolbar"
   [data]
   (p/h :aside {:id "toolbar"}
-       (om/build potato.search/search-component data)
-       (om/build roster-component data)))
+       (potato.search/Search-component data)
+       (Roster-component data)))
 
 (defn merge-msg-update [msglist update-message]
   "Return an updated msglist where updates specificed in the update
@@ -1044,7 +1044,7 @@ highlighted-message - the message that should be highlighted (or
            "\u2715")
     (p/h :span nil "Showing search results")))
 
-(c/defcomponent channel-history-range
+(c/defcomponent Channel-history-range
   :name "channel-history-range"
   :on-mount
   (fn [_]
@@ -1377,7 +1377,7 @@ highlighted-message - the message that should be highlighted (or
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
                                           other-users-typing)))))))))
 
-(c/defcomponent render-session-options
+(c/defcomponent Render-session-options
   :name "session-options"
   [options]
   (apply p/h :div {:class "session-options"}
