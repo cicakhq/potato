@@ -567,7 +567,7 @@ id's. Returns the updated value."
   (filter #(and (filter-fn (second %))
                 (not (:hide (second %)))) channels-list))
 
-(defcomponent channels-list
+(c/defcomponent channels-list
   :name "channels-list"
   [data]
   (p/h :nav {:id "left"}
@@ -598,7 +598,7 @@ id's. Returns the updated value."
         (when (:channel dest)
           (aset js/window "location" (str potato.urls/channel-root "/" (:channel dest)))))))
 
-(defcomponent channel-header
+(c/defcomponent channel-header
   :name "channel-header"
   [channel]
   (p/h :header {:id "channel"}
@@ -625,7 +625,7 @@ id's. Returns the updated value."
         (str (Math/floor (/ size kb)) nonbreak-space kilobytes-text)
         (str size nonbreak-space bytes-text)))))
 
-(defcomponent message-attachment
+(c/defcomponent message-attachment
   :name "message-attachment"
   [attachment]
   (p/h :span {:class "chat-attachment"}
@@ -660,7 +660,7 @@ id's. Returns the updated value."
   (let [hidden (message-hidden-p message)]
     (send-update-hidden (:id message) (not hidden))))
 
-(defcomponent gear-menu
+(c/defcomponent gear-menu
   :name     "gear-menu"
   :on-mount
   (fn [_] (let [menu-el       (c/find-dom-node owner)
@@ -701,7 +701,7 @@ id's. Returns the updated value."
                    (goog.Uri.QueryData/createFromMap #js {:location (.getAttribute a-link "href")})
                    nil nil))                  ; Fragment and IgnoreCase
 
-(defcomponent message-quote
+(c/defcomponent message-quote
   :name  "message-quote"
   ;;;; +FIXME: initial-state {:menu-opened false}
   :on-mount
@@ -926,7 +926,7 @@ id's. Returns the updated value."
                                                          :editable         (not (:unconfirmed message))
                                                          :editing-callback #(om/set-state! owner :editing %)}}))))))))
 
-(defcomponent user-in-list
+(c/defcomponent user-in-list
   :name "user-in-list"
   [[uid name nickname active]]
   (p/h :li {:class    (if active "online-highlight")
@@ -935,7 +935,7 @@ id's. Returns the updated value."
        name
        (if active (str nonbreak-space active-text))))
 
-(defcomponent roster-component
+(c/defcomponent roster-component
   :name "roster-component"
   [data]
   (let [build-user-list
@@ -959,7 +959,7 @@ id's. Returns the updated value."
          (apply p/h :ul {:id "channel-online"} (build-user-list true))
          (apply p/h :ul {:id "channel-offline"} (build-user-list false)))))
 
-(defcomponent channel-toolbar
+(c/defcomponent channel-toolbar
   :name "channel-toolbar"
   [data]
   (p/h :aside {:id "toolbar"}
@@ -1031,7 +1031,7 @@ highlighted-message - the message that should be highlighted (or
            "\u2715")
     (p/h :span nil "Showing search results")))
 
-(defcomponent channel-history-range
+(c/defcomponent channel-history-range
   :name "channel-history-range"
   :on-mount
   (fn [_]
@@ -1362,7 +1362,7 @@ highlighted-message - the message that should be highlighted (or
                                             (:description (get (:user-to-name-map @potato.state/global) uid)))
                                           other-users-typing)))))))))
 
-(defcomponent render-session-options
+(c/defcomponent render-session-options
   :name "session-options"
   [options]
   (apply p/h :div {:class "session-options"}
