@@ -527,7 +527,7 @@ id's. Returns the updated value."
 
 (c/defcomponent myself-view
   :name "myself-view"
-  [user owner]
+  [user owner] ;;; +FIXME: owner is the OM cursor, replace…
   (p/h :footer {:id "myself"}
        (p/h :section {:class    "myself-wrapper"
                       :on-click (fn [e] (potato.preferences/open-screen owner true) (.preventDefault e))}
@@ -1468,7 +1468,7 @@ highlighted-message - the message that should be highlighted (or
                          :on-click  (fn [e] (potato.preferences/open-screen owner false)
                                        (.preventDefault e))} ""))
             (when preferences-open
-              (om/build potato.preferences/preferences app))))))))
+              (potato.preferences/Preferences app))))))))
 
 (defn switch-channel [new-channel-id]
   (om.core/transact! (om.core/root-cursor potato.state/global)
