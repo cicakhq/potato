@@ -516,8 +516,9 @@ id's. Returns the updated value."
                                             (dispatch-notification-entry event async-channel)))
     (potato.eventsource2/set-error-fn! (fn [error-p]
                                          (cljs.pprint/cl-format true "Setting error: ~s" error-p)
-                                         (om/transact! (om/root-cursor potato.state/connection) [:error]
-                                           (constantly error-p))))
+                                         (swap! potato.state/connection
+                                                update-in [:error]
+                                                (constantly error-p))))
     (potato.eventsource2/start-notification-handler channel-id)
     async-channel))
 
@@ -602,7 +603,7 @@ id's. Returns the updated value."
        (om/build myself-view (:current-user data))))
 
 (defn start-private-chat [uid]
-  (go (let [current-domain (:current-domain (deref (state-root)))
+  (go (let [current-domain (:current-domain (state-root))
             {dest :body}   (async/<! (http/post potato.urls/start-private-chat {:json-params {:user uid :domain (:id current-domain)}}))]
         (when (:channel dest)
           (aset js/window "location" (str potato.urls/channel-root "/" (:channel dest)))))))
@@ -815,8 +816,9 @@ id's. Returns the updated value."
 
 (defn- at-magic-close! []
   (let [cid (:active-channel (deref potato.state/global))]
-    (om.core/transact! (state-root)
-                       [:channels cid  :has-autocomplete-menu] (fn [] nil))))
+    (swap! (state-root)
+           update-in [:channels cid  :has-autocomplete-menu]
+           (fn [] nil))))
 
 
 ;;; FIXME: this one is big!
@@ -1144,8 +1146,8 @@ highlighted-message - the message that should be highlighted (or
 
 ;;; +FIXME: TODO: REWRITE with swap!
 (defn- get-unique-id []
-  (let [counter (om.core/ref-cursor (:unique-counter (om.core/root-cursor potato.state/global)))]
-    (om.core/transact! counter [0] inc)
+  (let [counter (:unique-counter potato.state/global)]
+    (swap! counter update-in [0] inc)
     (get counter 0)))
 
 (defn encode-string-as-sha1 [s]
@@ -1484,9 +1486,10 @@ highlighted-message - the message that should be highlighted (or
               (potato.preferences/Preferences app))))))))
 
 (defn switch-channel [new-channel-id]
-  (om.core/transact! (om.core/root-cursor potato.state/global)
-                     [:active-channel]
-                     #(str new-channel-id))
+  (swap!
+    potato.state/global
+    update-in [:active-channel]
+    #(str new-channel-id))
   (potato.eventsource2/start-notification-handler new-channel-id)
   (request-channel-info new-channel-id)
   (if (goog.history.Html5History/isSupported)
