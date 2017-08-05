@@ -588,8 +588,8 @@ id's. Returns the updated value."
             (p/h :div {:id "channels-list"}
                  (p/h :h1 nil channels-text)
                  (apply p/h :ul nil
-                        (map (fn [x i]
-                               (om/build  channel-in-list x (assoc {:opts {:current-channel-id (:active-channel data)}} ::index i)))
+                        (map (fn [x i] ;;; +FIXME: params?
+                               (Channel-in-list x (assoc {:opts {:current-channel-id (:active-channel data)}} ::index i)))
                              (sort-by lower-case-channel-name
                                       (filter-channels #(not (:private %)) (:channels data))) (range))))
             (let [private-channels (sort-by lower-case-channel-name
@@ -600,7 +600,7 @@ id's. Returns the updated value."
                      (apply p/h :ul nil
                             (build-all channel-in-list private-channels
                                        {:opts {:current-channel-id (:active-channel data)}}))))))
-       (om/build myself-view (:current-user data))))
+       (Myself-view (:current-user data)))) ;;; +FIXME: params?
 
 (defn start-private-chat [uid]
   (go (let [current-domain (:current-domain (state-root))
@@ -788,7 +788,7 @@ id's. Returns the updated value."
              (goog.events/listen (:root-node (om/get-shared owner))
                                  goog.events.EventType/CLICK
                                  #(om/set-state! owner :menu-opened false))
-             (om/build gear-menu message {:opts {:on-edit editing-callback :can-edit-p canEdit}}))))))
+             (Gear-menu message {:opts {:on-edit editing-callback :can-edit-p canEdit}}))))))  ;;; +FIXME: params
 
 (defn- at-magic-callback [owner text event editable type]
   (let [cid (:active-channel @potato.state/global)
@@ -934,10 +934,10 @@ id's. Returns the updated value."
                                  :title (:nickname user-entry)}
                        (or (:description user-entry) ""))
                   (display-time (:created_date message)))
-                (om/build message-quote message {:state {:update-time      update-time
-                                                         :editing          editing
-                                                         :editable         (not (:unconfirmed message))
-                                                         :editing-callback #(om/set-state! owner :editing %)}}))))))))
+                (Message-quote message {:state {:update-time      update-time ;;; +FIXME: params?
+                                                :editing          editing
+                                                :editable         (not (:unconfirmed message))
+                                                :editing-callback #(om/set-state! owner :editing %)}}))))))))
 
 (c/defcomponent User-in-list
   :name "user-in-list"
@@ -1019,7 +1019,7 @@ id's. Returns the updated value."
 (defn- build-message-view [messages-list state key-prefix highlighted-message]
   "Build the react object representing a list of messages.
 messages-list - A list of message objects to be rendered
-state - the state structure to be passed to the call to om/build
+state - the state structure to be passed to the call to the component
 key-prefix - Used as a prefix when creating both the react key and the
              dom id. This is needed in order to support displaying
              the same message more than once in the dom tree.
@@ -1029,11 +1029,11 @@ highlighted-message - the message that should be highlighted (or
    (fn [[_ curmsg]]
      (let [message-highlighted-p (= (:id curmsg) highlighted-message)
            [_ prev] (first (rsubseq (deref messages-list) < (:id curmsg)))]
-       (om/build message-view curmsg {:state (conj state {:previous-from (:from prev)
-                                                          :previous-date (:created_date prev)})
-                                      :react-key (make-message-react-key key-prefix curmsg)
-                                      :opts {:highlighted-p message-highlighted-p
-                                             :key-prefix key-prefix}})))
+       (Message-view curmsg {:state (conj state {:previous-from (:from prev)   ;;; +FIXME: params?
+                                                 :previous-date (:created_date prev)})
+                             :react-key (make-message-react-key key-prefix curmsg)
+                             :opts {:highlighted-p message-highlighted-p
+                                    :key-prefix key-prefix}})))
    messages-list))
 
 (defn channel-history-range-splitter [cid]
@@ -1366,7 +1366,7 @@ highlighted-message - the message that should be highlighted (or
     (render-state [_ {typing :typing}]
       (p/h :footer {:id "input"}
         (when (:has-autocomplete-menu channel)
-          (om/build autocomplete-menu channel))
+          (Autocomplete-menu channel)) ;;; + FIXME: params?
         (p/h :fieldset nil "")
         (let [user-id (:id (:current-user (deref potato.state/global)))
               other-users-typing (disj typing user-id)]
@@ -1424,16 +1424,16 @@ highlighted-message - the message that should be highlighted (or
                              (p/h :div {:id "uploading-text"} uploading-file-text)
                              (p/h :div {:id "uploading-percent"} "0%")
                              (p/h :a   {:id "uploading-cancel" :href "#"} nil))
-                        (om/build channel-header  channel))
+                        (Channel-header channel)) ;;; +FIXME: params?
                   (let [range (:range channel)]
                     (when range
-                      (list (om/build channel-history-range range {:opts {:channel-id cid}
-                                                                   :react-key (str "channel-history-" cid)}))))
-                  (list (om/build channel-history (:messages channel) {:opts {:channel-id cid}
-                                                                       :react-key (str "channel-content-" cid)})
-                        (om/build channel-input channel)))
+                      (list (Channel-history-range range {:opts {:channel-id cid} ;;; +FIXME: params?
+                                                          :react-key (str "channel-history-" cid)}))))
+                  (list (Channel-history (:messages channel) {:opts {:channel-id cid} ;;; +FIXME: params?
+                                                              :react-key (str "channel-content-" cid)})
+                        (Channel-input channel))) ;;; +FIXME: params?
                  (let [options (:options channel)]
-                   (list (om/build render-session-options options))))))))
+                   (list (Render-session-options options)))))))) ;;; +FIXME: params?
 
 ;;; +FIXME: big main component
 (defn potato [app owner]
@@ -1473,9 +1473,9 @@ highlighted-message - the message that should be highlighted (or
                           (p/h :a {:class    "dismiss"
                                    :on-click #(om/set-state! owner :hide-alerts true)} "")))
             (p/h :main {:id "potato-core"}
-                 (om/build channels-list app)
-                 (om/build channel-view current-channel)
-                 (om/build channel-toolbar app))
+                 (Channels-list app) ;;; +FIXME: params
+                 (Channel-view current-channel)  ;;; +FIXME: params
+                 (Channel-toolbar app)) ;;; +FIXME: params
             ;; add a div to capture clicks
             (when preferences-open
               (p/h :div {:id        "click-mask"
