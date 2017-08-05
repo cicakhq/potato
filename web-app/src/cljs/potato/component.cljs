@@ -6,10 +6,10 @@
   (or (and component (.-base component) component)))
 
 (def ^:dynamic *component*
-  "Within a component lifecycle function, is be bound to the underlying ReactJS instance." nil)
+  "Within a component lifecycle function, is be bound to the underlying PreactJS instance." nil)
 
 (def ^:private lifecycle-impls
-  "Mapping of public lifecycle API to internal ReactJS API."
+  "Mapping of public lifecycle API to internal PreactJS API."
   (let [basic (fn [impl]
                 (preact-method []
                   (apply impl
@@ -41,11 +41,7 @@
      :on-update {:componentDidUpdate with-old-value}
      :on-unmount {:componentWillUnmount basic}
      :on-render {:componentDidUpdate with-old-value
-                 :componentDidMount with-nil-old-value}
-     :will-enter {:componentWillEnter with-callback}
-     :did-enter  {:componentDidEnter basic}
-     :will-leave {:componentWillLeave with-callback}
-     :did-leave {:componentDidLeave basic}}))
+                 :componentDidMount with-nil-old-value}}))
 
 (defn- build-lifecycle-impls
   [opts-map]
@@ -88,26 +84,6 @@
      value, the _old_  value (which will be nil in the case of the initial render) and any constant
      args passed to the render fn. This maps to both the 'componentDidMount' and
      'componentDidUpdate' lifecycle methods in PreactJS.
-     :will-enter - A function invoked whenever this component is added to a PreactTransitionGroup.
-     Invoked at the same time as :onMount. Is passed the underlying DOM node, a callback
-     function, the value and any constant args passed to the render fn. Maps to the
-     'componentWillEnter' lifecycle  method in PreactJS. See the PreactJS documentation at
-     http://facebook.github.io/react/docs/animation.html for full documentation of the behavior.
-     :did-enter - A function invoked after the callback provided to :willEnter is called. It is
-     passed the underlying DOM node, the value and any constant args passed to the render fn. Maps
-     to the 'componentDidEnter' lifecycle method in PreactJS. See the PreactJS documentation at
-     http://facebook.github.io/react/docs/animation.html for full documentation of the behavior.
-     :will-leave - A function invoked whenever this component is removed from a PreactTransitionGroup.
-     Is passed the underlying DOM node, a callback function, the most recent value and the most
-     recent constant args passed to the render fn. The DOM node will not be removed until the
-     callback is called. Maps to the 'componentWillEnter' lifecycle method in PreactJS. See the
-     PreactJS documentation at http://facebook.github.io/react/docs/animation.html for full
-     documentation of the behavior.
-     :did-leave - A function invoked after the callback provided to :willLeave is called (at the same
-     time as :onUnMount). Is passed the underlying DOM node, the most recent value and the most
-     recent constant args passed to the render fn. Maps to the 'componentDidLeave' lifecycle method
-     in PreactJS. See the PreactJS  documentation at
-     http://facebook.github.io/react/docs/animation.html for full documentation of the behavior.
   The *component* dynamic var will be bound to the underlying PreactJS component for all invocations
   of the render function and invocations of functions defined in the opts map."
   ([renderer] (component renderer {}))
@@ -122,14 +98,14 @@
                               (.-value (.-props *component*))
                               (.-constants (.-props *component*))))}
                  (build-lifecycle-impls opts))
-          react-component (.createClass js/Preact (clj->js impl))]
+          preact-component (p/Component (clj->js impl))] ;;; is this correct?
       (fn [value & constant-args]
         (let [props (js-obj)]
           (set! (.-value props) value)
           (set! (.-constants props) constant-args)
           (when-let [keyfn (:keyfn opts)]
             (set! (.-key props) (keyfn value)))
-          (p/h react-component props))))))
+          (p/h preact-component props))))))
 
 (defn unmount
   "Remove a mounted Element from the given DOM node."
