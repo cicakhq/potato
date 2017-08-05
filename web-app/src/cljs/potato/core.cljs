@@ -34,7 +34,8 @@
             [potato.preferences]
             [potato.search]
             [potato.mathjax])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
+  (:require-macros [potato.core            :refer [defcomponent react-method]]
+                   [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defonce current-build-id (aget js/window "currentBuildId"))
 
@@ -670,9 +671,6 @@ id's. Returns the updated value."
 (defn toggle-hidden [message]
   (let [hidden (message-hidden-p message)]
     (send-update-hidden (:id message) (not hidden))))
-
-(defn find-dom-node [component]
-  (or (and component (.base js/component) component)))
 
 (defn gear-menu [message owner opts]
   (reify
