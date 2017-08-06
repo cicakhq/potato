@@ -27,7 +27,7 @@
             [cljsjs.moment]
             [cljs.pprint]
             [potato.component :as c]
-            [potato.state]
+            [potato.state     :as state]
             [potato.urls]
             [potato.eventsource2]
             [potato.keyboard]
@@ -1436,58 +1436,56 @@ highlighted-message - the message that should be highlighted (or
                    (list (Render-session-options options)))))))) ;;; +FIXME: params?
 
 ;;; +FIXME: big main component
-(defn potato [app owner]
-  (reify
-    om/IDisplayName (display-name [_] "potato")
-    om/IInitState
-    (init-state [_]
-      (print "Init state of potato")
-      {:notifications-enabled false
-       :hide-alerts false
-       :preferences-open false
-       :disabled-input []})
-    om/IWillMount
-    (will-mount [_]
-      (if (and (.hasOwnProperty js/window "Notification") (= (.-permission js/Notification) "granted"))
-        (om/set-state! owner :notifications-enabled true))
-      (go-loop []
-        (let [new-state (async/<! (:preferences-chan (om/get-shared owner)))]
-          (om/set-state! owner :preferences-open new-state)
-          ;; FIXME: disable Drag-and-drop as well
-          (if new-state
-            (potato.keyboard/disable (om/get-shared owner :keyboard-control))
-            (potato.keyboard/enable  (om/get-shared owner :keyboard-control)))
-          (recur))))
-    om/IRenderState
-    (render-state [this {:keys [notifications-enabled hide-alerts preferences-open]}]
-      (let [current-channel (get-in app [:channels (:active-channel app)])]
-        (when current-channel
-          (p/h :div {:id "potato"}
-            (when (and (not notifications-enabled) (not hide-alerts))
-              (p/h :div {:id "potato-alert"} needs-your-permission-text nonbreak-space
-                          (p/h :a {:class "enable"
-                                   :on-click   (fn [e] (potato.preferences/open-screen owner true)
-                                                 (.preventDefault e))}
-                               enable-notifications-text)
-                          "."
-                          (p/h :a {:class    "dismiss"
-                                   :on-click #(om/set-state! owner :hide-alerts true)} "")))
-            (p/h :main {:id "potato-core"}
-                 (Channels-list app) ;;; +FIXME: params
-                 (Channel-view current-channel)  ;;; +FIXME: params
-                 (Channel-toolbar app)) ;;; +FIXME: params
-            ;; add a div to capture clicks
-            (when preferences-open
-              (p/h :div {:id        "click-mask"
-                         :class     "capture"
-                         :on-click  (fn [e] (potato.preferences/open-screen owner false)
-                                       (.preventDefault e))} ""))
-            (when preferences-open
-              (potato.preferences/Preferences app))))))))
+(defcomponent Potato
+  :name "potato"
+  ;;; +FIXME: initial state? ----> in constructor
+  ;; {:notifications-enabled false
+  ;;  :hide-alerts false
+  ;;  :preferences-open false
+  ;;  :disabled-input []}
+  ; componentWillMount
+  ;;; +FIXME: om/IWillMount what is will mount?
+  (will-mount [_]
+              (if (and (.hasOwnProperty js/window "Notification") (= (.-permission js/Notification) "granted"))
+                (om/set-state! owner :notifications-enabled true))
+              (go-loop []
+                (let [new-state (async/<! (:preferences-chan (om/get-shared owner)))]
+                  (om/set-state! owner :preferences-open new-state)
+                  ;; FIXME: disable Drag-and-drop as well
+                  (if new-state
+                    (potato.keyboard/disable (om/get-shared owner :keyboard-control))
+                    (potato.keyboard/enable  (om/get-shared owner :keyboard-control)))
+                  (recur))))
+  [props state]
+  ;[this {:keys [notifications-enabled hide-alerts preferences-open]}]
+  (let [current-channel (:active-channel @state/global)]
+    (when current-channel
+      (p/h :div {:id "potato"}
+           (when (and (not notifications-enabled) (not hide-alerts))
+             (p/h :div {:id "potato-alert"} needs-your-permission-text nonbreak-space
+                  (p/h :a {:class "enable"
+                           :on-click   (fn [e] (potato.preferences/open-screen props true)
+                                         (.preventDefault e))}
+                       enable-notifications-text)
+                  "."
+                  (p/h :a {:class    "dismiss"
+                           :on-click #(om/set-state! state :hide-alerts true)} "")))
+           (p/h :main {:id "potato-core"}
+                (Channels-list app) ;;; +FIXME: params
+                (Channel-view current-channel)  ;;; +FIXME: params
+                (Channel-toolbar app)) ;;; +FIXME: params
+           ;; add a div to capture clicks
+           (when preferences-open
+             (p/h :div {:id        "click-mask"
+                        :class     "capture"
+                        :on-click  (fn [e] (potato.preferences/open-screen props false)
+                                     (.preventDefault e))} ""))
+           (when preferences-open
+             (potato.preferences/Preferences app))))))
 
 (defn switch-channel [new-channel-id]
   (swap!
-    potato.state/global
+    state/global
     update-in [:active-channel]
     #(str new-channel-id))
   (potato.eventsource2/start-notification-handler new-channel-id)
@@ -1499,15 +1497,15 @@ highlighted-message - the message that should be highlighted (or
       (.setToken       history (str "/" new-channel-id)))))
 
 (defn- send-active-notification []
-  (http/post "/update_active" {:json-params {:channel (:active-channel @potato.state/global)}}))
+  (http/post "/update_active" {:json-params {:channel (:active-channel @state/global)}}))
 
 (defn ^:export main []
   (println (str "-- main called at " (.format (js/moment))))
-  (let [event-channel    (make-polling-connection (:active-channel @potato.state/global))
-        event-publisher  (async/pub event-channel (fn [[tag & _]] tag))
-        root-node        (goog.dom/getElement "potato-root")
-        preferences-chan (async/chan (async/dropping-buffer 1))
-        typing-chan      (async/chan (async/dropping-buffer 1))
+  (let [event-channel          (make-polling-connection (:active-channel @state/global))
+        event-publisher        (async/pub event-channel (fn [[tag & _]] tag))
+        root-node              (goog.dom/getElement "potato-root")
+        preferences-chan       (async/chan (async/dropping-buffer 1))
+        typing-chan            (async/chan (async/dropping-buffer 1))
         initial-load-completed (async/chan (async/dropping-buffer 1))]
     (request-channel-info-for-all-channels
      #(do
@@ -1517,7 +1515,7 @@ highlighted-message - the message that should be highlighted (or
         ;; information (like the topic). Thus, we need to make sure
         ;; that request-channel-info is called after the previous call
         ;; has returned.
-        (request-channel-info (:active-channel @potato.state/global))))
+        (request-channel-info (:active-channel @state/global))))
     (goog.events/listen (new goog.ui.IdleTimer 0) goog.ui.IdleTimer/Event.BECOME_ACTIVE mark-notifications)
     ;; Set default idle timer to one hour
     (let [timer (new goog.ui.IdleTimer 1800000)]
@@ -1527,16 +1525,15 @@ highlighted-message - the message that should be highlighted (or
       (goog.events/listen timer goog.ui.IdleTimer/Event.BECOME_IDLE #(potato.eventsource2/set-is-active false)))
     (maybe-send-type-notification typing-chan)
 
-    (om/root potato
-             potato.state/global
-             {:shared {:event-channel          event-channel
-                       :event-publisher        event-publisher
-                       :root-node              root-node
-                       :has-autocomplete-menu  nil
-                       :typing-chan            typing-chan
-                       :search-item            (async/chan (async/dropping-buffer 1))
-                       :move-selected-menuitem (async/chan (async/dropping-buffer 1))
-                       :preferences-chan       preferences-chan
-                       :keyboard-control       (potato.keyboard/init root-node)
-                       :initial-load-completed initial-load-completed}
-              :target root-node})))
+    (render (Potato state.global
+                    {:event-channel          event-channel
+                     :event-publisher        event-publisher
+                     :root-node              root-node
+                     :has-autocomplete-menu  nil
+                     :typing-chan            typing-chan
+                     :search-item            (async/chan (async/dropping-buffer 1))
+                     :move-selected-menuitem (async/chan (async/dropping-buffer 1))
+                     :preferences-chan       preferences-chan
+                     :keyboard-control       (potato.keyboard/init root-node)
+                     :initial-load-completed initial-load-completed}
+                    root-node))))
