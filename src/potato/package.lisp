@@ -437,7 +437,8 @@
            #:register-gcm
            #:gcm-enabled-p
            #:gcm-registration
-           #:update-unread-subscription))
+           #:update-unread-subscription
+           #:parse-provider-name))
 
 (defpackage :potato.oauth-north
   (:use :cl :potato :potato.common))

@@ -2,11 +2,6 @@
 
 (declaim #.potato.common::*compile-decl*)
 
-(defun parse-provider-name (name)
-  (string-case:string-case (name)
-    ("gcm" :gcm)
-    ("apns" :apns)))
-
 (define-api-method (register-gcm-token "/register-gcm" nil ())
   (api-case-method
     (:post
@@ -23,7 +18,7 @@
     (:post
      (let* ((data (parse-and-check-input-as-json))
             (channel (potato.core:load-channel-with-check cid))
-            (provider (parse-provider-name (nil-if-json-null (st-json:getjso "provider" data)))))
+            (provider (potato.gcm:parse-provider-name (nil-if-json-null (st-json:getjso "provider" data)))))
        (potato.gcm:update-unread-subscription (potato.core:current-user)
                                               (st-json:getjso "token" data)
                                               provider

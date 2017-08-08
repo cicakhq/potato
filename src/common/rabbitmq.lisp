@@ -19,6 +19,8 @@
 (defparameter *gcm-unread-state-exchange-name* "gcm-unread-ex")
 (defparameter *gcm-queue-name* "user-notifications-gcm-send")
 (defparameter *apns-exchange-name* "apns-sender-ex")
+(defparameter *apns-management-exchange-name* "apns-admin-ex")
+(defparameter *apns-management-queue-name* "apns-admin")
 
 (defparameter *message-send-exchange-name* "message-send-ex"
   "Exchange that reecieves all messages that are sent in the system.
@@ -181,6 +183,12 @@ following form: DOMAIN.CHANNEL.USER.COMMAND")
 
      ;; APNS queue
      (cl-rabbit:exchange-declare conn 1 *apns-exchange-name* "topic" :durable t)
+     (cl-rabbit:exchange-declare conn 1 *apns-management-exchange-name* "topic" :durable t)
+     (cl-rabbit:queue-declare conn 1 :queue  *apns-management-queue-name* :durable t)
+     (cl-rabbit:queue-bind conn 1
+                           :queue *apns-management-queue-name*
+                           :exchange *apns-management-exchange-name*
+                           :routing-key "#")
 
      ;; State server
      (cl-rabbit:exchange-declare conn 1 *state-server-reader-exchange-name* "topic" :durable t)

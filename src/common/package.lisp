@@ -130,7 +130,9 @@
            #:*gcm-unread-state-exchange-name*
            #:*session-notifications-exchange-name*
            #:truncate-string
-           #:*apns-exchange-name*))
+           #:*apns-exchange-name*
+           #:*apns-management-exchange-name*
+           #:*apns-management-queue-name*))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)

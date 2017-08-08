@@ -63,6 +63,11 @@
                   (gcm-registration/gcm-token obj)
                   (gcm-registration/provider obj))))))
 
+(defun parse-provider-name (name)
+  (string-case:string-case (name)
+    ("gcm" :gcm)
+    ("apns" :apns)))
+
 (defun make-memcached-key-for-gcm-keys (uid)
   (format nil "gcm-~a" (encode-name uid)))
 
@@ -221,7 +226,8 @@
                                           "notification_type" (symbol-name notification-type)
                                           "text" (truncate-string text 1000)
                                           "provider" provider-name
-                                          "token" key)))
+                                          "token" key
+                                          "user" (potato.core:ensure-user-id user))))
                   (cl-rabbit:basic-publish conn 1
                                            :exchange *apns-exchange-name*
                                            :routing-key (format nil "~a.~a" channel provider-name)
@@ -256,9 +262,36 @@
 (defun start-gcm-listener ()
   (start-monitored-thread #'gcm-listener-loop "GCM listener loop"))
 
+(defun gcm-admin-listener-loop ()
+  (with-rabbitmq-connected (conn)
+    (cl-rabbit:basic-consume conn 1 *apns-management-queue-name* :no-ack t)
+    (loop
+      for msg = (cl-rabbit:consume-message conn)
+      for msg-body = (cl-rabbit:message/body (cl-rabbit:envelope/message msg))
+      for json = (st-json:read-json-from-string (babel:octets-to-string msg-body :encoding :utf-8))
+      do (json-bind ((cmd "cmd" :required t)
+                     (uid "user" :required t)
+                     (token "token" :required t)
+                     (provider-name "provider" :required t))
+             json
+           (string-case:string-case (cmd)
+             ("delete"
+              (let ((reg (potato.db:load-instance 'gcm-registration
+                                                  (make-gcm-registration-key uid token (parse-provider-name provider-name))
+                                                  :error-if-not-found nil)))
+                (if reg
+                    (potato.db:remove-instance reg)
+                    ;; ELSE: Registration did not exist, just log a message.
+                    (log:warn "Attempt to remove a registration: user=~s, token=~s, provider=~s"
+                              uid token provider-name)))))))))
+
+(defun start-gcm-admin-listener ()
+  (start-monitored-thread #'gcm-admin-listener-loop "GCM admin listener loop"))
+
 (potato.common.application:define-component gcm-sender
   (:dependencies potato.common::generic potato.db::db)
   (:start
    (unless (gcm-enabled-p)
      (log:warn "GCM key not configured. GCM notifications will not be available."))
-   (start-gcm-listener)))
+   (start-gcm-listener)
+   (start-gcm-admin-listener)))
