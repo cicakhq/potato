@@ -19,7 +19,11 @@ To do a standardlone installation, the following dependencies must be installed:
 
 On a clean Ubuntu system, these dependencies are available from the following packages:
 
-`git couchdb-server rabbitmq-server librabbitmq-dev memcached solr-jetty libfixposix-dev libffi-dev gcc g++ nodejs nodejs-legacy sassc unzip default-jdk`
+`git librabbitmq-dev libfixposix-dev libffi-dev gcc g++ sassc unzip default-jdk`
+
+to run the servers without using the `docker-compose` repository, you'll also need:
+
+`couchdb-server rabbitmq-server memcached solr-jetty`
 
 ### Initialise submodules
 
