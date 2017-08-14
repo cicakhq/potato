@@ -191,6 +191,32 @@
                                    (find-domain-email-invitations-for-user user)))))
       (remove-duplicates domains :key #'domain/id :test #'equal))))
 
+(defun remove-user-from-domain (domain user)
+  (let* ((user (ensure-user user))
+         (domain (ensure-domain domain))
+         (domain-id (domain/id domain)))
+    ;; Remove the user from the domain's groups
+    (let* ((groups-for-domain (find-groups-in-domain domain))
+           (groups-for-user-domain (remove-if-not (lambda (group)
+                                                    (equal (group/domain group) domain-id))
+                                                  groups-for-domain)))
+      (dolist (group groups-for-user-domain)
+        (remove-user-from-group group user)))
+    ;; Remove the user from the channels that belong to the group
+    (let* ((channels-for-user (find-channels-for-user user))
+           (channels-for-user-domain (remove-if-not (lambda (ch)
+                                                      (equal (channel/domain ch) domain-id))
+                                                    channels-for-user)))
+      (dolist (ch channels-for-user-domain)
+        (remove-user-from-channel ch user)))
+    ;; Remove the user from the domain
+    (let ((key (make-user-domain-mapping-id (user/id user) domain-id)))
+      (clouchdb:delete-document key))))
+
+(defun find-channels-in-domain (domain)
+  (potato.db:invoke-view-and-load-instances 'potato.core:channel "channel" "channels_in_domain"
+                                            :key (ensure-domain-id domain)))
+
 (defun find-default-group-in-domain (domain)
   (let ((groups (find-groups-in-domain domain)))
     (find :domain-default groups :key #'group/type)))
@@ -248,6 +274,12 @@
       (raise-permission-error "User ~s does not have admin right in domain ~s" (ensure-user-id user) (ensure-domain-id domain))))
   (values))
 
+(defun common-user-domains (user1 user2)
+  "Returns the list of common domains which USER1 and USER2 are in"
+  (let ((domains1 (mapcar #'potato.core:domain-user/domain (load-domains-for-user user1)))
+        (domains2 (mapcar #'potato.core:domain-user/domain (load-domains-for-user user2))))
+    (intersection domains1 domains2 :test #'equal)))
+
 (defun load-domain-with-check (domain-id user &key require-admin-p)
   (check-type domain-id string)
   (handler-case
@@ -260,10 +292,6 @@
   "Returns the number of users in DOMAIN"
   (let ((result (clouchdb:invoke-view "domain" "user_count_in_domain" :key (ensure-domain-id domain) :reduce t)))
     (getfield :|value| (car (getfield :|rows| result)))))
-
-(defun remove-user-from-domain (domain user)
-  (let ((key (make-user-domain-mapping-id (ensure-user-id user) (ensure-domain-id domain))))
-    (clouchdb:delete-document key)))
 
 (defun update-domain-user-role (domain user role)
   (check-type role domain-user-role)
