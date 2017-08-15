@@ -27,7 +27,7 @@
                                    (:channel-url      . ,url)
                                    (:user-id          . ,(potato.core:user/id user))
                                    (:email            . ,(potato.core:user/primary-email user))
-                                   (:user-description      . ,(potato.core:user/description user))
+                                   (:user-description . ,(potato.core:user/description user))
                                    (:group            . ,(potato.core:group/id group))
                                    (:group-name       . ,(potato.core:group/name group))
                                    (:domain-id        . ,(potato.core:group/domain group))
