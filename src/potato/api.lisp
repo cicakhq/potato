@@ -190,24 +190,27 @@
      (let ((user (potato.db:load-instance 'potato.core:user uid :error-if-not-found nil)))
        (if (and user
                 (potato.core:common-user-domains (potato.core:current-user) uid))
-           (st-json:jso "id" (potato.core:user/id user)
-                       "description" (potato.core:user/description user)
-                       "nickname" (potato.core:user/nickname user)
-                       "image_name" (potato.core:user/image-name user))
+           (st-json:jso "user"
+                        (st-json:jso "id" (potato.core:user/id user)
+                                     "description" (potato.core:user/description user)
+                                     "nickname" (potato.core:user/nickname user)
+                                     "image_name" (potato.core:user/image-name user)))
            (raise-api-error "User not found" hunchentoot:+http-not-found+))))))
 
 (define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
   (api-case-method
     (:get
-     (and (potato.core:common-user-domains (potato.core:current-user) uid)
-          (alexandria:if-let ((content (potato.user-image:user-load-image uid)))
-            (progn
-              (setf (hunchentoot:content-type*) "image/png")
-              (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
-              content)
-            ;; ELSE: User not found or no image exists
-            nil)
-          (raise-api-error "User not found" hunchentoot:+http-not-found+)))))
+     (labels ((raise-not-found ()
+                (raise-api-error "User not found" hunchentoot:+http-not-found+)))
+       (unless (potato.core:common-user-domains (potato.core:current-user) uid)
+         (raise-not-found))
+       (alexandria:if-let ((content (potato.user-image:user-load-image uid)))
+         (progn
+           (setf (hunchentoot:content-type*) "image/png")
+           (setf (hunchentoot:header-out "cache-control") "public,max-age=86400")
+           content)
+         ;; ELSE: User not found or no image exists
+         (raise-not-found))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message API calls
