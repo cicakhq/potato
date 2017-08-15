@@ -8,7 +8,7 @@
      (json-bind ((token "token")
                  (provider "provider"))
          (parse-and-check-input-as-json)
-       (ecase (potato.gcm:register-gcm (potato.core:current-user) token (parse-provider-name provider))
+       (ecase (potato.gcm:register-gcm (potato.core:current-user) token (potato.gcm:parse-provider-name provider))
          (:not-changed (st-json:jso "result" "ok" "detail" "already_registered"))
          (:token-updated (st-json:jso "result" "ok" "detail" "token_updated"))
          (:new-registration (st-json:jso "result" "ok" "detail" "token_registered")))))))
