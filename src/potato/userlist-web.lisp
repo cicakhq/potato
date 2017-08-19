@@ -32,13 +32,13 @@
   (potato.core:with-authenticated-user ()
     (let* ((channel (potato.core:load-channel-with-check (st-json:getjso "channel" data)))
            (result (potato.core:user-descriptions-for-channel-members channel)))
-      (st-json:jso "members" (mapcar #'(lambda (v)
-                                         (destructuring-bind (id description nickname user-image)
-                                             v
-                                           (st-json:jso "id" id
-                                                        "description" description
-                                                        "nickname" nickname
-                                                        "image_name" user-image)))
+      (st-json:jso "members" (mapcar (lambda (v)
+                                       (destructuring-bind (id description nickname user-image)
+                                           v
+                                         (st-json:jso "id" id
+                                                      "description" description
+                                                      "nickname" nickname
+                                                      "image_name" user-image)))
                                      result)))))
 
 (potato.core:define-json-handler-fn-login (user-details-screen "/user_details" data nil ())
