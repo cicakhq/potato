@@ -100,6 +100,13 @@ credentials. This function returns the current session."
             (hunchentoot:set-cookie "loginkey" :value "" :path "/")))))
     session))
 
+(defun validate-cookie-and-find-user ()
+  (validate-cookie)
+  (let* ((user (user-session/user (find-current-user-session))))
+    (if (and user (user/activated-p user))
+        user
+        nil)))
+
 (defmacro with-authenticated-user ((&optional allow-unregistered) &body body)
   (alexandria:with-gensyms (user-session-sym user-sym)
     ;; We bind *CURRENT-USER-SESSION* to itself in order to ensure a

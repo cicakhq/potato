@@ -50,10 +50,20 @@
              (raise-api-error "User not actvated" hunchentoot:+http-forbidden+ (list "details" "not_activated"))))
       user)))
 
+(defun load-user-from-api-token-or-session ()
+  (let ((api-token (hunchentoot:header-in* "api-token")))
+    (if api-token
+        (load-user-from-api-token api-token)
+        (let ((user (potato.core:validate-cookie-and-find-user)))
+          (unless user
+            (raise-api-error "Not logged in" hunchentoot:+http-forbidden+))
+          user))))
+
 (defun verify-api-token-and-run (url fn)
   (handler-case
-      (let ((potato.core::*current-auth-user* (load-user-from-api-token (hunchentoot:header-in* "api-token"))))
-        (funcall fn))
+      (let ((api-token (hunchentoot:header-in* "api-token")))
+        (let ((potato.core::*current-auth-user* (load-user-from-api-token api-token)))
+          (funcall fn)))
     ;; Error handlers
     (api-error (condition)
       (log:debug "API error when calling ~a: ~a" url condition)

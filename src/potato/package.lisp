@@ -243,7 +243,8 @@
            #:update-message-hidden-with-check
            #:update-domain-user-role
            #:clear-user-password
-           #:common-user-domains))
+           #:common-user-domains
+           #:validate-cookie-and-find-user))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
