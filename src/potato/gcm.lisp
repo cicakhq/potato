@@ -4,7 +4,7 @@
 
 (defvar *gcm-authorisation-key* nil)
 
-(deftype provider-type () '(member :gcm :apns))
+(deftype provider-type () '(member :gcm :apns :apns-dev))
 
 (defclass gcm-registration ()
   ((user         :type string
@@ -66,7 +66,8 @@
 (defun parse-provider-name (name)
   (string-case:string-case (name)
     ("gcm" :gcm)
-    ("apns" :apns)))
+    ("apns" :apns)
+    ("apns-dev" :apns-dev)))
 
 (defun make-memcached-key-for-gcm-keys (uid)
   (format nil "gcm-~a" (encode-name uid)))
@@ -206,7 +207,7 @@
       (loop
         for (key provider) in (gcm-keys-for-user user)
         do (log:info "Sending to key = ~s" key)
-        do (ecase provider
+        do (case provider
              (:gcm
               (push-gcm-message user key (st-json:jso "potato_message_type" "message"
                                                       "message_id" message-id
@@ -215,7 +216,7 @@
                                                       "channel" channel
                                                       "notification_type" (symbol-name notification-type)
                                                       "text" (truncate-string text 1000))))
-             (:apns
+             (t
               (with-pooled-rabbitmq-connection (conn)
                 (let* ((provider-name (string-downcase (symbol-name provider)))
                        (json (st-json:jso "potato_message_type" "message"
