@@ -283,7 +283,7 @@
                 (if reg
                     (potato.db:remove-instance reg)
                     ;; ELSE: Registration did not exist, just log a message.
-                    (log:warn "Attempt to remove a registration: user=~s, token=~s, provider=~s"
+                    (log:warn "Attempt to remove a nonexistent registration: user=~s, token=~s, provider=~s"
                               uid token provider-name)))))))))
 
 (defun start-gcm-admin-listener ()
