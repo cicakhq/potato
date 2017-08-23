@@ -23,7 +23,7 @@
 (defparameter *apns-management-queue-name* "apns-admin")
 
 (defparameter *message-send-exchange-name* "message-send-ex"
-  "Exchange that reecieves all messages that are sent in the system.
+  "Exchange that receives all messages that are sent in the system.
 This is different from channel-content-ex in that this exchange only
 includes normal user messages, and not modifications, file uploads and
 system messages. The routing key has the following format:
