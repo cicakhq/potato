@@ -170,7 +170,7 @@ to initialise a session."
      (let ((user (potato.core:current-user)))
        (apply #'st-json:jso
               "user" (user-as-json user)
-              "channels" (load-domain-and-channel-information-as-json user)
+              "domains" (load-domain-and-channel-information-as-json user)
               "websocket_url" *external-websocket-listen-address*
               "upload_location" (ecase potato.upload:*default-upload-location*
                                   (:s3 "s3)")
@@ -205,10 +205,10 @@ to initialise a session."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun user-as-json (user)
-  (st-json:jso "user" (st-json:jso "id" (potato.core:user/id user)
-                                   "description" (potato.core:user/description user)
-                                   "nickname" (potato.core:user/nickname user)
-                                   "image_name" (potato.core:user/image-name user))))
+  (st-json:jso "id" (potato.core:user/id user)
+               "description" (potato.core:user/description user)
+               "nickname" (potato.core:user/nickname user)
+               "image_name" (potato.core:user/image-name user)))
 
 (define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
   (api-case-method
@@ -229,7 +229,7 @@ to initialise a session."
      (let ((user (potato.db:load-instance 'potato.core:user uid :error-if-not-found nil)))
        (if (and user
                 (potato.core:common-user-domains (potato.core:current-user) uid))
-           (user-as-json user)
+           (st-json:jso "user" (user-as-json user))
            (raise-api-error "User not found" hunchentoot:+http-not-found+))))))
 
 (define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
@@ -443,12 +443,12 @@ to initialise a session."
           unless (member domain-id found-domains :test #'equal)
             do (collect-domain (potato.db:load-instance 'potato.core:domain domain-id) nil))
         ;; Create the result tree
-        (st-json:jso "domains" (reverse tree))))))
+        (reverse tree)))))
 
 (define-api-method (api-channels2-screen "/channels2" nil ())
   (api-case-method
     (:get
-     (load-domain-and-channel-information-as-json (potato.core:current-user)))))
+     (st-json:jso "domains" (load-domain-and-channel-information-as-json (potato.core:current-user))))))
 
 (define-api-method (api-channel-info-screen "/channel/([a-z0-9]+)" t (cid))
   (api-case-method
