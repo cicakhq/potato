@@ -63,68 +63,71 @@
 
 (opts:define-opts
     (:name :potato
-           :description "Start potato web server"
-           :long "potato")
+     :description "Start potato web server"
+     :long "potato")
     (:name :state-server
-           :description "Start state server"
-           :long "state-server")
+     :description "Start state server"
+     :long "state-server")
   (:name :index
-         :description "Start the index manager"
-         :long "index")
+   :description "Start the index manager"
+   :long "index")
   (:name :content-processor
-         :description "Start the content processor"
-         :long "content-processor")
+   :description "Start the content processor"
+   :long "content-processor")
   (:name :email-updates
-         :description "Start the email updates server"
-         :long "email-updates")
+   :description "Start the email updates server"
+   :long "email-updates")
   (:name :full
-         :description "Start an instance with all services running in the same process"
-         :long "full")
+   :description "Start an instance with all services running in the same process"
+   :long "full")
+  (:name :debug
+   :description "Run the instance in debug mode. Used for development of Potato."
+   :long "debug")
   (:name :cmd
-         :description "Run administrative command"
-         :long "cmd"
-         :arg-parser #'identity)
+   :description "Run administrative command"
+   :long "cmd"
+   :arg-parser #'identity)
   (:name :init
-         :description "Initialise the database and exit the application"
-         :long "init")
+   :description "Initialise the database and exit the application"
+   :long "init")
   (:name :config
-         :description "Name of the configuration file (default: potato.cfg)"
-         :short #\c
-         :long "config"
-         :arg-parser #'identity)
+   :description "Name of the configuration file (default: potato.cfg)"
+   :short #\c
+   :long "config"
+   :arg-parser #'identity)
   (:name :swank-port
-         :short #\p
-         :description "Port number swank should be listening on"
-         :long "swank-port"
-         :arg-parser #'parse-port-number)
+   :short #\p
+   :description "Port number swank should be listening on"
+   :long "swank-port"
+   :arg-parser #'parse-port-number)
   (:name :service-name
-         :description "Name of the service (used to form the pid file name and default log file name)"
-         :short #\s
-         :long "service-name"
-         :arg-parser #'identity)
+   :description "Name of the service (used to form the pid file name and default log file name)"
+   :short #\s
+   :long "service-name"
+   :arg-parser #'identity)
   (:name :log-location
-         :description "Name of the log file"
-         :short #\l
-         :long "log-location"
-         :arg-parser #'identity)
+   :description "Name of the log file"
+   :short #\l
+   :long "log-location"
+   :arg-parser #'identity)
   (:name :log-level
-         :description "Log level (TRACE, DEBUG, INFO, WARNING, ERROR)"
-         :long "log-level"
-         :arg-parser #'parse-log-level)
+   :description "Log level (TRACE, DEBUG, INFO, WARNING, ERROR)"
+   :long "log-level"
+   :arg-parser #'parse-log-level)
   (:name :port
-         :description "Port number for the HTTP listener (used by the web server)"
-         :short #\P
-         :long "http-port"
-         :arg-parser #'parse-port-number)
+   :description "Port number for the HTTP listener (used by the web server)"
+   :short #\P
+   :long "http-port"
+   :arg-parser #'parse-port-number)
   (:name :websocket-port
-         :description "Port number for the websocket server (used by the web server)"
-         :short #\e
-         :long "websocket-port"
-         :arg-parser #'parse-port-number)
+   :description "Port number for the websocket server (used by the web server)"
+   :short #\e
+   :long "websocket-port"
+   :arg-parser #'parse-port-number)
   (:name :help
-         :description "Print help text"
-         :short #\h
-         :long "help"))
+   :description "Print help text"
+   :short #\h
+   :long "help"))
 
 (defmacro with-readable-errors (&body body)
   (let ((condition (gensym)))
@@ -258,6 +261,9 @@
 
       (alexandria:when-let ((value (getf options :websocket-port)))
         (setq potato:*websocket-listen-port* value))
+
+      (when (getf options :debug)
+        (setq potato.common:*debug* t))
 
       (dolist (module *default-modules*)
         (destructuring-bind (init-fn &key parameters) module
