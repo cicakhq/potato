@@ -81,8 +81,11 @@
    :description "Start an instance with all services running in the same process"
    :long "full")
   (:name :debug
-   :description "Run the instance in debug mode. Used for development of Potato."
+   :description "Run the instance in debug mode. Used for development of Potato"
    :long "debug")
+  (:name :allowed-origin
+   :description "When debug mode is on, this flag controls the value of the allowed-origin header"
+   :long "allowed-origin")
   (:name :cmd
    :description "Run administrative command"
    :long "cmd"
@@ -264,6 +267,9 @@
 
       (when (getf options :debug)
         (setq potato.common:*debug* t))
+
+      (alexandria:when-let ((value (getf options :allowed-origin)))
+        (setq potato:*allowed-origin* value))
 
       (dolist (module *default-modules*)
         (destructuring-bind (init-fn &key parameters) module

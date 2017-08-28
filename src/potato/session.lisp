@@ -33,8 +33,8 @@
   (with-memcached-warnings-muffled
     (let ((*current-user-session* nil))
       ;; In debug mode, we allow all CORS requests
-      (when *debug*
-        (setf (hunchentoot:header-out :access-control-allow-origin) "*"))
+      (when (and *debug* *allowed-origin*)
+        (setf (hunchentoot:header-out :access-control-allow-origin) *allowed-origin*))
       (call-next-method))))
 
 (defclass potato-web-request (hunchentoot:request)
