@@ -85,7 +85,8 @@
    :long "debug")
   (:name :allowed-origin
    :description "When debug mode is on, this flag controls the value of the allowed-origin header"
-   :long "allowed-origin")
+   :long "allowed-origin"
+   :arg-parser #'identity)
   (:name :cmd
    :description "Run administrative command"
    :long "cmd"
