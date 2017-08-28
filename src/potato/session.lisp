@@ -34,7 +34,8 @@
     (let ((*current-user-session* nil))
       ;; In debug mode, we allow all CORS requests
       (when (and *debug* *allowed-origin*)
-        (setf (hunchentoot:header-out :access-control-allow-origin) *allowed-origin*))
+        (setf (hunchentoot:header-out :access-control-allow-origin) *allowed-origin*)
+        (setf (hunchentoot:header-out :access-control-allow-credentials) "true"))
       (call-next-method))))
 
 (defclass potato-web-request (hunchentoot:request)
