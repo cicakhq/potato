@@ -9,6 +9,7 @@
 (defvar *listen-port* 8080)
 (defvar *websocket-listen-port* 8081)
 (defvar *external-websocket-listen-address* "ws://localhost:8081/ws")
+(defvar *allowed-origin* "http://localhost:8090")
 
 (defvar *smtp-server-host* nil)
 (defvar *smtp-server-port* 25)

@@ -24,7 +24,8 @@
            #:*allow-passwordless-login*
            #:*allow-password-recovery*
            #:*user-registration-validation-function*
-           #:init-dev-db))
+           #:init-dev-db
+           #:*allowed-origin*))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)
