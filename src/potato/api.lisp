@@ -158,6 +158,21 @@
     (:get (st-json:jso "version" "1"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Session API calls
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-user-init-screen "/user-session" nil ())
+  "This API call returns all the typical information a client needs.
+The purpose of this call is to reduce the number of roundtrips needed
+to initialise a session."
+  (api-case-method
+    (:get
+     (let ((user (potato.core:current-user)))
+       (st-json:jso "user" (user-as-json user)
+                    "channels" (load-domain-and-channel-information-as-json user)
+                    "websocket_url" *external-websocket-listen-address*)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Domain API calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -180,6 +195,12 @@
 ;; User API calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun user-as-json (user)
+  (st-json:jso "user" (st-json:jso "id" (potato.core:user/id user)
+                                   "description" (potato.core:user/description user)
+                                   "nickname" (potato.core:user/nickname user)
+                                   "image_name" (potato.core:user/image-name user))))
+
 (define-api-method (api-channel-users-screen "/channel/([a-z0-9]+)/users" t (channel-id))
   (api-case-method
     (:get (let* ((channel (potato.core:load-channel-with-check channel-id :if-not-joined :load))
@@ -199,11 +220,7 @@
      (let ((user (potato.db:load-instance 'potato.core:user uid :error-if-not-found nil)))
        (if (and user
                 (potato.core:common-user-domains (potato.core:current-user) uid))
-           (st-json:jso "user"
-                        (st-json:jso "id" (potato.core:user/id user)
-                                     "description" (potato.core:user/description user)
-                                     "nickname" (potato.core:user/nickname user)
-                                     "image_name" (potato.core:user/image-name user)))
+           (user-as-json user)
            (raise-api-error "User not found" hunchentoot:+http-not-found+))))))
 
 (define-api-method (api-download-user-image "/users/([^/]+)/image" t (uid) :result-as-json nil)
@@ -356,70 +373,73 @@
        for domain = (potato.db:load-instance 'potato.core:domain (potato.core:domain-user/domain domain-user))
        collect (group-and-channels-from-domain domain)))))
 
+(defun load-domain-and-channel-information-as-json (user)
+  (let* ((uid (potato.core:user/id user))
+         (domains (potato.core:load-domains-for-user uid))
+         (result (clouchdb:invoke-view "user" "channels_by_domain_and_user"
+                                       :start-key (list uid nil)
+                                       :end-key (list uid 'clouchdb:json-map)))
+         (rows (getfield :|rows| result))
+         (counterpart-ids (loop
+                            for v in rows
+                            for counterpart = (nth 6 (getfield :|value| v))
+                            when counterpart
+                              collect counterpart))
+         (counterpart-names (mapcar #'cons counterpart-ids
+                                    (potato.core:find-descriptions-for-users counterpart-ids))))
+    (let ((current-domain nil)
+          (current-channels nil)
+          (tree nil)
+          (found-domains nil))
+      (labels ((collect-domain (domain channels)
+                 (push (st-json:jso "id" (potato.core:domain/id domain)
+                                    "name" (potato.core:domain/name domain)
+                                    "domain-type" (symbol-name (potato.core:domain/domain-type domain))
+                                    "channels" channels)
+                       tree))
+               (collect-current-domain ()
+                 (when current-channels
+                   (collect-domain current-domain (reverse current-channels))
+                   (push (potato.core:domain/id current-domain) found-domains)
+                   (setq current-channels nil))))
+        ;; Go thorugh the list of channels and build the domain tree
+        (loop
+          for row in rows
+          do (destructuring-bind (cid name hide group group-type unread-count cpt-id)
+                 (getfield :|value| row)
+               (let ((domain-id (second (getfield :|key| row))))
+                 (when (or (null current-domain)
+                           (not (equal (potato.core:domain/id current-domain) domain-id)))
+                   (when current-domain
+                     (collect-current-domain))
+                   (setq current-domain (potato.db:load-instance 'potato.core:domain domain-id)))
+                 (push (st-json:jso "id" cid
+                                    "name" (if cpt-id
+                                               (or (cdr (assoc cpt-id counterpart-names
+                                                               :test #'string=))
+                                                   (error "No cpt name"))
+                                               name)
+                                    "hide" (st-json:as-json-bool hide)
+                                    "group" group
+                                    "group_type" group-type
+                                    "unread_count" unread-count
+                                    "private_user" (or cpt-id :null))
+                       current-channels)))
+          finally (collect-current-domain))
+        ;; At this point, there may be some domains left that has
+        ;; no channels, add them to the end.
+        (loop
+          for domain-user in domains
+          for domain-id = (potato.core:domain-user/domain domain-user)
+          unless (member domain-id found-domains :test #'equal)
+            do (collect-domain (potato.db:load-instance 'potato.core:domain domain-id) nil))
+        ;; Create the result tree
+        (st-json:jso "domains" (reverse tree))))))
+
 (define-api-method (api-channels2-screen "/channels2" nil ())
   (api-case-method
     (:get
-     (let* ((uid (potato.core:user/id (potato.core:current-user)))
-            (domains (potato.core:load-domains-for-user uid))
-            (result (clouchdb:invoke-view "user" "channels_by_domain_and_user"
-                                          :start-key (list uid nil)
-                                          :end-key (list uid 'clouchdb:json-map)))
-            (rows (getfield :|rows| result))
-            (counterpart-ids (loop
-                               for v in rows
-                               for counterpart = (nth 6 (getfield :|value| v))
-                               when counterpart
-                                 collect counterpart))
-            (counterpart-names (mapcar #'cons counterpart-ids
-                                       (potato.core:find-descriptions-for-users counterpart-ids))))
-       (let ((current-domain nil)
-             (current-channels nil)
-             (tree nil)
-             (found-domains nil))
-         (labels ((collect-domain (domain channels)
-                    (push (st-json:jso "id" (potato.core:domain/id domain)
-                                       "name" (potato.core:domain/name domain)
-                                       "domain-type" (symbol-name (potato.core:domain/domain-type domain))
-                                       "channels" channels)
-                          tree))
-                  (collect-current-domain ()
-                    (when current-channels
-                      (collect-domain current-domain (reverse current-channels))
-                      (push (potato.core:domain/id current-domain) found-domains)
-                      (setq current-channels nil))))
-           ;; Go thorugh the list of channels and build the domain tree
-           (loop
-             for row in rows
-             do (destructuring-bind (cid name hide group group-type unread-count cpt-id)
-                    (getfield :|value| row)
-                  (let ((domain-id (second (getfield :|key| row))))
-                    (when (or (null current-domain)
-                              (not (equal (potato.core:domain/id current-domain) domain-id)))
-                      (when current-domain
-                        (collect-current-domain))
-                      (setq current-domain (potato.db:load-instance 'potato.core:domain domain-id)))
-                    (push (st-json:jso "id" cid
-                                       "name" (if cpt-id
-                                                  (or (cdr (assoc cpt-id counterpart-names
-                                                                  :test #'string=))
-                                                      (error "No cpt name"))
-                                                  name)
-                                       "hide" (st-json:as-json-bool hide)
-                                       "group" group
-                                       "group_type" group-type
-                                       "unread_count" unread-count
-                                       "private_user" (or cpt-id :null))
-                          current-channels)))
-             finally (collect-current-domain))
-           ;; At this point, there may be some domains left that has
-           ;; no channels, add them to the end.
-           (loop
-             for domain-user in domains
-             for domain-id = (potato.core:domain-user/domain domain-user)
-             unless (member domain-id found-domains :test #'equal)
-               do (collect-domain (potato.db:load-instance 'potato.core:domain domain-id) nil))
-           ;; Create the result tree
-           (st-json:jso "domains" (reverse tree))))))))
+     (load-domain-and-channel-information-as-json (potato.core:current-user)))))
 
 (define-api-method (api-channel-info-screen "/channel/([a-z0-9]+)" t (cid))
   (api-case-method
