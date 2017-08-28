@@ -61,9 +61,8 @@
 
 (defun verify-api-token-and-run (url fn)
   (handler-case
-      (let ((api-token (hunchentoot:header-in* "api-token")))
-        (let ((potato.core::*current-auth-user* (load-user-from-api-token api-token)))
-          (funcall fn)))
+      (let ((potato.core::*current-auth-user* (load-user-from-api-token-or-session)))
+        (funcall fn))
     ;; Error handlers
     (api-error (condition)
       (log:debug "API error when calling ~a: ~a" url condition)
