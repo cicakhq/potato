@@ -304,6 +304,17 @@
                                            :|group_name| name
                                            :|group_type| group_type
                                            :|role| role)))))))))
+            (:|groups_for_user_nodomain|
+              ,(zs (lambda (doc)
+                     (with-slots (_id type name users group_type) doc
+                       (when (eql type #.(docname 'potato.core:group))
+                         (dolist (user users)
+                           (with-slots (user_id role) user
+                             (emit (list user_id role)
+                                   (create :|group| _id
+                                           :|group_name| name
+                                           :|group_type| group_type
+                                           :|role| role)))))))))
             (:|groups_and_users|
               ,(zs (lambda (doc)
                      (with-slots (_id type users) doc

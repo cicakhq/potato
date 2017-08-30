@@ -153,6 +153,14 @@
   (when (> length potato.core:*max-message-size*)
     (raise-api-error "Message is too large" hunchentoot:+http-request-entity-too-large+)))
 
+(defun group-as-json (group include-channels-p)
+  (st-json:jso
+   "id" (potato.core:group/id group)
+   "name" (potato.core:group/name group)
+   "type" (symbol-name (potato.core:group/type group))
+   (if include-channels-p
+       (list "channels" (api-load-channels-for-group group)))))
+
 (define-api-method (api-version-screen "/version" nil ())
   (api-case-method
     (:get (st-json:jso "version" "1"))))
@@ -256,6 +264,34 @@ to initialise a session."
            content)
          ;; ELSE: User not found or no image exists
          (raise-not-found))))))
+
+(define-api-method (api-groups-for-user-screen "/users/([^/]+)/groups" t (uid))
+  (api-case-method
+    (:get
+     (let* ((own-uid (potato.core:user/id (potato.core:current-user)))
+            (loading-own-user-p (equal own-uid uid))
+            (groups (clouchdb:invoke-view "group" "groups_for_user_nodomain"
+                                          :start-key (list uid nil)
+                                          :end-key (list uid 'clouchdb:json-map)))
+            (visible-group-ids (if loading-own-user-p
+                                   nil
+                                   (let ((visible-groups (clouchdb:invoke-view "group" "groups_for_user_nodomain"
+                                                                               :start-key (list own-uid nil)
+                                                                               :end-key (list own-uid 'clouchdb:json-map))))
+                                     ;; TODO: Merge this with the list of groups that are in domains
+                                     ;;       for which the user is admin.
+                                     (mapcar (lambda (row)
+                                               (getfield :|group| (getfield :|value| row)))
+                                             (getfield :|rows| visible-groups))))))
+       (loop
+         for row in (getfield :|rows| groups)
+         for value = (getfield :|value| row)
+         for gid = (getfield :|group| value)
+         when (or loading-own-user-p (member gid visible-group-ids :test #'equal))
+           collect (st-json:jso "id" gid
+                                "name" (getfield :|group_name| value)
+                                "type" (getfield :|group_type| value)
+                                "role" (getfield :|role| value)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message API calls
