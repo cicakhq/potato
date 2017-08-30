@@ -201,6 +201,16 @@ to initialise a session."
             (api-load-domain-info domain-id include-groups include-channels)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Group API calls
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-api-method (api-group-screen "/groups/([^/]+)" t (group-id))
+  (api-case-method
+    (:get (lofn:with-checked-parameters ((include-channels :type :boolean))
+            (let ((group (potato.core:load-group-with-check group-id)))
+              (group-as-json group include-channels))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User API calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -362,12 +372,7 @@ to initialise a session."
   (loop
     for group in (potato.core:find-groups-in-domain domain)
     when (potato.core:user-role-for-group group (potato.core:current-user))
-      collect (apply #'st-json:jso
-                     "id" (potato.core:group/id group)
-                     "name" (potato.core:group/name group)
-                     "type" (symbol-name (potato.core:group/type group))
-                     (if include-channels-p
-                         (list "channels" (api-load-channels-for-group group))))))
+      collect (group-as-json group include-channels-p)))
 
 (defun group-and-channels-from-domain (domain)
   (st-json:jso "id" (potato.core:domain/id domain)
