@@ -146,6 +146,15 @@
       (error "Error while posting message"))
     (values (st-json:getjso "id" res))))
 
+(defun delete-message (message-id &key (connection *connection*))
+  (check-type message-id string)
+  (check-type connection connection)
+  (let ((res (authenticated-request connection (format nil "/message/~a" message-id)
+                                    :method :delete)))
+    (unless (equal (st-json:getjso "result" res) "ok")
+      (error "Error while deleting message"))
+    nil))
+
 (defun list-users (channel-id &key (connection *connection*))
   (check-type channel-id string)
   (check-type connection connection)

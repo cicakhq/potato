@@ -17,4 +17,5 @@
            #:subscribe-to-channel
            #:message-history
            #:load-domain
-           #:user-image))
+           #:user-image
+           #:delete-message))
