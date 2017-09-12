@@ -38,6 +38,7 @@
         (setf (hunchentoot:header-out :access-control-allow-credentials) "true"))
       (when *force-https*
         (setf (hunchentoot:header-out :strict-transport-security) "max-age=15768000"))
+      (setf (hunchentoot:header-out :referrer-policy) "no-referrer")
       (call-next-method))))
 
 (defclass potato-web-request (hunchentoot:request)
