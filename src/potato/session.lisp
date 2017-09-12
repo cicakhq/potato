@@ -36,6 +36,8 @@
       (when (and *debug* *allowed-origin*)
         (setf (hunchentoot:header-out :access-control-allow-origin) *allowed-origin*)
         (setf (hunchentoot:header-out :access-control-allow-credentials) "true"))
+      (when *force-https*
+        (setf (hunchentoot:header-out :strict-transport-security) "max-age=15768000"))
       (call-next-method))))
 
 (defclass potato-web-request (hunchentoot:request)
