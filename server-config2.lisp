@@ -221,7 +221,7 @@
             (update :gcm-key potato.gcm:*gcm-authorisation-key* #'string-or-nil-p)
             (update :allow-passwordless-login potato:*allow-passwordless-login* (constantly t))
             (update :allow-password-reset potato:*allow-password-recovery* (constantly t))
-            (update :https-only potato.common:*force-https* (constantly t)))
+            (update :force-https potato.common:*force-https* (constantly t)))
           result)
         ;; ELSE: Config file not found, print a warning
         (progn
