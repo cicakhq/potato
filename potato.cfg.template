@@ -114,4 +114,8 @@
  ;; "forgot password" link on the login screen.
  (:allow-password-reset . t)
 
+ ;; If true, various security features will be enabled that expects
+ ;; that the client only connects via HTTPS.
+ (:force-https . nil)
+
  )

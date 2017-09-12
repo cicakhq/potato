@@ -132,7 +132,8 @@
            #:truncate-string
            #:*apns-exchange-name*
            #:*apns-management-exchange-name*
-           #:*apns-management-queue-name*))
+           #:*apns-management-queue-name*
+           #:*force-https*))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)
@@ -171,3 +172,4 @@
           '(optimize (speed 0) (safety 3) (debug 3))))))
 
 (defvar *debug* t)
+(defvar *force-https* nil)

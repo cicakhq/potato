@@ -153,7 +153,10 @@
                                          :user-id nil
                                          :cookie-value (ironclad:byte-array-to-hex-string (secure-random:bytes 64 secure-random:*generator*)))))
              (update-persisted-session-data session)
-             (hunchentoot:set-cookie *session-cookie-name* :value (user-session/cookie-value session) :path "/")
+             (hunchentoot:set-cookie *session-cookie-name* :value (user-session/cookie-value session)
+                                                           :path "/"
+                                                           :secure *force-https*
+                                                           :http-only t)
              session)))
 
     (or *current-user-session*

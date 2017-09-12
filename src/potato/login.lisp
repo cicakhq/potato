@@ -63,7 +63,9 @@ are correct.")
                                              (encode-name (login-reference/user ref))
                                              (encode-name (login-reference/key ref)))
                               :expires (login-reference/expires ref)
-                              :path "/"))))
+                              :path "/"
+                              :secure *force-https*
+                              :http-only t))))
 
 (defun load-ref-from-cookie-value (value)
   (multiple-value-bind (match strings)
