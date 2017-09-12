@@ -99,7 +99,7 @@ credentials. This function returns the current session."
         (when (and cookie (not (equal cookie "")))
           (unless (load-autologin-user cookie)
             ;; We had a cookie, but there was no login data or the data has expired
-            (hunchentoot:set-cookie "loginkey" :value "" :path "/")))))
+            (hunchentoot:set-cookie "loginkey" :value "" :path "/" :secure *force-https* :http-only t)))))
     session))
 
 (defun validate-cookie-and-find-user ()
@@ -247,7 +247,7 @@ credentials. This function returns the current session."
   (update-user-session nil)
   (alexandria:when-let ((ref (load-ref-from-cookie)))
     (potato.db:remove-instance ref))
-  (hunchentoot:set-cookie "loginkey" :value "" :path "/")
+  (hunchentoot:set-cookie "loginkey" :value "" :path "/" :secure *force-https* :http-only t)
   (hunchentoot:redirect "/"))
 
 (lofn:define-handler-fn (forgot-password-screen "/forgot-password" nil ())
