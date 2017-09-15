@@ -154,12 +154,12 @@
     (raise-api-error "Message is too large" hunchentoot:+http-request-entity-too-large+)))
 
 (defun group-as-json (group include-channels-p)
-  (st-json:jso
-   "id" (potato.core:group/id group)
-   "name" (potato.core:group/name group)
-   "type" (symbol-name (potato.core:group/type group))
-   (if include-channels-p
-       (list "channels" (api-load-channels-for-group group)))))
+  (apply #'st-json:jso
+         "id" (potato.core:group/id group)
+         "name" (potato.core:group/name group)
+         "type" (symbol-name (potato.core:group/type group))
+         (if include-channels-p
+             (list "channels" (api-load-channels-for-group group)))))
 
 (define-api-method (api-version-screen "/version" nil ())
   (api-case-method
