@@ -41,7 +41,21 @@
       (setf (hunchentoot:header-out :referrer-policy) "no-referrer")
       (setf (hunchentoot:header-out :x-frame-options) "DENY")
       (setf (hunchentoot:header-out :x-xss-protection) "1; mode=block")
-      (call-next-method))))
+      ;; If the request is a CORS preflight request, only allow it in debug mode
+      (cond ((not (and (eq (hunchentoot:request-method*) :options)
+                       (hunchentoot:header-in* "access-control-request-method")))
+             ;; This is not a CORS preflight request
+             (call-next-method))
+            (*debug*
+             ;; CORS preflight is always allowed in debug mode
+             (setf (hunchentoot:header-out :access-control-allow-methods) "GET,POST,PUT,DELETE")
+             (setf (hunchentoot:header-out :access-control-allow-headers) "api-token")
+             (setf (hunchentoot:return-code*) hunchentoot:+http-ok+)
+             "")
+            (t
+             ;; If not in debug mode, just deny the preflight request
+             (setf (hunchentoot:return-code*) hunchentoot:+http-bad-request+)
+             "")))))
 
 (defclass potato-web-request (hunchentoot:request)
   ()
