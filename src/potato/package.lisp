@@ -410,7 +410,9 @@
            #:add-new-channel-binding-async
            #:verify-queue-name
            #:*session-notification-unknown-slashcommand*
-           #:*session-notification-option*))
+           #:*session-notification-option*
+           #:remove-channel-binding
+           #:remove-channel-binding-async))
 
 (defpackage :potato.rabbitmq-channels
   (:use :cl :potato :potato.common)

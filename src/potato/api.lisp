@@ -52,6 +52,7 @@
 
 (defun load-user-from-api-token-or-session ()
   (let ((api-token (hunchentoot:header-in* "api-token")))
+    (log:info "Got api token: ~s" api-token)
     (if api-token
         (load-user-from-api-token api-token)
         (let ((user (potato.core:validate-cookie-and-find-user)))
@@ -615,23 +616,32 @@ name and group are required, while the topic parameter is optional."
                                  (service-names :name "services" :required nil))
     (api-case-method
       (:post
-       (let ((services (if service-names
-                           (parse-service-names service-names)
-                           '(:content-p t)))
-             (channel (potato.core:load-channel-with-check cid :if-not-joined :join)))
-         (unless (equal command "add")
-           (raise-api-error "Only command add is currently supported" hunchentoot:+http-bad-request+))
-         (destructuring-bind (&key content-p user-state-p channel-updates-p &allow-other-keys) services
-           (unless (or content-p user-state-p channel-updates-p)
-             (raise-api-error "Illegal services: at least one of content, state, channel is required"
-                              hunchentoot:+http-bad-request+))
-           (potato.rabbitmq-notifications:verify-queue-name event-id nil)
-           (with-pooled-rabbitmq-connection (conn)
-             (potato.rabbitmq-notifications:add-new-channel-binding conn 1 event-id (potato.core:channel/id channel)
-                                                                    :content-p content-p
-                                                                    :user-state-p user-state-p
-                                                                    :channel-updates-p channel-updates-p))
-           (st-json:jso "result" "ok")))))))
+       (string-case:string-case (command)
+         ("add"
+          (let ((services (if service-names
+                              (parse-service-names service-names)
+                              '(:content-p t)))
+                (channel (potato.core:load-channel-with-check cid :if-not-joined :join)))
+            (destructuring-bind (&key content-p user-state-p channel-updates-p &allow-other-keys) services
+              (unless (or content-p user-state-p channel-updates-p)
+                (raise-api-error "Illegal services: at least one of content, state, channel is required"
+                                 hunchentoot:+http-bad-request+))
+              (potato.rabbitmq-notifications:verify-queue-name event-id nil)
+              (with-pooled-rabbitmq-connection (conn)
+                (potato.rabbitmq-notifications:add-new-channel-binding conn 1 event-id (potato.core:channel/id channel)
+                                                                       :content-p content-p
+                                                                       :user-state-p user-state-p
+                                                                       :channel-updates-p channel-updates-p)))))
+         ("remove"
+          (potato.rabbitmq-notifications:verify-queue-name event-id nil)
+          (format *out* "Removing binding ~s for channel ~s" event-id cid)
+          #+nil
+          (with-pooled-rabbitmq-connection (conn)
+            (let ((channel (potato.core:load-channel-with-check cid)))
+              (potato.rabbitmq-notifications:remove-channel-binding conn 1 event-id (potato.core:channel/id channel)))))
+         (t
+          (raise-api-error "Unknown command" hunchentoot:+http-bad-request+)))
+       (st-json:jso "result" "ok")))))
 
 (define-api-method (api-download-screen "/download/([^/]+)" t (key) :result-as-json nil)
   (api-case-method

@@ -119,6 +119,25 @@
   (when user-state-p
     (r cid queue-name)))
 
+(define-async-sync-function remove-channel-binding remove-channel-binding-async
+    ((u cl-rabbit:queue-unbind cl-rabbit-async:async-queue-unbind))
+    (queue-name cid)
+  "Removes the channel binding for CID on queue QUEUE-NAME"
+  (u :queue queue-name
+     :exchange *channel-content-exchange-name*
+     :routing-key cid)
+  (u :queue queue-name
+     :exchange *state-server-sender-exchange-name*
+     :routing-key (format nil "change.*.~a.*.all" cid))
+  (u :queue queue-name
+     :exchange *state-server-sender-exchange-name*
+     :routing-key (format nil "sync.*.~a.*.~a"
+                          (encode-name-for-routing-key cid)
+                          (encode-name-for-routing-key queue-name)))
+  (u :queue queue-name
+     :exchange *channel-exchange-name*
+     :routing-key (format nil "*.~a" (encode-name-for-routing-key cid))))
+
 (define-async-sync-function create-and-bind-notifications-queue create-and-bind-notifications-queue-async
     ((d declare-notifications-queue declare-notifications-queue-async)
      (b cl-rabbit:queue-bind cl-rabbit-async:async-queue-bind)
