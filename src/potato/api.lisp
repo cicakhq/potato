@@ -600,7 +600,7 @@ name and group are required, while the topic parameter is optional."
     (let* ((services (if service-names
                          (parse-service-names service-names)
                          '(:content-p t)))
-           (cids (if (equal channel-names "")
+           (cids (if (or (null channel-names) (equal channel-names ""))
                      nil
                      (split-sequence:split-sequence #\, channel-names)))
            (channels (mapcar (lambda (cid)
