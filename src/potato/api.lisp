@@ -52,7 +52,6 @@
 
 (defun load-user-from-api-token-or-session ()
   (let ((api-token (hunchentoot:header-in* "api-token")))
-    (log:info "Got api token: ~s" api-token)
     (if api-token
         (load-user-from-api-token api-token)
         (let ((user (potato.core:validate-cookie-and-find-user)))
