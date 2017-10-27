@@ -444,7 +444,7 @@ to initialise a session."
       (labels ((collect-domain (domain channels)
                  (push (st-json:jso "id" (potato.core:domain/id domain)
                                     "name" (potato.core:domain/name domain)
-                                    "domain-type" (symbol-name (potato.core:domain/domain-type domain))
+                                    "type" (symbol-name (potato.core:domain/domain-type domain))
                                     "channels" channels)
                        tree))
                (collect-current-domain ()
@@ -633,7 +633,6 @@ name and group are required, while the topic parameter is optional."
                                                                        :channel-updates-p channel-updates-p)))))
          ("remove"
           (potato.rabbitmq-notifications:verify-queue-name event-id nil)
-          (format *out* "Removing binding ~s for channel ~s" event-id cid)
           #+nil
           (with-pooled-rabbitmq-connection (conn)
             (let ((channel (potato.core:load-channel-with-check cid)))
