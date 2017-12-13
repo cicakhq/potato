@@ -235,8 +235,6 @@
 domain is anything that comes after the @ sign in an email
 address. Users with an email address that matches the registered
 addresses will be allowed to join this domain."
-  (unless (potato.core:is-allowed-email-p email)
-    (error "Illegal email format: ~s~%" email))
   (let ((d (potato.db:load-instance 'potato.core:domain domain)))
     (if (find email (potato.core:domain/email-domains d) :test #'string=)
         (format t "Email already added to domain~%")
