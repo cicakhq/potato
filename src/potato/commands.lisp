@@ -175,15 +175,30 @@
      (nickname "The nickname to be associated with the domain, or the empty string to remove the nickname"))
     ()
     "Set the nickname for a domain"
-    "Sets the nickname for the given domain. If the domain already had a nickname, the old one will become available for a different domain."
+    "Sets the nickname for the given domain. If the domain already had
+a nickname, the old one will become available for a different domain."
   (potato.core:set-nickname-for-domain domain (if (equal nickname "") nil nickname)))
+
+(define-command update-domain-join-default "update-domain-join-default"
+    ((domain "The id of the domain")
+     (join-default "A boolean indicating the join-default state"))
+    ()
+    "Update the join-default value for a domain"
+    "Updates the join-default value for a given domain. If true, then
+any user who registers and has access to the domain will be
+automatically joined when their user is created."
+  (let ((domain (potato.db:load-instance 'potato.core:domain domain)))
+    (setf (potato.core:domain/join-default domain) (arg-is-active join-default))
+    (potato.db:save-instance domain)))
 
 (define-command set-domain-admin "set-domain-admin"
     ((domain "The id of the domain")
      (user "The user id of the user that should be set as admin"))
     ()
     "Gives admin rights to a domain"
-    "The given user is desigated as an administator of the given domain. This command will only work for users that are already members of the domain."
+    "The given user is desigated as an administator of the given
+domain. This command will only work for users that are already members
+of the domain."
   (let ((domain (potato.db:load-instance 'potato.core:domain domain))
         (user (potato.db:load-instance 'potato.core:user user)))
     (potato.core:update-domain-user-role domain user :admin))
