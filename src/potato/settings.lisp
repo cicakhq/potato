@@ -77,4 +77,5 @@
                           (show-update-password-screen "Password can't be blank"))
                          ((plusp (length password1))
                           (potato.core:user/update-password loaded-user password1)
+                          (potato.db:save-instance loaded-user)
                           (hunchentoot:redirect "/"))))))))))
