@@ -452,6 +452,9 @@ id's. Returns the updated value."
     (om/transact! (state-root) [:channels cid :options]
       (fn [_] e))))
 
+(defn- handle-unknown-slashcommand [e]
+  (cljs.pprint/cl-format true "Should display error message here. Unknown command: ~a" (:cmd e)))
+
 (defn dispatch-notification-entry [entry async-channel]
   (cljs.pprint/cl-format true "Got server message: ~s" entry)
   (case (:type entry)
@@ -488,6 +491,9 @@ id's. Returns the updated value."
     ;; Interactive options
     "option"
     (handle-interactive-option entry)
+    ;; Unknown slashcommand
+    "unknown-slashcommand"
+    (handle-unknown-slashcommand entry)
     ;; Log any unhandled event types
     (cljs.pprint/cl-format true "Unknown type: ~s" entry)))
 
