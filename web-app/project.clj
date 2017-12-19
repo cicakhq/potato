@@ -26,7 +26,7 @@
                                                                    ring/ring-core
                                                                    commons-fileupload
                                                                    clj-time]]
-                             [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure
+                             [cider/cider-nrepl "0.16.0-SNAPSHOT" :exclusions [org.clojure/clojure
                                                                                org.clojure/tools.nrepl]]]}}
 
   :cljsbuild {:builds
