@@ -133,7 +133,8 @@
            #:*apns-exchange-name*
            #:*apns-management-exchange-name*
            #:*apns-management-queue-name*
-           #:*force-https*))
+           #:*force-https*
+           #:s3-wasabi-enabled))
 
 (defpackage :potato.common.timer
   (:use :cl :potato.common)

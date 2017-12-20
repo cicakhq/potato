@@ -49,7 +49,12 @@
    (when (s3-enabled-p)
      (let ((hash (make-hash-table :test #'equalp)))
        (setf (gethash '("s3.amazonaws.com" *s3-bucket* *s3-access-key*) hash) "the-potato.s3.amazonaws.com")
-       (setf zs3::*permanent-redirects* hash)))))
+       (setf zs3::*permanent-redirects* hash)
+       (when (s3-wasabi-enabled)
+         (setq zs3:*s3-endpoint* "s3.wasabisys.com"))))))
+
+(defun s3-wasabi-enabled ()
+  (cl-ppcre:scan "^https?://s3.wasabisys.com/" *s3-endpoint*))
 
 (defun zs3-authorized-url (&key bucket key vhost expires ssl sub-resource content-disposition content-type
                          ((:credentials zs3:*credentials*) zs3:*credentials*))

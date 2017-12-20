@@ -260,14 +260,16 @@ Parameters"
   "Find the :VHOST parameter for the given endpoint.
 This is a bit hackish, and is only needed because ZS3 has some hardcoded
 values for Amazon."
-  (if (cl-ppcre:scan "^https?://s3.wasabisys.com/" *s3-endpoint*) :wasabi :amazon))
+  (if (s3-wasabi-enabled)
+      :wasabi
+      :amazon))
 
 (defun download-s3 (file)
   (check-s3-active)
   (let ((url (zs3-authorized-url :bucket *s3-bucket*
                                  :key (file/key file)
                                  :expires (+ (get-universal-time) 60)
-                                 :vhost (find-vhost)
+                                 :vhost :amazon
                                  :content-disposition (format nil "inline; filename*=~a" (encode-rfc5987 (file/name file)))
                                  :content-type (or (file/mime-type file) "binary/octet-stream")
                                  :ssl t)))

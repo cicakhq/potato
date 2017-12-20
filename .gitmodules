@@ -22,3 +22,6 @@
 [submodule "vendor/html5-notification"]
 	path = vendor/html5-notification
 	url = https://github.com/lokedhs/html5-notification
+[submodule "vendor/zs3"]
+	path = vendor/zs3
+	url = https://github.com/lokedhs/zs3

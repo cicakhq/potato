@@ -10,6 +10,19 @@
 (defgeneric process-result (task result)
   (:documentation "Called after the image has been converted"))
 
+(defun find-image-convert-result (out-string error-string)
+  (let ((out-parts (split-sequence:split-sequence #\Newline out-string)))
+    (if (equal (first out-parts) "")
+        (let ((parts (split-sequence:split-sequence #\Newline error-string)))
+          (if (= (length parts) 3)
+              (second parts)
+              nil))
+        ;; ELSE: Check stdout
+        (if (= (length out-parts) 2)
+            (first out-parts)
+            nil))))
+
+(defvar *err* nil)
 (defun resize-and-convert-image (infile outfile width height)
   "Resize INFILE using the given WIDTH and HEIGHT and write the output
 to OUTFILE. Returns a list of two values: the resulting width and
@@ -21,17 +34,28 @@ height, or NIL if the resulting size could not be determined."
                                           "-resize"
                                           (format nil "~ax~a" width height)
                                           (namestring outfile))
+                                    :output :string
                                     :error-output :string)
-    (declare (ignore out-string))
+    (log:info "args: ~s" (list *imagemagick-convert-program*
+                                          "-verbose"
+                                          (namestring infile)
+                                          "-resize"
+                                          (format nil "~ax~a" width height)
+                                          (namestring outfile)))
+    (setq *err* error-string)
     ;; The output from convert -verbose are two lines on stderr of the following form:
     ;;   f.png PNG 1186x1427 1186x1427+0+0 8-bit DirectClass 70.6KB 0.020u 0:00.019
     ;;   f.png=>foo.png PNG 1186x1427=>166x200 166x200+0+0 8-bit DirectClass 4.1KB 0.110u 0:00.019
-    (let ((parts (split-sequence:split-sequence #\Newline error-string)))
-      (print parts)
-      (when (= (length parts) 3)
+    ;;
+    ;; There seems to be two versions of this program. The first version sends all output to stderr
+    ;; while the second sends the first line to stderr and the other to stdout. We need to handle
+    ;; both of these cases.
+    (let ((row (find-image-convert-result out-string error-string)))
+      (log:trace "Result from convert call: ~s" row)
+      (when row
         (multiple-value-bind (match strings)
             (cl-ppcre:scan-to-strings "^[a-zA-Z0-9._/-]+=>[a-zA-Z0-9._/-]+ [A-Z]+ [0-9]+x[0-9]+=>([0-9]+)x([0-9]+)"
-                                      (second parts))
+                                      row)
           (if match
               (list (parse-integer (aref strings 0)) (parse-integer (aref strings 1)))
               (progn
@@ -42,6 +66,7 @@ height, or NIL if the resulting size could not be determined."
   (unwind-protect
        (with-temp-file (name ".png")
          (when (resize-and-convert-image (namestring input) name width height)
+           (break)
            (funcall callback name)))
     ;; Unwind form: delete the input file
     (delete-file input)))
@@ -75,6 +100,7 @@ height, or NIL if the resulting size could not be determined."
         (destructuring-bind (ext) (cdr type-data)
           (let ((ext-with-period (concatenate 'string "." ext)))
             (with-temp-file (infile ext-with-period)
+              (log:trace "Downloading file ~s to ~s" file-id infile)
               (potato.upload:download-file-by-filesource file-id infile)
               (with-temp-file (outfile ext-with-period)
                 (alexandria:when-let ((size (resize-and-convert-image infile outfile *resized-width* *resized-height*)))
