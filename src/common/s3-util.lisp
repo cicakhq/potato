@@ -52,44 +52,75 @@
        (setf zs3::*permanent-redirects* hash)))))
 
 (defun zs3-authorized-url (&key bucket key vhost expires ssl sub-resource content-disposition content-type
-                             ((:credentials zs3:*credentials*) zs3:*credentials*))
+                         ((:credentials zs3:*credentials*) zs3:*credentials*))
   (unless (and expires (integerp expires) (plusp expires))
     (error "~S option must be a positive integer" :expires))
-
-  (let* ((extra-parameters (append (if content-disposition
+  (let* ((region (zs3::bucket-region bucket))
+         (region-endpoint (zs3::region-endpoint region))
+         (endpoint (case vhost
+                     (:cname bucket)
+                     (:amazon (format nil "~A.~A" bucket region-endpoint))
+                     (:wasabi (format nil "~a.s3.wasabisys.com" bucket))
+                     ((nil) region-endpoint)))
+         (extra-parameters (append (if content-disposition
                                        (list (cons "response-content-disposition" content-disposition)))
                                    (if content-type
                                        (list (cons "response-content-type" content-type)))))
-
          (request (make-instance 'zs3::url-based-request
                                  :method :get
                                  :bucket bucket
+                                 :region region
+                                 :endpoint endpoint
                                  :sub-resource sub-resource
                                  :key key
                                  :expires (zs3::unix-time expires)
-                                 :parameters extra-parameters))
-
-         (parameters
-           (zs3::alist-to-url-encoded-string
-            (list* (cons "AWSAccessKeyId" (zs3:access-key zs3:*credentials*))
-                   (cons "Expires" (format nil "~D" (zs3::expires request)))
-                   (cons "Signature" (zs3::signature request))
-                   extra-parameters))))
-    (log:trace "Creating authorised url. key=~s, parameters=~s" key parameters)
-    (case vhost
-      (:cname
-       (format nil "http~@[s~*~]://~A/~@[~A~]?~@[~A&~]~A"
-               ssl bucket (zs3::url-encode key) sub-resource parameters))
-      (:amazon
-       (format nil "http~@[s~*~]://~A.s3.amazonaws.com/~@[~A~]?~@[~A&~]~A"
-               ssl bucket (zs3::url-encode key) sub-resource parameters))
-      (:google
-       (format nil "http~@[s~*~]://~A.storage.googleapis.com/~@[~A~]?~@[~A&~]~A"
-               ssl bucket (zs3::url-encode key) sub-resource parameters))
-      ((nil)
-       (format nil "http~@[s~*~]://s3.amazonaws.com/~@[~A/~]~@[~A~]?~@[~A&~]~A"
-               ssl (zs3::url-encode bucket) (zs3::url-encode key) sub-resource
-                   parameters)))))
+                                 :parameters extra-parameters)))
+    (setf (zs3::amz-headers request) nil)
+    (setf (zs3::parameters request)
+          (zs3:parameters-alist "X-Amz-Algorithm" "AWS4-HMAC-SHA256"
+                            "X-Amz-Credential"
+                            (format nil "~A/~A/~A/s3/aws4_request"
+                                    (zs3:access-key zs3:*credentials*)
+                                    (zs3::iso8601-basic-date-string (zs3::date request))
+                                    (zs3::region request))
+                            "X-Amz-Date" (zs3::iso8601-basic-timestamp-string (zs3::date request))
+                            "X-Amz-Expires" (- expires (get-universal-time))
+                            "X-Amz-SignedHeaders"
+                            (format nil "~{~A~^;~}" (zs3::signed-headers request))))
+    (setf (zs3::parameters request) (append (zs3::parameters request) extra-parameters))
+    (push (cons "X-Amz-Signature" (zs3::request-signature request))
+          (zs3::parameters request))
+    (let ((parameters (zs3::alist-to-url-encoded-string (zs3::parameters request))))
+      (case vhost
+        (:cname
+         (format nil "http~@[s~*~]://~A/~@[~A~]?~@[~A&~]~A"
+                 ssl
+                 bucket
+                 (zs3::url-encode key :encode-slash nil)
+                 sub-resource
+                 parameters))
+        (:amazon
+         (format nil "http~@[s~*~]://~A/~@[~A~]?~@[~A&~]~A"
+                 ssl
+                 endpoint
+                 (zs3::url-encode key :encode-slash nil)
+                 sub-resource
+                 parameters))
+        (:wasabi
+         (format nil "http~@[s~*~]://~A/~@[~A~]?~@[~A&~]~A"
+                 ssl
+                 endpoint
+                 (zs3::url-encode key :encode-slash nil)
+                 sub-resource
+                 parameters))
+        ((nil)
+         (format nil "http~@[s~*~]://~A/~@[~A/~]~@[~A~]?~@[~A&~]~A"
+                 ssl
+                 endpoint
+                 (zs3::url-encode bucket)
+                 (zs3::url-encode key :encode-slash nil)
+                 sub-resource
+                 parameters))))))
 
 (defmethod zs3::signed-path ((request zs3::request))
   (let ((*print-pretty* nil))
