@@ -107,7 +107,8 @@ height, or NIL if the resulting size could not be determined."
                   (let* ((pictures-key (format nil "~a~a" (make-random-name 40) ext-with-period))
                          (uploaded-file (potato.upload:upload-file-by-name outfile pictures-key
                                                                            (potato.upload:file/mime-type file)
-                                                                           message-id)))
+                                                                           message-id
+                                                                           "images")))
                     (log:trace "Converted image: ~s" uploaded-file)
                     (cl-rabbit:basic-publish conn 1
                                              :exchange *chat-image-converter-response-exchange-name*

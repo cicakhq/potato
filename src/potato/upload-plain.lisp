@@ -20,7 +20,7 @@
 storage and update the FILE instance to indicate that the file has
 been saved."))
 
-(defgeneric upload-manager/create-file (upload-manager user channel filename mime-type)
+(defgeneric upload-manager/create-file (upload-manager user channel filename mime-type subdirectory)
   (:documentation "Returns the key for the given file"))
 
 (defgeneric upload-manager/copy-storage-to-stream (upload-manager file stream)
@@ -33,7 +33,7 @@ been saved."))
 (defun process-multipart-upload (upload-manager cid filename content-type uploaded-file)
   (ecase *default-upload-location*
     (:s3
-     (let ((file (create-file-s3 (potato.core:current-user) cid filename content-type uploaded-file)))
+     (let ((file (create-file-s3 (potato.core:current-user) cid filename content-type uploaded-file nil)))
        (send-file-upload-message-to-channel file)))
     (:file
      (let* ((channel (potato.core:load-channel-with-check cid))
@@ -71,15 +71,16 @@ been saved."))
          :reader directory-upload-manager/path
          :documentation "Root directory of the file storage")))
 
-(defmethod upload-manager/create-file ((upload-manager directory-upload-manager) user channel filename mime-type)
+(defmethod upload-manager/create-file ((upload-manager directory-upload-manager) user channel filename mime-type subdirectory)
   (let ((user (potato.core:ensure-user user))
         (channel (potato.core:ensure-channel channel)))
     (multiple-value-bind (match strings)
         (cl-ppcre:scan-to-strings ".+(\\.[^.]+)$" filename)
       (let* ((cid (potato.core:channel/id channel))
-             (key (format nil "~a/~a/~a~a"
+             (key (format nil "~a/~a/~@[~a/~]~a~a"
                           (potato.core:channel/domain channel)
                           cid
+                          subdirectory
                           (make-random-name 40)
                           (if match (aref strings 0) ""))))
         (let ((file (make-instance 'file
@@ -161,7 +162,7 @@ been saved."))
                                             :if-exists :supersede)
                (upload-manager/copy-storage-to-stream *file-upload-manager* (file/key file) s))))))
 
-(defun upload-file-by-name (input-file destination-name mime-type message)
+(defun upload-file-by-name (input-file destination-name mime-type message subdirectory)
   (let ((message (potato.core:ensure-message message)))
     (ecase *default-upload-location*
       (:s3
@@ -169,13 +170,15 @@ been saved."))
                        (potato.core:message/channel message)
                        destination-name
                        mime-type
-                       input-file))
+                       input-file
+                       subdirectory))
       (:file
        (let ((file (upload-manager/create-file *file-upload-manager*
                                                (potato.core:message/from message)
                                                (potato.core:message/channel message)
                                                destination-name
-                                               mime-type)))
+                                               mime-type
+                                               subdirectory)))
          (with-open-file (s input-file :direction :input :element-type '(unsigned-byte 8))
            (upload-manager/copy-stream-to-storage *file-upload-manager* s file))
          file)))))

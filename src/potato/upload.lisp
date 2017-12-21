@@ -210,15 +210,16 @@
               (send-file-upload-message-to-channel file)
               (st-json:write-json-to-string (st-json:jso "file" (file/name file))))))))))
 
-(defun create-file-s3 (user channel filename mime-type input-file)
+(defun create-file-s3 (user channel filename mime-type input-file subdirectory)
   (let ((user (potato.core:ensure-user user))
         (channel (potato.core:ensure-channel channel)))
     (multiple-value-bind (match strings)
         (cl-ppcre:scan-to-strings ".+(\\.[^.]+)$" filename)
       (let* ((cid (potato.core:channel/id channel))
-             (key (format nil "~a/~a/~a~a"
-                          (potato.core:channel/domain channel)
+             (key (format nil "~a/~a/~@[~a/~]~a~a"
+                          *s3-directory*
                           cid
+                          subdirectory
                           (make-random-name 40)
                           (if match (aref strings 0) "")))
              (file (make-instance 'file
