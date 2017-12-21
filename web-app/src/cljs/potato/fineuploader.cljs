@@ -37,7 +37,7 @@
 (defn create-fine-uploader-s3 [instance-callback current-user-id current-channel-id]
   ;; Workaround for a bug in fineuploader that prevents it from using
   ;; the "bucket" key in the "request" struct.
-  ;;(set! js/qq.s3.util.getBucket (fn [_] (:bucket potato.state/init-s3-credentials)))
+  (set! js/qq.s3.util.getBucket (fn [_] (:bucket potato.state/init-s3-credentials)))
   ;;
   (new js/qq.s3.FineUploaderBasic
        (clj->js {"request"          {"endpoint"  (:endpoint potato.state/init-s3-credentials)
