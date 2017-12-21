@@ -394,33 +394,34 @@
                               :close-callback #'handle-channel-closed)))
 
                (unwind-protect
-                    (if http-event
-                        ;; The client gave us a queue name, check that it exists and is idle
-                        (multiple-value-bind (queue-name num-messages num-consumers)
-                            (declare-notifications-queue-async rchannel http-event t)
-                          (declare (ignore queue-name num-messages))
-                          (unless (zerop num-consumers)
-                            (error "Queue is not idle: ~s" http-event)))
-                        ;; ELSE: Need to declare a new queue
-                        (progn
-                          (log:warn "No support for client sessions in eventsource implementation")
-                          (let ((queue (create-and-bind-notifications-queue-async rchannel user (list channel) services nil)))
-                            (setq http-event queue)
-                            (format stream "id:~a~a~a" queue +nl+ +nl+)
-                            (finish-output stream))))
-                 (potato.core:refresh-user user channel (* *ping-interval* 2))
-                 (bordeaux-threads:with-lock-held (lock)
-                   (let ((v (cl-rabbit-async:async-basic-consume rchannel http-event :no-ack t)))
-                     (setq consumer-tag v)))
-                 (bordeaux-threads:with-lock-held (lock)
-                   (schedule-notification-timer))
-                 (loop
-                   for finished-p = (multiple-value-bind (sockets remaining)
-                                        (usocket:wait-for-input (list socket) :ready-only t)
-                                      (declare (ignore remaining))
-                                      (member socket sockets))
-                   until finished-p)
-                 (log:trace "Connection dropped")
+                    (progn
+                      (if http-event
+                          ;; The client gave us a queue name, check that it exists and is idle
+                          (multiple-value-bind (queue-name num-messages num-consumers)
+                              (declare-notifications-queue-async rchannel http-event t)
+                            (declare (ignore queue-name num-messages))
+                            (unless (zerop num-consumers)
+                              (error "Queue is not idle: ~s" http-event)))
+                          ;; ELSE: Need to declare a new queue
+                          (progn
+                            (log:warn "No support for client sessions in eventsource implementation")
+                            (let ((queue (create-and-bind-notifications-queue-async rchannel user (list channel) services nil)))
+                              (setq http-event queue)
+                              (format stream "id:~a~a~a" queue +nl+ +nl+)
+                              (finish-output stream))))
+                      (potato.core:refresh-user user channel (* *ping-interval* 2))
+                      (bordeaux-threads:with-lock-held (lock)
+                        (let ((v (cl-rabbit-async:async-basic-consume rchannel http-event :no-ack t)))
+                          (setq consumer-tag v)))
+                      (bordeaux-threads:with-lock-held (lock)
+                        (schedule-notification-timer))
+                      (loop
+                        for finished-p = (multiple-value-bind (sockets remaining)
+                                             (usocket:wait-for-input (list socket) :ready-only t)
+                                           (declare (ignore remaining))
+                                           (member socket sockets))
+                        until finished-p)
+                      (log:trace "Connection dropped"))
 
                  ;; Unwind form
                  (log:trace "Closing channel: ~s" rchannel)
