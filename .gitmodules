@@ -25,3 +25,6 @@
 [submodule "vendor/zs3"]
 	path = vendor/zs3
 	url = https://github.com/lokedhs/zs3
+[submodule "vendor/mailgun"]
+	path = vendor/mailgun
+	url = https://github.com/lokedhs/mailgun

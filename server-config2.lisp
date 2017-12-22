@@ -33,6 +33,7 @@
                           (merge-pathnames #p"vendor/cl-rabbit/" (truename "."))
                           (merge-pathnames #p"vendor/cl-rabbit-async/" (truename "."))
                           (merge-pathnames #p"vendor/zs3/" (truename "."))
+                          (merge-pathnames #p"vendor/mailgun/" (truename "."))
                           (truename "."))
                         (symbol-value sym)))))))
 

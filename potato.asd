@@ -28,6 +28,7 @@
                  ;;:websocket-driver
                  :north
                  :cl-markup
+                 :mailgun
                  :potato-common
                  :state-server
                  :potato-index)
