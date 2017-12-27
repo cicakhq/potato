@@ -25,7 +25,7 @@
                               :password (or password "")
                               :activated-p nil
                               :activate-code (ironclad:byte-array-to-hex-string (secure-random:bytes 16 secure-random:*generator*))
-                              :default-image-name (format nil "~a.png" (1+ (random 7))))))
+                              :default-image-name (format nil "~a.png" (1+ (secure-random:number 7))))))
     (when password
       (potato.core::user/update-password user password))
     user))
