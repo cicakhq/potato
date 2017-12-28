@@ -25,7 +25,10 @@
            #:*allow-password-recovery*
            #:*user-registration-validation-function*
            #:init-dev-db
-           #:*allowed-origin*))
+           #:*allowed-origin*
+           #:*mailgun-key*
+           #:*email-type*
+           #:*mailgun-user-domain*))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)

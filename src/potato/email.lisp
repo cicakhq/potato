@@ -55,17 +55,21 @@
                              :exchange *email-exchange-name*
                              :body (conspack:encode mail))))
 
+(defun encode-destination (mail)
+  (if (mail-descriptor/to-name mail)
+      (format nil "~a <~a>"
+              (cl-smtp:rfc2045-q-encode-string (mail-descriptor/to-name mail))
+              (mail-descriptor/to-email mail))
+      (format nil "<~a>" (mail-descriptor/to-email mail))))
+
 (defun post-smtp-message (mail)
   (unless *smtp-server-host*
     (log:warn "No SMTP server configured, email to ~a will not be sent" (mail-descriptor/to-email mail))
     (return-from post-smtp-message))
+  (log:trace "Sending email via SMTP to: ~a" (mail-descriptor/to-name mail))
   (let ((params (append (list *smtp-server-host*
                               *potato-sender-address*
-                              (if (mail-descriptor/to-name mail)
-                                  (format nil "~a <~a>"
-                                          (cl-smtp:rfc2045-q-encode-string (mail-descriptor/to-name mail))
-                                          (mail-descriptor/to-email mail))
-                                  (format nil "<~a>" (mail-descriptor/to-email mail)))
+                              (encode-destination mail)
                               (mail-descriptor/subject mail)
                               (or (mail-descriptor/text-content mail) "This is a HTML message")
                               :ssl *smtp-ssl*)
@@ -81,6 +85,17 @@
       (cl-smtp:rcpt-failed (condition) (log:error "Unable to send email to ~s: ~a"
                                                   (mail-descriptor/to-email mail) condition)))))
 
+(defun post-mailgun-message (mail)
+  (unless (and *mailgun-key* *mailgun-user-domain*)
+    (log:warn "No mailgun key configured, email will not be sent")
+    (return-from post-mailgun-message))
+  (log:trace "Sending email via mailgun to: ~a" (mail-descriptor/to-name mail))
+  (mailgun:send-message *potato-sender-address* (list (encode-destination mail)) (mail-descriptor/subject mail)
+                        :user-domain *mailgun-user-domain*
+                        :api-key *mailgun-key*
+                        :content (or (mail-descriptor/text-content mail) "This is a HTML message")
+                        :html-content (mail-descriptor/html-content mail)))
+
 (defun email-sender-loop ()
   (with-rabbitmq-connected (conn)
     (cl-rabbit:basic-consume conn 1 *email-queue-name*)
@@ -90,8 +105,11 @@
        for mail-descriptor = (potato.common:decode-conspack-with-interning body)
        do (progn
             (cl-rabbit:basic-ack conn 1 (cl-rabbit:envelope/delivery-tag msg))
-            (post-smtp-message mail-descriptor)))))
+            (ecase *email-type*
+              (:smtp (post-smtp-message mail-descriptor))
+              (:mailgun (post-mailgun-message mail-descriptor)))))))
 
 (defun start-email-sender-thread ()
-  (when *smtp-server-host*
-    (start-monitored-thread #'email-sender-loop "Email sender")))
+  (if *email-type*
+      (start-monitored-thread #'email-sender-loop "Email sender")
+      (log:info "No email provider configured. Not starting email sender.")))

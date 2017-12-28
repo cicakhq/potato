@@ -11,11 +11,17 @@
 (defvar *external-websocket-listen-address* "ws://localhost:8081/ws")
 (defvar *allowed-origin* "*")
 
+(defvar *email-type* nil
+  "Email provider type. Valid values are NIL (off), :SMTP or :MAILGUN")
+
 (defvar *smtp-server-host* nil)
 (defvar *smtp-server-port* 25)
 (defvar *smtp-username* nil)
 (defvar *smtp-password* nil)
 (defvar *smtp-ssl* nil)
+
+(defvar *mailgun-key* nil)
+(defvar *mailgun-user-domain* nil)
 
 (defvar *allow-passwordless-login* nil)
 (defvar *allow-password-recovery* t)

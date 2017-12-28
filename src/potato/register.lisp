@@ -102,9 +102,9 @@
 
   (let ((url (potato.core:make-potato-url "activate?user=~a&id=~a"
                                           (encode-name (user/id user)) (user/activate-code user))))
-    (unless *smtp-server-host*
+    (unless *email-type*
       (unless *inhibit-no-smtp-server-warning*
-        (log:warn "No SMTP server specified. Registration email will not be sent. Manual registration URL: ~a" url))
+        (log:warn "No email sender configured. Registration email will not be sent. Manual registration URL: ~a" url))
       (return-from send-activation-email))
     (potato.email:send-email (make-instance 'potato.email:mail-descriptor
                                             :to-name (user/description user)
