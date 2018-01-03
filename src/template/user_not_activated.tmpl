@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <% include "common_meta.tmpl" %>
+  <head>
+    <% call common_meta %>
+    <title>Test page</title>
+  </head>
+  <body>
+    <div>
+      <% if user-activated-p %>
+        User has been activated. <a href="/">Back</a>
+      <% else %>
+        User not activated. Click <a href="/send_activation_email">here</a> to re-send activation email.
+      <% end %>
+    <div>
+      <i>Development note: This file is <code>user_not_activated.tmpl</code></i>
+    </div>
+  </body>
+</html>

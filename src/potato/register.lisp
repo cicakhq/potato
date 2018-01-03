@@ -138,3 +138,8 @@
       (unless (user/activated-p user)
         (send-activation-email user))
       (lofn:show-template-stream "activation_email_sent.tmpl" `((:user-activated-p . ,(user/activated-p user)))))))
+
+(define-handler-fn-login (user-not-activated-screen "/user_not_activated" nil ())
+  (with-authenticated-user (t)
+    (let ((user (current-user)))
+      (lofn:show-template-stream "user_not_activated.tmpl" `((:user-activated-p . ,(user/activated-p user)))))))

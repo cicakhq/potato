@@ -25,23 +25,25 @@
       </section>
     <% end %>
 
-    <section id="domains">
-      <h2>Available channels</h2>
-      <ul>
-        <% for domain-tree %>
-          <% var domain-name = domain-name %>
-          <% if ! (domain-role == "PRIVATE") %>
-            <% for groups %>
-              <% if ! (group-type == :private) %>
-                <% for channels %>
-                  <li> <a href="/channel/<% e#channel-id %>"><% #,domain-name %> – <% #channel-name %></a> </li>
+    <% if user-registered-p %>
+      <section id="domains">
+        <h2>Available channels</h2>
+        <ul>
+          <% for domain-tree %>
+            <% var domain-name = domain-name %>
+            <% if ! (domain-role == "PRIVATE") %>
+              <% for groups %>
+                <% if ! (group-type == :private) %>
+                  <% for channels %>
+                    <li> <a href="/channel/<% e#channel-id %>"><% #,domain-name %> – <% #channel-name %></a> </li>
+                  <% end %>
                 <% end %>
               <% end %>
             <% end %>
           <% end %>
-        <% end %>
-      </ul>
-    </section>
+        </ul>
+      </section>
+    <% end %>
 
     <section>
       <h2>Tips for new users</h2>
