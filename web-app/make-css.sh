@@ -14,7 +14,7 @@ if [ ! -d $CSS_OUT ] && [ -d ../public ]; then
 	 mkdir -p $CSS_OUT
 fi
 
-function make_scss {
+make_scss () {
   cd $1
   for f in *.scss
   do
@@ -26,7 +26,7 @@ function make_scss {
   done
 }
 
-function clean {
+clean () {
   rm -f $1/*.css
   rm -f $MANIFEST
 }
