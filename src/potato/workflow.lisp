@@ -51,7 +51,7 @@
     ;; If the user is already a member of the domain, raise an error.
     (when (member (domain/id domain) (potato.core:load-domains-for-user%obsolete user) :key #'first :test #'equal)
       (raise-permission-error "User is already a member of domain"))
-    (let ((available (potato.core:load-available-domains user)))
+    (let ((available (potato.core:load-available-domains-for-user user)))
       (unless (member (domain/id domain) available :key #'domain/id :test #'equal)
         (raise-permission-error "User is not allowed to join domain"))
       (add-user-to-domain user domain :user))))
@@ -79,31 +79,36 @@ it's eliminated altogether."
     (let ((validator-result (funcall *user-registration-validation-function* email description)))
       (when validator-result
         (potato.core:raise-permission-error validator-result))))
-  ;; The user is allowed to be registered, go ahead and create it in the database
-  (let ((user (potato.core::make-unregistered-user description password)))
-    (when enable-api
-      (potato.core::generate-and-modify-api-token user))
-    (when activated-p
-      (setf (potato.core:user/activated-p user) (format-timestamp nil (local-time:now))))
-    ;; Before saving the user object, create the email/user mapping object. This will fail
-    ;; if the email address has already been registered
-    (let ((emailuser (make-instance 'potato.core:user-email
-                                    :user (potato.core:user/id user)
-                                    :email email)))
-      (potato.db:save-instance emailuser))
-    ;; Now that the email mapping object has been saved, we can save the user object
-    (potato.core:save-user user)
-    ;; Create the user's private domain
-    (let ((domain (potato.core::make-and-save-domain (format nil "Private domain for user ~a" email) :private)))
-      (add-user-to-domain user domain :private))
-    ;; Add the user to all domains that the user has access to for which join-default is true
-    (dolist (domain (load-available-domains user))
-      (when (domain/join-default domain)
-        (if (eq (domain/domain-type domain) :corporate)
-            (add-user-to-domain user domain :user)
-            ;; ELSE: This indicates a violation of an invariant, only :CORPORATE domains should be marked join-default
-            (log:error "Domain ~s is marked as auto-join but is not of type :CORPORATE" (domain/id domain)))))
-    user))
+  ;; For dedicated-domain installations, only allow registration if the user has access to at least one domain
+  (let ((available-domains (load-available-domains-for-emails (list email))))
+    (unless (or *allow-registration-without-domain*
+                available-domains)
+      (raise-permission-error "User does not have access to any domains"))
+    ;; The user is allowed to be registered, go ahead and create it in the database
+    (let ((user (potato.core::make-unregistered-user description password)))
+      (when enable-api
+        (potato.core::generate-and-modify-api-token user))
+      (when activated-p
+        (setf (potato.core:user/activated-p user) (format-timestamp nil (local-time:now))))
+      ;; Before saving the user object, create the email/user mapping object. This will fail
+      ;; if the email address has already been registered
+      (let ((emailuser (make-instance 'potato.core:user-email
+                                      :user (potato.core:user/id user)
+                                      :email email)))
+        (potato.db:save-instance emailuser))
+      ;; Now that the email mapping object has been saved, we can save the user object
+      (potato.core:save-user user)
+      ;; Create the user's private domain
+      (let ((domain (potato.core::make-and-save-domain (format nil "Private domain for user ~a" email) :private)))
+        (add-user-to-domain user domain :private))
+      ;; Add the user to all domains that the user has access to for which join-default is true
+      (dolist (domain available-domains)
+        (when (domain/join-default domain)
+          (if (eq (domain/domain-type domain) :corporate)
+              (add-user-to-domain user domain :user)
+              ;; ELSE: This indicates a violation of an invariant, only :CORPORATE domains should be marked join-default
+              (log:error "Domain ~s is marked as auto-join but is not of type :CORPORATE" (domain/id domain)))))
+      user)))
 
 (defun add-email-invitation-for-domain (domain email)
   (check-type domain domain)

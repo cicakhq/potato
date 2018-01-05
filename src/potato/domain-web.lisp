@@ -14,7 +14,7 @@
   (declare (ignore data))
   (potato.core:with-authenticated-user ()
    (let ((domains (potato.core:load-domains-for-user%obsolete (potato.core:current-user)))
-         (available (potato.core:load-available-domains (potato.core:current-user))))
+         (available (potato.core:load-available-domains-for-user (potato.core:current-user))))
      (st-json:jso "domains" (mapcar (lambda (v)
                                       (destructuring-bind (id name role) v
                                         (st-json:jso "id" id

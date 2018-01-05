@@ -28,7 +28,8 @@
            #:*allowed-origin*
            #:*mailgun-key*
            #:*email-type*
-           #:*mailgun-user-domain*))
+           #:*mailgun-user-domain*
+           #:*allow-registration-without-domain*))
 
 (defpackage :potato.core
   (:use :cl :potato :potato.common)
@@ -103,7 +104,6 @@
            #:group/type
            #:group/email-domains
            #:load-message-log
-           #:load-available-domains
            #:save-message-modification
            #:load-message
            #:message/channel
@@ -248,7 +248,9 @@
            #:update-domain-user-role
            #:clear-user-password
            #:common-user-domains
-           #:validate-cookie-and-find-user))
+           #:validate-cookie-and-find-user
+           #:load-available-domains-for-emails
+           #:load-available-domains-for-user))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)

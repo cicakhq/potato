@@ -27,3 +27,5 @@
 (defvar *allow-password-recovery* t)
 
 (defvar *user-registration-validation-function* nil)
+(defvar *allow-registration-without-domain* t
+  "If false, do not allow registration of a user which does not have access to at least one domain.")

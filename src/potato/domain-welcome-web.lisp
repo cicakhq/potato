@@ -6,7 +6,7 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defun user-is-invited-to-domain-p (domain user)
-  (let ((available (potato.core:load-available-domains user)))
+  (let ((available (potato.core:load-available-domains-for-user user)))
     (member (potato.core:domain/id domain) available :key #'potato.core:domain/id :test #'equal)))
 
 (defun domain-admin-p (domain)
