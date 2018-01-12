@@ -250,7 +250,9 @@
            #:common-user-domains
            #:validate-cookie-and-find-user
            #:load-available-domains-for-emails
-           #:load-available-domains-for-user))
+           #:load-available-domains-for-user
+           #:remove-user-from-domain
+           #:update-user-role-in-domain))
 
 (defpackage :potato.views
   (:use :cl :clouchdb :parenscript)
@@ -356,7 +358,8 @@
            #:add-email-invitation-for-domain
            #:remove-email-invitation-for-domain
            #:send-message-to-channel
-           #:create-channel-with-check))
+           #:create-channel-with-check
+           #:add-user-to-domain))
 
 (defpackage :potato.register
   (:use :cl :potato :potato.common :potato.core)

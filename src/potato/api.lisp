@@ -208,6 +208,48 @@ to initialise a session."
                                          (include-channels :type :boolean))
             (api-load-domain-info domain-id include-groups include-channels)))))
 
+(define-api-method (api-domain-users-screen "/domains/([^/]+)/users" t (domain-id))
+  (let ((domain (potato.core:load-domain-with-check domain-id (potato.core:current-user) :require-admin-p t)))
+    (api-case-method
+      (:get (let* ((result (clouchdb:invoke-view "domain" "users_in_domain" :key (potato.core:domain/id domain))))
+              (mapcar (lambda (row)
+                        (let ((d (getfield :|value| row)))
+                          (st-json:jso "user" (getfield :|user| d)
+                                       "role" (getfield :|role| d))))
+                      (getfield :|rows| result)))))))
+
+(define-api-method (api-domain-user-modify-screen "/domains/([^/]+)/users/([^/]+)" t (domain-id uid))
+  (macrolet ((with-role-json ((role-sym) &body body)
+               (alexandria:with-gensyms (role)
+                 `(json-bind ((,role "role")) (parse-and-check-input-as-json)
+                    (unless (eq (potato.core:domain/domain-type domain) :corporate)
+                      (raise-api-error "Invalid domain type"
+                                       hunchentoot:+http-bad-request+))
+                    (let ((,role-sym (string-case:string-case (,role)
+                                       ("USER" :user)
+                                       ("ADMIN" :admin)
+                                       (t (raise-api-error "Illegal role" hunchentoot:+http-bad-request+)))))
+                      (progn ,@body))))))
+    (let* ((domain (potato.core:load-domain-with-check domain-id (potato.core:current-user) :require-admin-p t))
+           (user (potato.core:load-user uid)))
+      (api-case-method
+        (:get
+         (let ((role (potato.core:user-is-in-domain-p domain user)))
+           (if role
+               (st-json:jso "user" (potato.core:user/id user) "role" (symbol-name role))
+               (raise-api-error "User not found in domain" hunchentoot:+http-not-found+))))
+        (:post
+         (with-role-json (role-symbol)
+           (potato.workflow:add-user-to-domain user domain role-symbol)
+           (st-json:jso "result" "ok")))
+        (:put
+         (with-role-json (role-symbol)
+           (potato.core:update-user-role-in-domain domain user role-symbol)
+           (st-json:jso "result" "ok")))
+        (:delete
+         (potato.core:remove-user-from-domain domain user)
+         (st-json:jso "result" "ok"))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Group API calls
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
