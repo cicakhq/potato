@@ -12,9 +12,10 @@ if [ ! -f $DEST/noto/NotoColorEmoji.ttf ] || [ ! -f out/font-awe.zip ] || [ ! -f
 	echo "Download and copy fonts:"
 	if [ ! -d out ]; then mkdir out; fi
 	echo "1. Font Awesome"
-	curl -o out/font-awe.zip http://fontawesome.io/assets/font-awesome-4.7.0.zip
+	curl -o out/font-awe.zip https://use.fontawesome.com/releases/v5.0.8/fontawesome-free-5.0.8.zip
+#http://fontawesome.io/assets/font-awesome-4.7.0.zip
 	if [ ! -d $DEST/awe ]; then mkdir -p $DEST/awe/; fi
-	unzip -oj out/font-awe.zip '*/fonts/*' -d $DEST/awe/
+	unzip -oj out/font-awe.zip '*/webfonts/*' -d $DEST/awe/
 	echo "2. Adobe Source Sans Pro"
 	curl -o out/font-ssp.zip https://codeload.github.com/adobe-fonts/source-sans-pro/zip/2.020R-ro/1.075R-it
 	if [ ! -d $DEST/ssp ]; then mkdir -p $DEST/ssp/; fi
