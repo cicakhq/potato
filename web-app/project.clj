@@ -5,10 +5,10 @@
   :min-lein-version   "2.8.1"
 
   :dependencies [[org.clojure/clojure       "1.9.0"]
-                 [http-kit                  "2.2.0"]
-                 [org.clojure/clojurescript "1.9.946" :scope "provided"]
+                 [http-kit                  "2.3.0-beta2"]
+                 [org.clojure/clojurescript "1.10.217" :scope "provided"]
                  [org.omcljs/om             "1.0.0-beta1"]
-                 [org.clojure/core.async    "0.3.465"]
+                 [org.clojure/core.async    "0.4.474"]
                  ;; If cljs-http is upgraded to 0.1.39, the code will fail when compiled with optimisations enabled
                  [cljs-http                 "0.1.44" :exclusions [org.clojure/core.async]]
                  [cljsjs/moment             "2.17.1-1"]]
