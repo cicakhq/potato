@@ -683,10 +683,10 @@ id's. Returns the updated value."
     (render [_]
       (apply om.dom/menu #js {:id "chat-popup-menu" :type "popup"}
              (map (fn [menuentry]
-                    (om.dom/menuitem #js {:label        (:label menuentry)
-                                          :onClick      (:onclick menuentry)
-                                          :onMouseEnter #(goog.dom.classlist/add    (.-currentTarget %) "chat-popup-item-active")
-                                          :onMouseLeave #(goog.dom.classlist/remove (.-currentTarget %) "chat-popup-item-active")}
+                    (om.dom/div #js {:label        (:label menuentry)
+                                     :onClick      (:onclick menuentry)
+                                     :onMouseEnter #(goog.dom.classlist/add    (.-currentTarget %) "chat-popup-item-active")
+                                     :onMouseLeave #(goog.dom.classlist/remove (.-currentTarget %) "chat-popup-item-active")}
                       (:label menuentry)))
                   (concat [{:label "Hide" :onclick #(toggle-hidden message)}]
                           (if (:can-edit-p opts)
@@ -1306,11 +1306,11 @@ highlighted-message - the message that should be highlighted (or
                    (if (> (count found-items) 0)
                      (let [selected (or (get-selected-entry) (select-default-entry))]
                        (map (fn [item]
-                              (om.dom/menuitem #js {:className    (if (= (:id item) (:id selected)) "active")
-                                                    :onMouseEnter #(select-entry item)
-                                                    :onClick      #(potato.keyboard/key-on-default
-                                                                    (om/get-shared owner :keyboard-control)
-                                                                    potato.keyboard/ENTER)}
+                              (om.dom/div #js {:className    (if (= (:id item) (:id selected)) "active")
+                                               :onMouseEnter #(select-entry item)
+                                               :onClick      #(potato.keyboard/key-on-default
+                                                               (om/get-shared owner :keyboard-control)
+                                                               potato.keyboard/ENTER)}
                                 (if (= (:special item) "emoji") (potato.emoji/span item) (:text item))))
                             found-items))
                      [(om.dom/div #js {:className "notice"} "no match")]))))))))
