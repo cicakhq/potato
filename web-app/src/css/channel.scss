@@ -70,8 +70,9 @@ footer#potato-foot {
         cursor:          pointer;
 
         &::before {
-            content:     "\f00d";
-            font-family: FontAwesome;
+            content: '  ';
+            white-space: pre;
+            background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzODQgNTEyIj48cGF0aCBkPSJNMzIzLjEgNDQxbDUzLjktNTMuOWM5LjQtOS40IDkuNC0yNC41IDAtMzMuOUwyNzkuOCAyNTZsOTcuMi05Ny4yYzkuNC05LjQgOS40LTI0LjUgMC0zMy45TDMyMy4xIDcxYy05LjQtOS40LTI0LjUtOS40LTMzLjkgMEwxOTIgMTY4LjIgOTQuOCA3MWMtOS40LTkuNC0yNC41LTkuNC0zMy45IDBMNyAxMjQuOWMtOS40IDkuNC05LjQgMjQuNSAwIDMzLjlsOTcuMiA5Ny4yTDcgMzUzLjJjLTkuNCA5LjQtOS40IDI0LjUgMCAzMy45TDYwLjkgNDQxYzkuNCA5LjQgMjQuNSA5LjQgMzMuOSAwbDk3LjItOTcuMiA5Ny4yIDk3LjJjOS4zIDkuMyAyNC41IDkuMyAzMy45IDB6Ii8+PC9zdmc+") no-repeat;
             float:       right;
             padding-right: $font-size;
         }
