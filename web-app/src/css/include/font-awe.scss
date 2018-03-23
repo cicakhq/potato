@@ -2,12 +2,13 @@ $awe-fontpath:  '/assets/fonts/awe';
 
 @font-face {
   font-family: 'FontAwesome';
-  src: url($awe-fontpath + '/fontawesome-webfont.eot');
-  src: url("#{$awe-fontpath}/fontawesome-webfont.eot?#iefix") format('embedded-opentype'),
-       url("#{$awe-fontpath}/fontawesome-webfont.woff") format('woff'),
-       url("#{$awe-fontpath}/fontawesome-webfont.ttf") format('truetype'),
-       url("#{$awe-fontpath}/fontawesome-webfont.svg?#fontawesomeregular") format('svg');
-  font-weight: normal;
+  src: url($awe-fontpath + '/fa-regular-400.eot');
+  src: url("#{$awe-fontpath}/fa-regular-400.eot?#iefix") format('embedded-opentype'),
+  url("#{$awe-fontpath}/fa-regular-400.woff2") format('woff2'),
+  url("#{$awe-fontpath}/fa-regular-400.woff") format('woff'),
+  url("#{$awe-fontpath}/fa-regular-400.ttf") format('truetype'),
+  url("#{$awe-fontpath}/fa-regular-400.svg?#fontawesome") format('svg');
+  font-weight: 400;
   font-style: normal;
   unicode-range: $non-emoji-unicode-ranges;
 }
