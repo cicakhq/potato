@@ -6,7 +6,7 @@ echo "Compile the CSS files"
 
 READLINK=readlink
 MD5SUM=md5sum
-if [ "`uname -s`" == 'Darwin' ]; then
+if [ "`uname -s`" = 'Darwin' ]; then
 	echo 'macOS - readlink and md5sum from coreutils'
 	READLINK=greadlink
 	MD5SUM=gmd5sum
