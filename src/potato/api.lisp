@@ -59,9 +59,11 @@
             (raise-api-error "Not logged in" hunchentoot:+http-forbidden+))
           user))))
 
-(defun verify-api-token-and-run (url fn)
+(defun verify-api-token-and-run (url auth-p fn)
   (handler-case
-      (let ((potato.core::*current-auth-user* (load-user-from-api-token-or-session)))
+      (let ((potato.core::*current-auth-user* (if auth-p
+                                                  (load-user-from-api-token-or-session)
+                                                  nil)))
         (funcall fn))
     ;; Error handlers
     (api-error (condition)
@@ -85,6 +87,8 @@
       (potato.core::update-user-session user)
       (hunchentoot:redirect (or redirect "/")))))
 
+
+
 (defmacro api-case-method (&body cases)
   (destructuring-bind (new-cases has-default-p)
       (loop
@@ -106,19 +110,20 @@
                                                         (symbol-name ,method-sym))
                                                 hunchentoot:+http-method-not-allowed+)))))))))
 
-(defmacro define-api-method ((name url regexp (&rest bind-vars) &key (result-as-json t)) &body body)
+(defmacro define-api-method ((name url regexp (&rest bind-vars)
+                              &key (result-as-json t) (auth-p t)) &body body)
   (let ((result-sym (gensym "RESULT-")))
     `(lofn:define-handler-fn (,name ,(concatenate 'string +api-url-prefix+ url) ,regexp ,bind-vars)
        (log:trace "Call to API method ~s, URL: ~s" ',name (hunchentoot:request-uri*))
        ,(if result-as-json
-            `(let ((,result-sym (verify-api-token-and-run ',name (lambda () ,@body))))
+            `(let ((,result-sym (verify-api-token-and-run ',name ,auth-p (lambda () ,@body))))
                (lofn:with-hunchentoot-stream (out "application/json")
                  (st-json:write-json ,result-sym out)
                  ;; Write a final newline to make the output a bit easier to
                  ;; read when using tools such as curl
                  (format out "~c" #\Newline)))
             ;; ELSE: Don't process the result
-            `(verify-api-token-and-run ',name (lambda () ,@body))))))
+            `(verify-api-token-and-run ',name ,auth-p (lambda () ,@body))))))
 
 (defun api-load-channels-for-group (group)
   (let ((is-private-p (eq (potato.core:group/type group) :private)))
@@ -161,9 +166,14 @@
          (if include-channels-p
              (list "channels" (api-load-channels-for-group group)))))
 
-(define-api-method (api-version-screen "/version" nil ())
+(define-api-method (api-version-screen "/version" nil () :auth-p nil)
   (api-case-method
     (:get (st-json:jso "version" "1"))))
+
+(define-api-method (api-server-info-screen "/server" nil () :auth-p nil)
+  (api-case-method
+    (:get (st-json:jso "version" "1"
+                       "gcm_sender" (or potato.gcm:*gcm-sender* :null)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Session API calls

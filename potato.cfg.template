@@ -104,6 +104,7 @@
  ;; disabled, and the Android application will not receive
  ;; notifications.
  (:gcm-key . nil)
+ (:gcm-sender . nil)
 
  ;; If true, users are allowed to login with just an email address.
  ;; When this feature is activated, the user will receive an email

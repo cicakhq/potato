@@ -3,6 +3,7 @@
 (declaim #.potato.common::*compile-decl*)
 
 (defvar *gcm-authorisation-key* nil)
+(defvar *gcm-sender* nil)
 
 (deftype provider-type () '(member :gcm :apns :apns-dev))
 

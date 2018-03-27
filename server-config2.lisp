@@ -224,6 +224,7 @@
             (update :upload-path potato.upload:*file-upload-directory* #'string-or-nil-p #'convert-path)
             (update :default-upload-mode potato.upload:*default-upload-location* #'valid-upload-location-p)
             (update :gcm-key potato.gcm:*gcm-authorisation-key* #'string-or-nil-p)
+            (update :gcm-sebder potato.gcm:*gcm-sender* #'string-or-nil-p)
             (update :allow-passwordless-login potato:*allow-passwordless-login* (constantly t))
             (update :allow-password-reset potato:*allow-password-recovery* (constantly t))
             (update :force-https potato.common:*force-https* (constantly t))
