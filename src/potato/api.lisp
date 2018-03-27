@@ -78,7 +78,7 @@
                    "error_type" "permission"
                    "message" (potato.core:potato-error/message condition)))))
 
-(lofn:define-handler-fn (login-api-key-screesn "/login_api_key" nil ())
+(lofn:define-handler-fn (login-api-key-screen "/login_api_key" nil ())
   (lofn:with-parameters ((key "api-key")
                          (redirect "redirect"))
     (let ((user (load-user-from-api-token key)))
