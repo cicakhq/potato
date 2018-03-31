@@ -405,6 +405,7 @@ Valid values for role is: user, admin"
     "Show user details"
     "Show user details"
   (let ((user (potato.db:load-instance 'potato.core:user user)))
+    (format t "ID: ~a~%" (potato.core:user/id user))
     (format t "Description: ~a~%" (potato.core:user/description user))
     (format t "Activated date: ~a~%" (potato.core:user/activated-p user))
     (format t "New login: ~:[false~;true~]~%" (potato.core:user/new-login user))
@@ -424,6 +425,50 @@ Valid values for role is: user, admin"
         (potato.core:user/update-password user password))
     (potato.db:save-instance user)
     (format t "Password ~[updated~;cleared~]~%" clear)))
+
+(define-command list-groups "list-groups"
+    ((domain "domain id"))
+    ()
+    "List groups in a domain"
+    "List groups in a domain "
+  (let ((domain (potato.db:load-instance 'potato.core:domain domain)))
+    (loop
+      for group in (potato.core:find-groups-in-domain domain)
+      do (format t "~a ~a~%" (potato.core:group/id group) (potato.core:group/name group)))))
+
+(define-command group-info "group-info"
+    ((group "group id"))
+    ()
+    "Show group info"
+    "Show group info"
+  (let ((group (potato.db:load-instance 'potato.core:group group)))
+    (format t "ID: ~a~%" (potato.core:group/id group))
+    (format t "Name: ~a~%" (potato.core:group/name group))
+    (format t "Type: ~a~%" (symbol-name (potato.core:group/type group)))
+    (format t "Email-domains: ~{~a~^, ~}~%" (potato.core:group/email-domains group))
+    (format t "Members:~%  ~{~s~^, ~}~%"
+            (mapcar (lambda (v)
+                      (let ((user (potato.core:load-user (getfield :|user_id| v))))
+                        (list (potato.core:user/id user)
+                              (potato.core:user/description user)
+                              (getfield :|role| v))))
+                    (potato.core:group/users group)))))
+
+(define-command set-user-group-role "set-user-group-role"
+    ((user "user id")
+     (group "group id")
+     (role "role"))
+    ()
+    "Set the role for a given user in a group"
+    "Set the role for a given user in a group. The role is one of: USER, ADMIN"
+  (let ((user (potato.core:load-user user))
+        (group (potato.db:load-instance 'potato.core:group group)))
+    (unless (member (potato.core:group/type group) '(:standard :domain-default))
+      (error "Can only change role for groups of type STANDARD or DOMAIN-DEFAULT"))
+    (unless (member role (list potato.core:+group-user-type-user+ potato.core:+group-user-type-admin+)
+                    :test #'equal)
+      (error "Illegal role type"))
+    (potato.core:update-role-for-group-user group user role)))
 
 (defun run-command (cmd)
   (multiple-value-bind (match strings)
