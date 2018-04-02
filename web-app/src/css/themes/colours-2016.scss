@@ -124,11 +124,11 @@ main#potato-core {
             border-color:     $glaciergray;
             box-shadow: 0 2px 10px $glaciergray;
 
-            menuitem {
+            div {
                 border-color:   $glaciergray-background;
             }
 
-            menuitem.chat-popup-item-active {
+            div.chat-popup-item-active {
                 background-color: $marsala;
                 color:            $custard;
                 border-color:     $marsala;

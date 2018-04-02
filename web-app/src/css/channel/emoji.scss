@@ -16,8 +16,8 @@
     font-size:        $emojiBW-size !important;
 }
 
-menuitem .emoji,
-menuitem .emojiBW {
+menu > div .emoji,
+menu > div .emojiBW {
     margin-right:     $font-size / 2;
     font-weight:      200;
 }
