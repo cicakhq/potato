@@ -264,12 +264,12 @@ menu#activeBehaviour {
     left:             0;
     right:            0;
 
-    menu > div {
+    div {
         display:       block;
         padding-left:  $font-size;
     }
 
-    menu > div.active {
+    div.active {
         background-color: $custard;
         font-weight:      700;
     }
