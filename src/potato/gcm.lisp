@@ -186,7 +186,7 @@
                               "data" data)))
     (log:debug "Content = ~s" content)
     (multiple-value-bind (body code headers orig-url stream should-close reason)
-        (drakma:http-request "https://gcm-http.googleapis.com/gcm/send"
+        (drakma:http-request "https://fcm.googleapis.com/fcm/send"
                              :method :post
                              :content-type "application/json"
                              :additional-headers `((:authorization . ,(concatenate 'string "key=" *gcm-authorisation-key*)))
