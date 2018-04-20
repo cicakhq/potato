@@ -66,7 +66,6 @@ height, or NIL if the resulting size could not be determined."
   (unwind-protect
        (with-temp-file (name ".png")
          (when (resize-and-convert-image (namestring input) name width height)
-           (break)
            (funcall callback name)))
     ;; Unwind form: delete the input file
     (delete-file input)))
