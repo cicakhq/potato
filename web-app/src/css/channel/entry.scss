@@ -139,9 +139,9 @@
             &:before {
                 color:            $duskblue;
                 font-size:        $font-size;
-                font-family:      FontAwesome;
-                content:          "\f040";
-                background-color: lighten($lucitegreen, 30%);
+                content:          '  ';
+                white-space:      pre;
+                background:       url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00OTEuNjA5IDczLjYyNWwtNTMuODYxLTUzLjgzOWMtMjYuMzc4LTI2LjM3OS02OS4wNzUtMjYuMzgzLTk1LjQ2LS4wMDFMMjQuOTEgMzM1LjA4OS4zMjkgNDg0LjA4NWMtMi42NzUgMTYuMjE1IDExLjM2OCAzMC4yNjEgMjcuNTg3IDI3LjU4N2wxNDguOTk1LTI0LjU4MiAzMTUuMzI2LTMxNy4zNzhjMjYuMzMtMjYuMzMxIDI2LjU4MS02OC44NzktLjYyOC05Ni4wODd6TTIwMC40NDMgMzExLjU1N0MyMDQuNzM5IDMxNS44NTMgMjEwLjM3IDMxOCAyMTYgMzE4czExLjI2MS0yLjE0NyAxNS41NTctNi40NDNsMTE5LjAyOS0xMTkuMDMgMjguNTY5IDI4LjU2OUwyMTAgMzkxLjM1NVYzNTBoLTQ4di00OGgtNDEuMzU2bDE3MC4yNTktMTY5LjE1NSAyOC41NjkgMjguNTY5LTExOS4wMyAxMTkuMDI5Yy04LjU4OSA4LjU5Mi04LjU4OSAyMi41MjIuMDAxIDMxLjExNHpNODIuMTMyIDQ1OC4xMzJsLTI4LjI2My0yOC4yNjMgMTIuMTQtNzMuNTg3TDg0LjQwOSAzMzhIMTI2djQ4aDQ4djQxLjU5bC0xOC4yODIgMTguNDAxLTczLjU4NiAxMi4xNDF6bTM3OC45ODUtMzE5LjUzM2wtLjA1MS4wNTEtLjA1MS4wNTEtNDguMDMgNDguMzQ0LTg4LjAzLTg4LjAzIDQ4LjM0NC00OC4wMy4wNS0uMDUuMDUtLjA1YzkuMTQ3LTkuMTQ2IDIzLjk3OC05LjI1OSAzMy4yMzYtLjAwMWw1My44NTQgNTMuODU0YzkuODc4IDkuODc3IDkuOTM5IDI0LjU0OS42MjggMzMuODYxeiI+PC9wYXRoPjwvc3ZnPgo=") lighten($lucitegreen, 30%) no-repeat;
                 padding-right:    $font-size/2;
                 padding-left:     $font-size/2;
                 height:           $line-height;
@@ -178,7 +178,7 @@
                 //background-color: lighten($lucitegreen, 30%);
                 padding-right:    $font-size/2;
                 padding-left:     $font-size/2;
-                height:           $line-height;                
+                height:           $line-height;
             }
         }
 
