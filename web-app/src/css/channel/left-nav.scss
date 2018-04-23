@@ -67,8 +67,9 @@ nav#left {
         #channels-list, #conversations-list {
 
             .close::before {
-                content:         '\f057';
-                font-family:     FontAwesome;
+                content:       '  ';
+                white-space:   pre;
+                background:    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTI1NiA4QzExOSA4IDggMTE5IDggMjU2czExMSAyNDggMjQ4IDI0OCAyNDgtMTExIDI0OC0yNDhTMzkzIDggMjU2IDh6bTAgNDQ4Yy0xMTAuNSAwLTIwMC04OS41LTIwMC0yMDBTMTQ1LjUgNTYgMjU2IDU2czIwMCA4OS41IDIwMCAyMDAtODkuNSAyMDAtMjAwIDIwMHptMTAxLjgtMjYyLjJMMjk1LjYgMjU2bDYyLjIgNjIuMmM0LjcgNC43IDQuNyAxMi4zIDAgMTdsLTIyLjYgMjIuNmMtNC43IDQuNy0xMi4zIDQuNy0xNyAwTDI1NiAyOTUuNmwtNjIuMiA2Mi4yYy00LjcgNC43LTEyLjMgNC43LTE3IDBsLTIyLjYtMjIuNmMtNC43LTQuNy00LjctMTIuMyAwLTE3bDYyLjItNjIuMi02Mi4yLTYyLjJjLTQuNy00LjctNC43LTEyLjMgMC0xN2wyMi42LTIyLjZjNC43LTQuNyAxMi4zLTQuNyAxNyAwbDYyLjIgNjIuMiA2Mi4yLTYyLjJjNC43LTQuNyAxMi4zLTQuNyAxNyAwbDIyLjYgMjIuNmM0LjcgNC43IDQuNyAxMi4zIDAgMTd6Ij48L3BhdGg+PC9zdmc+Cg==") no-repeat;
                 position:        absolute;
                 right:           $font-size/2;
                 padding-left:    $font-size;
