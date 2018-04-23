@@ -92,23 +92,24 @@ form#login {
     p#password:before {
         position:         absolute;
         left:             -3*$font-size;
-        font-family:      'FontAwesome', sans-serif;
-        background-color: $white;
         color:            $black;
         display:          block;
         height:           2*$line-height;
         line-height:      2*$line-height;
         text-align:       center;
-        width:            3*$font-size;
-        font-size:        140%;
+        width:            $font-size;
     }
 
     p#email::before {
-        content:          "\f007";
+        content:          '  ';
+        white-space:      pre;
+        background:       url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00MzAuNzY5IDMxMi42NTNsLTQ4LjY1OC0xMy45MDJDNDI3LjgzMyAyNTEuODA2IDQzMiAxOTcuNjA1IDQzMiAxNzYgNDMyIDc4Ljg0NSAzNTMuMjYyIDAgMjU2IDAgMTU4Ljg1OSAwIDgwIDc4LjcyNCA4MCAxNzZjMCAyMS42MDkgNC4xNjcgNzUuODA2IDQ5Ljg4OSAxMjIuNzUxbC00OC42NTggMTMuOTAyQzE5LjQ5IDMzMC4yOTQgMCAzODYuNDQyIDAgNDIwLjM0NFY0NDhjMCAzNS4yOSAyOC43MSA2NCA2NCA2NGgzODRjMzUuMjkgMCA2NC0yOC43MSA2NC02NHYtMjcuNjU2YzAtMzMuMTk4LTE4Ljk4MS04OS45MDUtODEuMjMxLTEwNy42OTF6TTI1NiAzMmM3OS41MjkgMCAxNDQgNjQuNDcxIDE0NCAxNDRzLTY0LjQ3MSAxNDQtMTQ0IDE0NC0xNDQtNjQuNDcxLTE0NC0xNDRTMTc2LjQ3MSAzMiAyNTYgMzJ6bTIyNCA0MTZjMCAxNy42NzMtMTQuMzI3IDMyLTMyIDMySDY0Yy0xNy42NzMgMC0zMi0xNC4zMjctMzItMzJ2LTI3LjY1NmMwLTM1LjcxOCAyMy42NzgtNjcuMTA5IDU4LjAyMi03Ni45MjJsNjkuODYyLTE5Ljk2MUMxNzYuOTY5IDMzNC42MTMgMjEwLjEwOSAzNTIgMjU2IDM1MmM0NS44OTcgMCA3OS4wMzgtMTcuMzkyIDk2LjExNi0yOC41MzhsNjkuODYyIDE5Ljk2MUM0NTYuMzIyIDM1My4yMzUgNDgwIDM4NC42MjYgNDgwIDQyMC4zNDRWNDQ4eiI+PC9wYXRoPjwvc3ZnPgo=") $white no-repeat;
     }
 
     p#password::before {
-        content:          "\f023";
+        content:          '  ';
+        white-space:      pre;
+        background:       url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00MDAgMjI0aC0xNnYtNjIuNUMzODQgNzMuMSAzMTIuOS4zIDIyNC41IDAgMTM2LS4zIDY0IDcxLjYgNjQgMTYwdjY0SDQ4Yy0yNi41IDAtNDggMjEuNS00OCA0OHYxOTJjMCAyNi41IDIxLjUgNDggNDggNDhoMzUyYzI2LjUgMCA0OC0yMS41IDQ4LTQ4VjI3MmMwLTI2LjUtMjEuNS00OC00OC00OHpNOTYgMTYwYzAtNzAuNiA1Ny40LTEyOCAxMjgtMTI4czEyOCA1Ny40IDEyOCAxMjh2NjRIOTZ2LTY0em0zMDQgMzIwSDQ4Yy04LjggMC0xNi03LjItMTYtMTZWMjcyYzAtOC44IDcuMi0xNiAxNi0xNmgzNTJjOC44IDAgMTYgNy4yIDE2IDE2djE5MmMwIDguOC03LjIgMTYtMTYgMTZ6Ij48L3BhdGg+PC9zdmc+Cg==") $white no-repeat;
     }
 
     #email input, #password input, #submit input {
@@ -227,10 +228,9 @@ form#login {
 
     &:after {
         padding-left:  0.4*$font-size;
-        font-family:   'FontAwesome', sans-serif;
-        color:         $scubablue;
-        content:       "\f061";
-        font-style:    normal;
+        content:       '  ';
+        white-space:      pre;
+        background:    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDggNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik0xOTAuNSA2Ni45bDIyLjItMjIuMmM5LjQtOS40IDI0LjYtOS40IDMzLjkgMEw0NDEgMjM5YzkuNCA5LjQgOS40IDI0LjYgMCAzMy45TDI0Ni42IDQ2Ny4zYy05LjQgOS40LTI0LjYgOS40LTMzLjkgMGwtMjIuMi0yMi4yYy05LjUtOS41LTkuMy0yNSAuNC0zNC4zTDMxMS40IDI5NkgyNGMtMTMuMyAwLTI0LTEwLjctMjQtMjR2LTMyYzAtMTMuMyAxMC43LTI0IDI0LTI0aDI4Ny40TDE5MC45IDEwMS4yYy05LjgtOS4zLTEwLTI0LjgtLjQtMzQuM3oiPjwvcGF0aD48L3N2Zz4K") $scubablue no-repeat;
     }
 
     a {
