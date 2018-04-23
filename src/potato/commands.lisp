@@ -424,7 +424,7 @@ Valid values for role is: user, admin"
         (setf (potato.core:user/password user) "")
         (potato.core:user/update-password user password))
     (potato.db:save-instance user)
-    (format t "Password ~[updated~;cleared~]~%" clear)))
+    (format t "Password ~:[updated~;cleared~]~%" clear)))
 
 (define-command list-groups "list-groups"
     ((domain "domain id"))
