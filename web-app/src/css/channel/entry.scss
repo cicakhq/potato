@@ -105,8 +105,9 @@
                 margin-left:     1.4em;
 
                 &:before {
-                    content:     "\f0ab";
-                    font-family: FontAwesome;
+                    content:       '  ';
+                    white-space:   pre;
+                    background:    url("PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJibGFjayIgZD0iTTUwNCAyNTZjMCAxMzctMTExIDI0OC0yNDggMjQ4UzggMzkzIDggMjU2IDExOSA4IDI1NiA4czI0OCAxMTEgMjQ4IDI0OHptLTE0My42LTI4LjlMMjg4IDMwMi42VjEyMGMwLTEzLjMtMTAuNy0yNC0yNC0yNGgtMTZjLTEzLjMgMC0yNCAxMC43LTI0IDI0djE4Mi42bC03Mi40LTc1LjVjLTkuMy05LjctMjQuOC05LjktMzQuMy0uNGwtMTAuOSAxMWMtOS40IDkuNC05LjQgMjQuNiAwIDMzLjlMMjM5IDQwNC4zYzkuNCA5LjQgMjQuNiA5LjQgMzMuOSAwbDEzMi43LTEzMi43YzkuNC05LjQgOS40LTI0LjYgMC0zMy45bC0xMC45LTExYy05LjUtOS41LTI1LTkuMy0zNC4zLjR6Ij48L3BhdGg+PC9zdmc+Cg==") no-repeat;
                     position:    absolute;
                     right:       100%;
                     top:         -1px;
