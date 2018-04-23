@@ -615,7 +615,7 @@ id's. Returns the updated value."
             (om.dom/a {:href "#"} ""))))))
 
 (defn display-time [time]
-  (om.dom/time #js {:dateTime time} (.fromNow (js/moment time))))
+  (om.dom/time #js {:dateTime time :title (-> (js/moment time) (.format "LLLL"))} (.fromNow (js/moment time))))
 
 ;;; ISeqable for NodeList from https://groups.google.com/forum/#!topic/clojure/unHrE3amqNs
 (extend-type js/NodeList
