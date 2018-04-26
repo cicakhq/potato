@@ -1,4 +1,0 @@
----
-- name: set file ownership
-  become: yes
-  file: path=/potato/current/ owner=potato group=potato mode=775 state=directory recurse=yes

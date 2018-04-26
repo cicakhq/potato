@@ -1,6 +1,0 @@
----
-dependencies:
-  - { role: erlang  }
-  - { role: libicu-dev }
-  - { role: nodejs }
-  - { role: spidermonkey }

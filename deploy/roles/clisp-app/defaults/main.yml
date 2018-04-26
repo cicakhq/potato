@@ -1,3 +1,0 @@
-sbcl_target_version: '1.3.5'
-sbcl_sha256sum: '31621bcd2e87b66983f64391b0e627a5a3e1444e2169f2244ba1d7d34a7f6a93'
-libfixposix_version: '0.3.0'

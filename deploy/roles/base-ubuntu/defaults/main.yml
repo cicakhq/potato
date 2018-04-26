@@ -1,0 +1,7 @@
+---
+packages:
+  - bash
+  - sudo
+  - tmux
+  - vim
+  - git

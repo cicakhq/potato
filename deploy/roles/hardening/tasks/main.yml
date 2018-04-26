@@ -1,5 +1,0 @@
----
-- name: Remove Vagrant user
-  become: yes
-  user: name=vagrant state=absent remove=true
-  when: production == true
