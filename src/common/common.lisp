@@ -118,7 +118,7 @@ needed to santise the names before using them in a routing key."
         (cdr v)
         (if accept-missing
             nil
-            (error "Missing value for: ~s" key)))))
+            (error "Missing value for: ~s, in: ~s" key result)))))
 
 (defun (setf getfield) (value key result)
   (let ((v (assoc key result)))
