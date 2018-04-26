@@ -195,9 +195,9 @@ to initialise a session."
                                   (:file "file")
                                   ((nil) :null))
               (if (and *s3-browser-access-key* *s3-endpoint* *s3-bucket*)
-                  (st-json:jso "s3_credentials" (st-json:jso "access_key" *s3-browser-access-key*
-                                                             "endpoint" *s3-endpoint* *s3-bucket*
-                                                             "bucket" *s3-bucket*))))))))
+                  (list (st-json:jso "s3_credentials" (st-json:jso "access_key" *s3-browser-access-key*
+                                                                   "endpoint" *s3-endpoint* *s3-bucket*
+                                                                   "bucket" *s3-bucket*)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Domain API calls
