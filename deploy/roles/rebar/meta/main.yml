@@ -1,4 +1,0 @@
----
-dependencies:
-  - { role: erlang }
-  - { role: cache-localhost}

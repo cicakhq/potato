@@ -1,7 +1,0 @@
----
-solr_user: solr
-solr_port: 8983
-
-solr_version: "5.3.0"
-solr_sha256sum: "26aec63d81239a65f182f17bbf009b1070f7db0bb83657ac2a67a08b57227f7c"
-solr_core: potato
