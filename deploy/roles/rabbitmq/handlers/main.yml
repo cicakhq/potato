@@ -1,5 +1,0 @@
----
-- name: Delete cache
-  become: yes
-  become_user: potato
-  file: path='/potato/.cache' force=yes state=absent

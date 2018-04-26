@@ -1,5 +1,0 @@
----
-rabbitmq_version: '3.5.4'
-rabbitmq_sha256sum: '3d66b53d09ad55c25431dade0a5f049d4e48b57e486fb6a7cf73ecda667a5b3b'
-rabbitmq_c_version: '0.6.0'
-libffi_version: '3.2.1'

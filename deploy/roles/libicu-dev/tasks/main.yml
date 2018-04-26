@@ -1,4 +1,0 @@
----
-- name: Install
-  become: yes
-  yum: name=libicu-devel.x86_64 state=latest

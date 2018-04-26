@@ -1,0 +1,9 @@
+---
+- hosts: docker
+  remote_user: "{{remote_user}}"
+  become: yes
+  become_method: sudo
+  serial: 1
+  roles:
+  - role: base-ubuntu
+  - role: docker

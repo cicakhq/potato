@@ -1,0 +1,47 @@
+---
+- name: Set a sane locale
+  copy: src=environment dest=/etc/environment owner=root group=root mode=0644
+
+- name: Update all packages to the latest version
+  apt:
+    upgrade: dist
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install packages
+  apt:
+    name: {{ item }}
+    update_cache: no
+  with_items: "{{ packages }}"
+
+- name: potato group
+  group: name=potato system=yes
+
+- name: Create named users
+  user: name={{ item.name }} group=users groups="sudo,potato" shell="/bin/bash"
+  with_items: "{{ users | default([]) }}"
+  when: users is defined
+  
+- name: Add SSH keys to named users
+  authorized_key: user={{ item.name }} key="{{ item.key }}"
+  with_items: "{{ users | default([]) }}"
+  when: users is defined
+
+- name: Sudoers don't need a password
+  lineinfile: "dest=/etc/sudoers regexp='^%sudo' line='%sudo ALL=(ALL) NOPASSWD:ALL' validate='/usr/sbin/visudo -cf %s'"
+
+- name: Sudoers don't need TTY
+  lineinfile: "dest=/etc/sudoers regexp='^Defaults.*requiretty' line='#Defaults requiretty' validate='/usr/sbin/visudo -cf %s'"
+  
+- name: Create the potato user
+  user: name=potato comment="The Potato" uid=1214 group=potato groups=users
+        shell="/sbin/nologin" home="/potato" createhome=no
+
+- name: Add potato user to sudoer
+  user: name=potato comment="The Potato" groups="potato,sudo" shell="/sbin/nologin" home="/potato" createhome=no
+  when: "{{ development }}"
+
+- name: Create the /potato directory(s)
+  file: path=/potato state=directory owner=potato group=potato mode=0775
+  ignore_errors: yes
+
