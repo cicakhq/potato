@@ -112,7 +112,6 @@
      for timestamp = (potato.core:format-timestamp nil (local-time:now))
      for result = (with-user-notification-db
                     (clouchdb:invoke-view "user" "notifications_updated"
-                                          :reduce t
                                           :end-key timestamp))
      for rows = (getfield :|rows| result)
      when rows
