@@ -116,18 +116,17 @@
                                           :end-key timestamp))
      for rows = (getfield :|rows| result)
      when rows
-     do (progn
-          (if (cdr rows)
-              (log:error "More than one result from reduced view: ~s" rows)
-              ;; ELSE: All is good, process all the updated users
-              (let ((uids (getfield :|value| (car rows))))
-                (log:trace "Got notifications for users: ~s" uids)
-                (loop
-                   for uid in uids
-                   do (process-email-notifications-for-user uid)))))
+     do (let ((uids (make-hash-table :test 'equal)))
+          (loop
+            for row in rows
+            do (setf (gethash (getfield :|value| row) uids) t))
+          (loop
+            for uid being each hash-key in uids
+            do (process-email-notifications-for-user uid)))
      do (sleep 10)))
 
 (defun start-ping-sender-thread ()
+  #+nil
   (start-monitored-thread #'ping-sender "Ping sender loop"))
 
 (defparameter *test-data*
