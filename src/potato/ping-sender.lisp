@@ -109,20 +109,20 @@
 
 (defun ping-sender ()
   (loop
-     for timestamp = (potato.core:format-timestamp nil (local-time:now))
-     for result = (with-user-notification-db
-                    (clouchdb:invoke-view "user" "notifications_updated"
-                                          :end-key timestamp))
-     for rows = (getfield :|rows| result)
-     when rows
-     do (let ((uids (make-hash-table :test 'equal)))
-          (loop
-            for row in rows
-            do (setf (gethash (getfield :|value| row) uids) t))
-          (loop
-            for uid being each hash-key in uids
-            do (process-email-notifications-for-user uid)))
-     do (sleep 30)))
+    for timestamp = (potato.core:format-timestamp nil (local-time:now))
+    for result = (with-user-notification-db
+                   (clouchdb:invoke-view "user" "notifications_updated"
+                                         :end-key timestamp))
+    for rows = (getfield :|rows| result)
+    when rows
+      do (let ((uids (make-hash-table :test 'equal)))
+           (loop
+             for row in rows
+             do (setf (gethash (getfield :|value| row) uids) t))
+           (loop
+             for uid being each hash-key in uids
+             do (process-email-notifications-for-user uid)))
+    do (sleep 30)))
 
 (defun start-ping-sender-thread ()
   (start-monitored-thread #'ping-sender "Ping sender loop"))
