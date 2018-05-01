@@ -125,7 +125,6 @@
      do (sleep 10)))
 
 (defun start-ping-sender-thread ()
-  #+nil
   (start-monitored-thread #'ping-sender "Ping sender loop"))
 
 (defparameter *test-data*
