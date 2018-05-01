@@ -114,11 +114,13 @@
                    (clouchdb:invoke-view "user" "notifications_updated"
                                          :end-key timestamp))
     for rows = (getfield :|rows| result)
+    do (log:trace "Got ~d rows" (length rows))
     when rows
       do (let ((uids (make-hash-table :test 'equal)))
            (loop
              for row in rows
              do (setf (gethash (getfield :|value| row) uids) t))
+           (log:trace "users with outstanding notifications: ~d" (hash-table-count uids))
            (loop
              for uid being each hash-key in uids
              do (process-email-notifications-for-user uid)))
