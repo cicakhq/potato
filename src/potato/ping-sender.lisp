@@ -122,7 +122,7 @@
           (loop
             for uid being each hash-key in uids
             do (process-email-notifications-for-user uid)))
-     do (sleep 60)))
+     do (sleep 30)))
 
 (defun start-ping-sender-thread ()
   (start-monitored-thread #'ping-sender "Ping sender loop"))
