@@ -30,6 +30,7 @@ height, or NIL if the resulting size could not be determined."
   (multiple-value-bind (out-string error-string)
       (uiop/run-program:run-program (list *imagemagick-convert-program*
                                           "-verbose"
+                                          "-auto-orient"
                                           (namestring infile)
                                           "-resize"
                                           (format nil "~ax~a" width height)
