@@ -10,57 +10,47 @@
 (defgeneric process-result (task result)
   (:documentation "Called after the image has been converted"))
 
-(defun find-image-convert-result (out-string error-string)
-  (let ((out-parts (split-sequence:split-sequence #\Newline out-string)))
-    (if (equal (first out-parts) "")
-        (let ((parts (split-sequence:split-sequence #\Newline error-string)))
-          (if (= (length parts) 3)
-              (second parts)
-              nil))
-        ;; ELSE: Check stdout
-        (if (= (length out-parts) 2)
-            (first out-parts)
-            nil))))
+(defun find-image-convert-result (s)
+  (let ((parts (split-sequence:split-sequence #\Newline s)))
+    (loop
+      for line in parts
+      for result = (multiple-value-bind (match strings)
+                       (cl-ppcre:scan-to-strings "^[a-zA-Z0-9._/-]+=>[a-zA-Z0-9._/-]+ [A-Z]+ [0-9]+x[0-9]+=>([0-9]+)x([0-9]+)"
+                                                 line)
+                     (if match
+                         (list (parse-integer (aref strings 0)) (parse-integer (aref strings 1)))
+                         nil))
+      when result
+        return result)))
 
 (defvar *err* nil)
 (defun resize-and-convert-image (infile outfile width height)
   "Resize INFILE using the given WIDTH and HEIGHT and write the output
 to OUTFILE. Returns a list of two values: the resulting width and
 height, or NIL if the resulting size could not be determined."
-  (multiple-value-bind (out-string error-string)
-      (uiop/run-program:run-program (list *imagemagick-convert-program*
-                                          "-verbose"
-                                          (namestring infile)
-                                          "-resize"
-                                          (format nil "~ax~a" width height)
-                                          (namestring outfile))
-                                    :output :string
-                                    :error-output :string)
-    (log:info "args: ~s" (list *imagemagick-convert-program*
-                                          "-verbose"
-                                          (namestring infile)
-                                          "-resize"
-                                          (format nil "~ax~a" width height)
-                                          (namestring outfile)))
-    (setq *err* error-string)
-    ;; The output from convert -verbose are two lines on stderr of the following form:
-    ;;   f.png PNG 1186x1427 1186x1427+0+0 8-bit DirectClass 70.6KB 0.020u 0:00.019
-    ;;   f.png=>foo.png PNG 1186x1427=>166x200 166x200+0+0 8-bit DirectClass 4.1KB 0.110u 0:00.019
-    ;;
-    ;; There seems to be two versions of this program. The first version sends all output to stderr
-    ;; while the second sends the first line to stderr and the other to stdout. We need to handle
-    ;; both of these cases.
-    (let ((row (find-image-convert-result out-string error-string)))
-      (log:trace "Result from convert call: ~s" row)
-      (when row
-        (multiple-value-bind (match strings)
-            (cl-ppcre:scan-to-strings "^[a-zA-Z0-9._/-]+=>[a-zA-Z0-9._/-]+ [A-Z]+ [0-9]+x[0-9]+=>([0-9]+)x([0-9]+)"
-                                      row)
-          (if match
-              (list (parse-integer (aref strings 0)) (parse-integer (aref strings 1)))
-              (progn
-                (log:warn "Unable to parse result of call image resize: ~s" error-string)
-                nil)))))))
+  (let ((args (list *imagemagick-convert-program*
+                    "-verbose"
+                    "-auto-orient"
+                    (namestring infile)
+                    "-resize"
+                    (format nil "~ax~a" width height)
+                    (namestring outfile))))
+    (multiple-value-bind (out-string error-string)
+        (uiop/run-program:run-program args :output :string :error-output :string)
+      (log:info "args: ~s" args)
+      (setq *err* error-string)
+      ;; The output from convert -verbose are two lines on stderr of the following form:
+      ;;   f.png PNG 1186x1427 1186x1427+0+0 8-bit DirectClass 70.6KB 0.020u 0:00.019
+      ;;   f.png=>foo.png PNG 1186x1427=>166x200 166x200+0+0 8-bit DirectClass 4.1KB 0.110u 0:00.019
+      ;;
+      ;; There seems to be two versions of this program. The first version sends all output to stderr
+      ;; while the second sends the first line to stderr and the other to stdout. We need to handle
+      ;; both of these cases.
+      (or (find-image-convert-result out-string)
+          (find-image-convert-result error-string)
+          (progn
+            (log:warn "Unable to parse result of call image resize: ~s" error-string)
+            nil)))))
 
 (defun process-image (input width height callback)
   (unwind-protect

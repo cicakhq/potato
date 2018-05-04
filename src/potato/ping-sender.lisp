@@ -109,137 +109,22 @@
 
 (defun ping-sender ()
   (loop
-     for timestamp = (potato.core:format-timestamp nil (local-time:now))
-     for result = (with-user-notification-db
-                    (clouchdb:invoke-view "user" "notifications_updated"
-                                          :reduce t
-                                          :end-key timestamp))
-     for rows = (getfield :|rows| result)
-     when rows
-     do (progn
-          (if (cdr rows)
-              (log:error "More than one result from reduced view: ~s" rows)
-              ;; ELSE: All is good, process all the updated users
-              (let ((uids (getfield :|value| (car rows))))
-                (log:trace "Got notifications for users: ~s" uids)
-                (loop
-                   for uid in uids
-                   do (process-email-notifications-for-user uid)))))
-     do (sleep 10)))
+    for timestamp = (potato.core:format-timestamp nil (local-time:now))
+    for result = (with-user-notification-db
+                   (clouchdb:invoke-view "user" "notifications_updated"
+                                         :end-key timestamp))
+    for rows = (getfield :|rows| result)
+    do (log:trace "Got ~d rows" (length rows))
+    when rows
+      do (let ((uids (make-hash-table :test 'equal)))
+           (loop
+             for row in rows
+             do (setf (gethash (getfield :|value| row) uids) t))
+           (log:trace "users with outstanding notifications: ~d" (hash-table-count uids))
+           (loop
+             for uid being each hash-key in uids
+             do (process-email-notifications-for-user uid)))
+    do (sleep 30)))
 
 (defun start-ping-sender-thread ()
   (start-monitored-thread #'ping-sender "Ping sender loop"))
-
-(defparameter *test-data*
-  '((:NUM-MESSAGES . 4)
- (:CHANNELS
-  ((:CHANNEL-URL
-    . "http://localhost:8080/channel/4e8ff1e0e1c7d80e8e4e5cea510147db")
-   (:CHANNEL-NAME . "Default channel")
-   (:SECTIONS
-    ((:MESSAGES
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:42.189081Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>j</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:43.312368Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>k</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:43.759044Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>l</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:44.639001Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>m</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:51.342444Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>Message for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED . T))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:56.435783Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>message 2 for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:57.798952Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>another</p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:59.479076Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>message</p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:04.045777Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>message 3 for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:15.849007Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT . "<p>and now a bigger separation</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.292471Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>1</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.525702Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>2</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.782323Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>3</p>")
-       (:HIGHLIGHTED))))
-    ((:MESSAGES
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:42.189081Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>j</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:43.312368Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>k</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:43.759044Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>l</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:44.639001Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>m</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:51.342444Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>Message for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED . T))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:56.435783Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>message 2 for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:57.798952Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>another</p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:35:59.479076Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>message</p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:04.045777Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT
-        . "<p>message 3 for <em class=\"user\" user-id=\"user-fc77a2aeb8bbbf4d194a\">Foo</em></p>")
-       (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:15.849007Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson")
-       (:TEXT . "<p>and now a bigger separation</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.292471Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>1</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.525702Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>2</p>") (:HIGHLIGHTED))
-      ((:MESSAGE
-        . "msg-4e8ff1e0e1c7d80e8e4e5cea510147db-2015-12-10T07:36:16.782323Z_00000")
-       (:SENDER-NAME . "Elias Mårtenson") (:TEXT . "<p>3</p>")
-       (:HIGHLIGHTED)))))))))

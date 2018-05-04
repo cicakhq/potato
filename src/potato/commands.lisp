@@ -470,6 +470,14 @@ Valid values for role is: user, admin"
       (error "Illegal role type"))
     (potato.core:update-role-for-group-user group user role)))
 
+(define-command create-views "create-views"
+    ()
+    ()
+    "Create views"
+    "Create the couchdb views. Each view is removed before being added again, in order
+to ensure that they are properly recreated."
+  (potato.views:init-views))
+
 (defun run-command (cmd)
   (multiple-value-bind (match strings)
       (cl-ppcre:scan-to-strings "^([a-zA-Z0-9-]+)(?: +(.*))?$" cmd)
