@@ -49,7 +49,3 @@ Demo installation at: http://potato.dhsdevelopments.com/
 No guarantees are made as to the persistence of anything posted on
 that server.
 
-# Blog
-
-There is also a blog where we try to explain the technical choices
-behind the design of Potato: http://blog.potato.network/
