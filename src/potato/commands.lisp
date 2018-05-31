@@ -478,6 +478,18 @@ Valid values for role is: user, admin"
 to ensure that they are properly recreated."
   (potato.views:init-views))
 
+(define-command test-email "test-email"
+    ((email "Email address"))
+    ((subject "Subject")
+     (text "Text content"))
+    "Send test email"
+    "Send a test email to the given address."
+  (potato.email:send-email (make-instance 'potato.email:mail-descriptor
+                                          :to-name email
+                                          :to-email email
+                                          :subject (or subject "Test mail")
+                                          :text-content (or text "Test mail"))))
+
 (defun run-command (cmd)
   (multiple-value-bind (match strings)
       (cl-ppcre:scan-to-strings "^([a-zA-Z0-9-]+)(?: +(.*))?$" cmd)
