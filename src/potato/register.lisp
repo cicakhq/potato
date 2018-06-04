@@ -77,7 +77,7 @@
       ;; If errors, send back to the registration page
       (if errors
           (show-register-template errors)
-          (register-user-and-redirect email description password1 mobile-p
+          (register-user-and-redirect email-trimmed description password1 mobile-p
                                       (if mobile-p "potato://sent-registration"))))))
 
 (lofn:define-handler-fn (register-screen "/register" nil ())
